@@ -138,16 +138,24 @@ def build_markdown(runs_path: Path) -> str:
     wins_matrix = matrix(order, pairs, lambda c: c["wins"])
 
     return f"""---
-title: CoreWar 1993 competition replay
+title: Round robin of the surviving 1993 CoreWar programs
+subtitle: A reproduction, not the original competition results
 ---
 
 Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.csv).
 
+> These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
+> The entries of that competition did not all survive, Viktor's own entry is missing too, and some
+> programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up of the 1985 championship). This is a new
+> round robin played in {date.today().year} between the programs found in the `Historical` folder, so the
+> ranking says nothing about how the original competition ended.
+
 ## Setup
 
-- Engine: the original `MARS.COM` (CoreWar MARS V1.0 by GM, 1993) running in DOSBox, statistics mode (`/P`, `/V`).
-- Rules are the 1993 Hungarian championship rules: 8000 cell arena, at most 64 processes per program,
-  programs may execute each other's code, a war is a draw after {", ".join(max_steps)} steps.
+- Engine: Viktor's `MARS.COM` (CoreWar MARS V1.0 by GM, 1993) running in DOSBox in statistics mode
+  (`/P`, `/V`). This is not `COREWAR.EXE`, the reference implementation by Kovács Tamás, one of the organizers.
+- The rules follow the 1993 championship rules in `SZABALY.TXT`: 8000 cell arena, at most 64 processes
+  per program, programs may execute each other's code, and a war is a draw after {", ".join(max_steps)} steps.
 - {len(programs)} programs, {len(runs) // 2} pairs, {"/".join(map(str, per_pair))} games per pair
   (half of them with each program starting first), {games} games in total.
 - Start order: over all games the program starting first won {first_wins}, the second one won
@@ -155,13 +163,22 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.cs
 
 ## Scoring
 
-- **Elo**: maximum likelihood Bradley-Terry rating on the Elo scale (400 points = 10:1 odds), with a draw
-  counting as half a win. It is fitted to all games at once, so the result does not depend on the order
-  of the games like a running Elo would. The average rating is 1500. One virtual draw is added per pair
-  so that a program that never scores still gets a finite rating.
-- **Points**: 3 points for a win and 1 for a draw, averaged per 100 games (maximum 300). This is the
-  usual CoreWar tournament score.
-- **Score %**: wins plus half the draws, as a percentage of games.
+Elo is a maximum likelihood Bradley-Terry rating on the Elo scale (400 points means 10:1 odds), where a
+draw counts as half a win. It is fitted to all games at once, so unlike a running Elo it does not depend
+on the order of the games. The average rating is 1500. Each pair gets one extra virtual draw, which keeps
+the rating of a program that never scores finite.
+
+Points use the usual CoreWar tournament scoring: 3 for a win and 1 for a draw, averaged per 100 games
+(at most 300). Score % is wins plus half the draws as a percentage of the games played.
+
+## Example battle
+
+MICE (cyan) against KILLER (magenta), 14000 steps in. The bars at the bottom left show the number of
+processes of each program, the counter on the right shows the game number and the steps in thousands.
+Videos: [opening, slowed down](../media/MICE_vs_KILLER_opening.mp4) and
+[full game at 286 speed](../media/MICE_vs_KILLER_full.mp4).
+
+![MICE against KILLER in MARS](../media/MICE_vs_KILLER_opening_25.png){{ width=60% }}
 
 ## Ranking
 
@@ -220,7 +237,15 @@ def main() -> None:
     try:
         subprocess.run(["pandoc", "-s", "-H", str(header), str(md), "-o", str(REPORT.with_suffix(".html"))], check=True)
         subprocess.run(
-            ["pandoc", f"--reference-doc={reference}", str(md), "-o", str(REPORT.with_suffix(".odt"))], check=True
+            [
+                "pandoc",
+                f"--reference-doc={reference}",
+                f"--resource-path={RESULTS}",
+                str(md),
+                "-o",
+                str(REPORT.with_suffix(".odt")),
+            ],
+            check=True,
         )
     finally:
         header.unlink()
