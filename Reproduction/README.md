@@ -17,6 +17,23 @@ Viktor's 1993 `MARS.COM` under DOSBox.
 - Unprocessed MARS statistics output of every run: [raw/](raw)
 - Example screenshots and videos: [media/](media)
 
+## Results
+
+630 pairs, 630000 games. The top five by Elo, see the [report](results/report.md) for the full ranking
+and matrices:
+
+| Rank | Program | Elo | Points | Wins | Draws | Losses |
+|---:|:--|---:|---:|---:|---:|---:|
+| 1 | PRB004 | 1673 | 194.5 | 17758 | 14803 | 2439 |
+| 2 | PRB011 | 1662 | 189.0 | 16765 | 15856 | 2379 |
+| 3 | MICE | 1651 | 182.5 | 15338 | 17854 | 1808 |
+| 4 | PRB005 | 1649 | 186.0 | 16711 | 14954 | 3335 |
+| 5 | MICE2 | 1635 | 173.3 | 13527 | 20079 | 1394 |
+
+Half of the games (314190) ended in a draw. Moving first made no real difference: the first program
+won 157527 games and the second 158283. The two scores disagree for programs that win and lose a lot.
+Y, for example, has the fifth most points but is only tenth by Elo, because it lost 10861 games.
+
 ## Programs
 
 36 programs take part. Where a program came from is taken from its own comments or from the notes in
@@ -111,4 +128,4 @@ has, up to 64.
   nobody can die any more, so it ends the game as a draw. This makes imp against imp style games short.
 - The random placement is seeded from the BIOS timer, so every run is different.
 - A drawn game of 600000 steps takes about 0.6 s in DOSBox with `cycles=fixed 2000000` on the dynamic
-  core. Pairs that always draw take up to 10 minutes.
+  core. The slowest pair took 16 minutes, the whole tournament less than 4 hours with 8 in parallel.

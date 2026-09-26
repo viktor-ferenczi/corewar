@@ -177,7 +177,7 @@ def tournament(args: argparse.Namespace) -> None:
             done = {(r["first"], r["second"]) for r in csv.DictReader(f)}
     else:
         with RUNS_CSV.open("w", newline="") as f:
-            csv.DictWriter(f, RUN_FIELDS).writeheader()
+            csv.DictWriter(f, RUN_FIELDS, lineterminator="\n").writeheader()
 
     pairs = [(a, b) for a, b in itertools.combinations(PROGRAMS, 2) if (name_of(a), name_of(b)) not in done]
     print(f"{len(pairs)} pairs to play, {args.games} games each, {args.jobs} in parallel", flush=True)
@@ -187,7 +187,7 @@ def tournament(args: argparse.Namespace) -> None:
             rows = future.result()
             # Only the main thread appends, so the CSV needs no lock.
             with RUNS_CSV.open("a", newline="") as f:
-                csv.DictWriter(f, RUN_FIELDS).writerows(rows)
+                csv.DictWriter(f, RUN_FIELDS, lineterminator="\n").writerows(rows)
             a, b = futures[future]
             print(f"[{n}/{len(pairs)}] {a} vs {b} in {rows[0]['seconds']} s", flush=True)
 
