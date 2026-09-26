@@ -1,0 +1,26 @@
+;Molnar Gabor kiserleti prg N§01     {§=ALT+167}
+;=====- -=-  -ñ-====-  -ñ-====-      {ñ=ALT+241}
+;
+poin1   dat            $+2050
+poin2   dat            $+4000
+poin3   dat            $+5950
+data1   dat            $+0
+start   spl  $c2
+        spl  $c3
+        spl  $part2
+c1      mov  $data1    @poin1
+        add  #+3       $poin1
+        cmp  #+3997    @poin1
+        jmp  $c1
+        jmp  $part2
+c2      mov  $data1    @poin2
+        add  #+3       $poin2
+        cmp  #+5947    @poin2
+        jmp  $c2
+        jmp  $part2
+c3      mov  $data1    @poin3
+        add  #+3       $poin3
+        cmp  #+7897    @poin3
+        jmp  c3
+part2   mov  $+0       $+1
+end

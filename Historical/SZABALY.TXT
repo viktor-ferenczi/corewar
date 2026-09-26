@@ -1,0 +1,321 @@
+Mem¢riah bor£
+
+1. Bevezet‚s
+
+Mi is az a mem¢riah bor£?  A mem¢riah bor£ban csataprogramok harcolnak
+egym ssal,  ak r  a sz m¡t¢g‚pv¡rusok ‚s a v¡rusirt¢  programok.  Am¡g
+azonban  a  v¡rusok hasznos programjainkat, adatainkat is megfert“zik,
+t”nkreteszik,   addig  a  csataprogramok  csup n   egym sra   lehetnek
+ rtalmasak. A csata a sz m¡t¢g‚p mem¢ri j nak egy speci lisan  erre  a
+c‚lra  elkl”n¡tett r‚sz‚n, az £gynevezett ARNBAN zajlik, ezen k¡vl
+a  csataprogramok  b rmif‚le ‚letjelens‚gre  k‚ptelenek.   A  korabeli
+ferritmagos  mem¢ri kra  valamint az ARNA alakj ra  utalva  szok s  a
+j t‚kot magh bor£nak, angolul Corewar-nak is nevezni.
+
+A  csataprogramokat a REDCODE programnyelven kell meg¡rni.  A  REDCODE
+egy  speci lisan  ehhez a j t‚khoz kifejlesztett  programoz si  nyelv,
+amely  legink bb  egy  alacsony  szint–  assembly  nyelvhez  hasonl¡t.
+Utas¡t sai k”z”tt szerepel egy v‚grehajthatatlan utas¡t s is (a  DAT).
+Ezt  akn nak  vagy  bomb nak  is  nevezhetn‚nk.  Ha  egy  csataprogram
+valamely fut¢  ga egy ilyen DAT utas¡t shoz ‚r, a fut sa le ll, az   g
+'elhal'. A programok feladata teh t az, hogy bomb kkal sz¢rj k  be  az
+ARNT,  elpuszt¡tva ezzel az ellenf‚l program minden fut¢   g t.  Nem
+v‚letlen  a  t”bbessz m, mivel a REDCODE-nak van egy olyan  utas¡t sa,
+amely lehet“v‚ teszi a program fut s nak kett‚ gaz s t (l sd k‚s“bb).
+
+A  csataprogramok kzdelm‚t a Memory Array Redcode Simulator,  r”viden
+MARS  teszi  lehet“v‚.  Ez  egy program,  amely  'meg‚rti'  a  REDCODE
+programnyelvet, ez ltal lehet“v‚ teszi a csataprogramok futtat s t.  A
+Memory  Array  Redcode  Simulator teh t a processzort  helyettes¡ti  a
+j t‚kban. A csataprogramokat ez helyezi el a kzd“t‚r, vagyis az ARNA
+megfelel“ startpoz¡ci¢iba, ‚s teszi ‚l“v‚ v‚grehajt suk  ltal.  A MARS
+igazs gosan  osztja meg mag t a k‚t csataprogram k”z”tt,  vagyis  els“
+l‚p‚sben  az  egyik egy utas¡t s t dolgozza fel, ‚s  hajtja  v‚gre,  a
+m sodik  l‚p‚sben  a  m sik‚t, ‚s ¡gy tov bb...  gy  a  j t‚k  v‚g‚re
+biztosan mindk‚t oldal azonos id“t haszn lhatott fel.
+
+
+2. A Csataprogram
+
+A  csataprogramok legfeljebb 100 utas¡t sb¢l  llhatnak. Egyszerre  k‚t
+program  kzd egym ssal az ARNBAN. Ind¡t skor a programok  az  ARNA
+v‚letlenszer– poz¡ci¢j ra kerlnek, term‚szetesen gyelve  arra,  hogy
+ t ne fedj‚k egym st. A programok felv ltva kapj k meg a vez‚rl‚st. Ha
+egy program t”bbfel‚  gazik, minden egyes l‚p‚sben, amikor megkapja  a
+vez‚rl‚st, m s ‚s m s  g n hajt¢dik v‚gre egy utas¡t s. Pl.  ha  az  A
+programnak k‚t  ga van: A1 ‚s A2, a B programnak h rom  ga: B1, B2  ‚s
+B3, akkor az egyes  gak a k”vetkez“ sorrendben kapj k meg a vez‚rl‚st:
+
+     ... A1 B1  A2 B2  A1 B3  A2 B1  A1 B2  A2 B3  A1 B1 ...
+
+Ha   egy  program g  fut sa  sor n  egy  DAT  utas¡t shoz  vagy  egy‚b
+‚rtelmetlen  (‚s  enn‚lfogva  v‚grehajthatatlan)  utas¡t shoz  ‚r,   a
+v‚grehajt s  abbamarad, a program g 'elhal'. Nem  tekintjk  az  egyik
+program  sz m ra v‚grehajthatatlan utas¡t snak egy m sik   ltal  be¡rt
+vagy  m¢dos¡tott  utas¡t st,  azaz  a  csataprogramok  v‚grehajthatj k
+egym s  utas¡t sait  is. Ha egy csataprogram  minden  egyes  fut¢   ga
+kipusztul,   akkor  a  program  elvesztette  a  kzdelmet.    Ha   egy
+kzdelemben  semelyik csataprogram nem kerekedik fell 600  000  l‚p‚s
+alatt, akkor a csata d”ntetlen.
+
+
+3. A REDCODE
+
+Maga  a  csataprogram  egy k”z”ns‚ges sz”vegfile,  amely  kiel‚g¡ti  a
+REDCODE   szintaktikai  k”vetelm‚nyeit.   A  REDCODE  nagyon  egyszer–
+programnyelv,  ¡gy  k”nny– az elsaj t¡t sa.  A REDCODE  utas¡t sok  ”t
+mez“b“l  llnak:
+
+     1. Utas¡t sk¢d
+     2. Az els“ ('A') param‚ter c¡mz‚si m¢dja
+     3. Az els“ ('A') param‚ter
+     4. A m sodik ('B') param‚ter c¡mz‚si m¢dja
+     5. A m sodik ('B') param‚ter
+
+Minden  utas¡t st  kl”n  sorba kell ¡rni. Az utas¡t sok  form tuma  a
+k”vetkez“:
+
+<c¡mke> <utas¡t sk¢d> <A c.m¢d><A param.> <B c.m¢d><B param.> <megj.>
+
+P‚ld ul:
+
+; ™rd”gfi¢ka
+; rta: A. K. Dewdney
+;
+START   MOV START START+1        ; saj t mag t eggyel el“bbre m solja
+
+Minden  programnak tartalmaznia kell egy speci lis 'START' c¡mk‚t,  ez
+jelzi  a program bel‚p‚si pontj t, vagyis a kezd“ utas¡t st. Az  egyes
+mez“ket  tetsz“leges  sz m£ (de legal bb egy)  sz¢k”z  vagy  tabul tor
+karakter v laszthatja el. Ez al¢l kiv‚telt k‚peznek a c¡mz‚sm¢d  ‚s  a
+param‚ter mez“k, ezeket egybe kell ¡rni. Pl. '#-8', '<START+1', stb. A
+k”zvetlen   c¡met  (l sd  k‚s“bb)  jelent“  '$'  jel   elhagyhat¢.   A
+megjegyz‚sek  pontosvessz“vel (;) kell kezd“djenek,  azaz  a  ;  ut ni
+karaktereket  a  MARS figyelmen k¡vl hagyja. A kis ‚s  nagybet–ket  a
+MARS nem kl”nb”zteti meg.
+
+Van  n‚h ny utas¡t s, amelynek l tsz¢lag hi nyzik valamely param‚tere.
+Pl.  a DAT utas¡t snak el‚g egy 'B' param‚ter, a JMP, SPL-nek egy 'A'.
+Val¢j ban minden utas¡t snak k‚t param‚tere van, legfeljebb az egyiket
+nem  veszi  figyelembe a MARS, amikor v‚grehajtja az utas¡t st.  Teh t
+‚rtelmes  a  'JMP -1 #8' utas¡t s is. Az utas¡t s  ltal  nem  haszn lt
+param‚tert fel lehet haszn lni p‚ld ul sz ml l¢nak. Ez‚rt hasznosak az
+olyan   utas¡t sok   (illetve   a   '<'   c¡mz‚sm¢d),   amelyek    egy
+mem¢riarekesznek csak az egyik param‚ter‚t v ltoztatj k meg.
+
+A REDCODE utas¡t sai a k”vetkez“k:
+
+ mnemonic    param‚terek           m–k”d‚s
+
+     DAT       B    adat, nem v‚grehajthat¢ utas¡t s (bomba)
+     MOV  A    B    'A' mozgat sa 'B'-be
+     ADD  A    B    'A' hozz ad sa 'B'-hez
+     SUB  A    B    'A' kivon sa 'B'-b“l
+     JMP  A         Ugr s 'A'-ra
+     JMZ  A    B    Ugr s 'A'-ra, ha 'B' nulla
+     JMN  A    B    Ugr s 'A'-ra, ha 'B' nem nulla
+     DJN  A    B    'B' cs”kkent‚se eggyel, azt n JMN A B
+     CMP  A    B    Ha 'A'='B', akkor a k”v. utas¡t s  tugr sa
+     SPL  A         Vez‚rl‚smegoszt s 'A' ‚s a k”v. utas¡t s k”z”tt
+
+Az  'A' ‚s 'B' param‚terek (argumentumok) egy-egy c¡mz‚st jel”lnek.  A
+c¡mz‚sek k‚t r‚szb“l  llnak: c¡mz‚si m¢d ‚s maga a c¡m. A REDCODE n‚gy
+f‚le c¡mz‚si m¢dot ismer:
+
+      1. (#) k”zvetlen sz madat megad sa. Ez a c¡mz‚si m¢d csak a MOV,
+ADD,  SUB,  CMP utas¡t sok 'A' argumentum ban, illetve a DAT  utas¡t s
+egyetlen  'B'  argumentum ban szerepelhet. Ennek oka,  hogy  az  eg‚sz
+j t‚k  az  ARN-val ‚s az utas¡t sokkal egytt csak relat¡v c¡mz‚ssel
+zajlik, vagyis a csataprogramok nem tudj k, hogy az ARN-ban pontosan
+hol   helyezkednek   el,  csak  a  saj t  c¡mkh”z  k‚pest   relat¡van
+sz molhatnak.
+
+      2.  ($)  k”zvetlen  c¡m megad sa. Ilyenkor a  m–veletet  nem  az
+argumentummal  v‚gezzk el, hanem annak az ARNA-beli mem¢riarekesznek
+a tartalm val, ahov  az argumentum (relat¡van) mutat.
+
+      3.  (@)  k”zvetett (indirekt) c¡m megad sa. Ilyenkor a m–veletet
+annak   a  mem¢riarekesznek  a  tartalm val  v‚gezzk,  amelyikre   az
+argumentum   ltal (relat¡van) mutatott mem¢riarekesz  'B'  argumentum-
+mezeje (relat¡van) mutat.
+
+     4. (<) k”zvetett c¡m, ‚s automatikus cs”kkent‚s. Ugyanaz, mint az
+el“bb   (@),  csak  miel“tt  a  c¡mkisz mol st  elv‚gezzk,  a  k”ztes
+mem¢riarekesz 'B' argumentum t eggyel cs”kkentjk.
+
+Ha   a   c¡mz‚si  m¢dot  jel”l“  szimb¢lum  elmarad,   akkor   a   c¡m
+alap‚rtelmez‚sk‚nt k”zvetlen (relat¡v) c¡mk‚nt ($) ‚rt‚kel“dik.
+
+A k”zvetlen adat megad sa (#) nem csak annyiban t‚r el a t”bbi c¡mz‚si
+m¢dt¢l, hogy itt nincs mit relat¡van ‚rtelmezni (m¡g a t”bbit csak £gy
+szabad), hanem egy  ‚rdekess‚ggel is b¡r. Ha a MOV vagy a CMP utas¡t s
+'A'  argumentuma k”zvetlen, akkor csak az az egy sz madat mozog a  'B'
+ ltal mutatott megfel“ mem¢riarekesz 'B' arg-mezej‚be (illetve a  CMP-
+n‚l  hasonl¡t¢dik  vele),  m¡g ha nem k”zvetlen  akkor  az  'A'   ltal
+mutatott  mem¢riarekesz mind az ”t mezeje mozog a 'B'   ltal  mutatott
+mem¢riarekesz  ”t  mezej‚be (ill. hasonl¡t¢dik). gy ny¡lik  lehet“s‚g
+nem csak eg‚sz utas¡t sokat mozgatni, hanem egyes utas¡t soknak csak a
+'B' mezej‚t megv ltoztatni.
+
+Nem minden utas¡t sk¢d-c¡mz‚sm¢d kombin ci¢ megengedett. A megengedett
+(v‚grehajthat¢) utas¡t sok a k”vetkez“k:
+
+
+     MOV  #A   B    DJN   A  #B    SPL   A  #B
+     MOV  #A  @B    DJN   A   B    SPL   A   B
+     MOV  #A  <B    DJN   A  @B    SPL   A  @B
+     MOV   A   B    DJN   A  <B    SPL   A  <B
+     MOV   A  @B    DJN  @A  #B    SPL  @A  #B
+     MOV   A  <B    DJN  @A   B    SPL  @A   B
+     MOV  @A   B    DJN  @A  @B    SPL  @A  @B
+     MOV  @A  @B    DJN  @A  <B    SPL  @A  <B
+     MOV  @A  <B    DJN  <A  #B    SPL  <A  #B
+     MOV  <A   B    DJN  <A   B    SPL  <A   B
+     MOV  <A  @B    DJN  <A  @B    SPL  <A  @B
+     MOV  <A  <B    DJN  <A  <B    SPL  <A  <B
+
+     ADD  #A   B    JMP   A  #B    DAT  #A  #B
+     ADD  #A  @B    JMP   A   B    DAT  #A  <B
+     ADD  #A  <B    JMP   A  @B    DAT  <A  #B
+     ADD   A   B    JMP   A  <B    DAT  <A  <B
+     ADD   A  @B    JMP  @A  #B
+     ADD   A  <B    JMP  @A   B
+     ADD  @A   B    JMP  @A  @B
+     ADD  @A  @B    JMP  @A  <B
+     ADD  @A  <B    JMP  <A  #B
+     ADD  <A   B    JMP  <A   B
+     ADD  <A  @B    JMP  <A  @B
+     ADD  <A  <B    JMP  <A  <B
+
+     SUB  #A   B    JMZ   A  #B
+     SUB  #A  @B    JMZ   A   B
+     SUB  #A  <B    JMZ   A  @B
+     SUB   A   B    JMZ   A  <B
+     SUB   A  @B    JMZ  @A  #B
+     SUB   A  <B    JMZ  @A   B
+     SUB  @A   B    JMZ  @A  @B
+     SUB  @A  @B    JMZ  @A  <B
+     SUB  @A  <B    JMZ  <A  #B
+     SUB  <A   B    JMZ  <A   B
+     SUB  <A  @B    JMZ  <A  @B
+     SUB  <A  <B    JMZ  <A  <B
+
+     CMP  #A   B    JMN   A  #B
+     CMP  #A  @B    JMN   A   B
+     CMP  #A  <B    JMN   A  @B
+     CMP   A   B    JMN   A  <B
+     CMP   A  @B    JMN  @A  #B
+     CMP   A  <B    JMN  @A   B
+     CMP  @A   B    JMN  @A  @B
+     CMP  @A  @B    JMN  @A  <B
+     CMP  @A  <B    JMN  <A  #B
+     CMP  <A   B    JMN  <A   B
+     CMP  <A  @B    JMN  <A  @B
+     CMP  <A  <B    JMN  <A  <B
+
+
+A  REDCODE egyik leg‚rdekesebb utas¡t sa az SPL A, amelyik megosztja a
+vez‚rl‚st  az 'A'  ltal mutatott, ‚s az SPL ut ni utas¡t s k”z”tt.  Ez
+teszi lehet“v‚ a csataprogram szaporod s t, s ¡gy egyszerre t”bb   gon
+val¢  fut s s t.  A  MARS a csataprogram fut¢  gait nyilv ntartja,  ‚s
+ezeket sorban v‚grehajtja (minden l‚p‚sben a k”vetkez“  gat), ¡gy  egy
+k‚t  gb¢l  ll¢ program k‚tszer lassabb egy egyetlen  gb¢l  ll¢n l. Egy
+csataprogramnak egyszerre legfeljebb 64 ilyen p rhuzamos  ga lehet. Ha
+egy  64   gb¢l   ll¢  program £jabb SPL utas¡t shoz  ‚r,  a  MARS  ezt
+egyszer–en  figyelmen k¡vl hagyja. Term‚szetesen ‚rtelmes  az  SPL  1
+utas¡t s   is,  ekkor  a  program  k‚t  olyan   gra  oszlik,   amelyek
+ugyanazokat az utas¡t sokat hajtj k v‚gre.
+
+
+Sok  sz¢ esett m r a titokzatos kzd“t‚rr“l, az ARN-r¢l. Ez nem m s,
+mint  a mem¢ria egy k”rfolytonos r‚sze, amely a csataprogramok sz m ra
+van f”nntartva. Az ARENA 8000 mem¢riarekeszb“l  ll, azaz 8000 utas¡t s
+helyezhet“  el benne. Ez NEM 8000 byte-ot jelent, hiszen  egy  REDCODE
+utas¡t s  nem  'f‚r  el' egy byte-on, hanem 8000  rekordot,  ahol  egy
+rekord  egy REDCODE utas¡t s. Az utas¡t sok c¡mz‚startom nya is  ehhez
+igazodik:  a c¡m REDCODE-ban egy -8000..8000 intervallumba es“  eg‚sz.
+Term‚szetesen nagyobb abszol£t ‚rt‚k– c¡mek is haszn lhat¢k, de ezeket
+a MARS modulo 8000 'veszi'.
+
+
+4. P‚ld k
+
+N‚zznk  p‚ld t  csataprogramokra. A  legegyszer–bb  az  “rd”gfi¢k nak
+nevezett program, amely csup n egyetlen utas¡t sb¢l  ll:
+
+          MOV   0    1
+
+L that¢,  hogy  a  program  nem  tesz egyebet,  mint  a  0.  (relat¡v)
+mem¢riarekesz  tartalm t, vagyis mag t a  MOV  0  1  utas¡t st  az  1.
+(relat¡v),  vagyis a k”vetkez“ mem¢riac¡mre m solja.  Mivel  ezut n  a
+vez‚rl‚s a k”vetkez“ c¡men folytat¢dik, ott addigra egy £jabb MOV 0  1
+utas¡t st tal l, ‚s az eg‚sz kezd“dik el”lr“l. Az ”rd”gfi¢ka £jra  meg
+£jra v‚gigsz guld a mem¢ri n.
+
+
+
+Hogyan lehet "kiv‚gezni" az ”rd”gfi¢k t? P‚ld ul az ”rd”gfi¢ka-–z“vel.
+Ez a program m r t”bb utas¡t sb¢l  ll:
+
+               DAT      0
+     START     MOV  -1  -2
+               JMP  -1
+
+Az  ”rd”gfi¢ka-–z“ egy bomb t (DAT) haj¡t maga el‚ (a -2. c¡mre), majd
+visszaugrik  ugyanerre a (bombahaj¡t¢) utas¡t sra. Amint k”zeledik  az
+”rd”gfi¢ka, 50% val¢sz¡n–s‚ggel beleakad az ellene dobott  bomb ba  ‚s
+"elpusztul".
+
+
+
+Egy m sik p‚ldaprogram a 'T”rpe' nevezet–. A program a k”vetkez“k‚ppen
+n‚z ki:
+
+     COUNTER   DAT            0
+     START     ADD   #4       COUNTER
+               MOV   COUNTER  @COUNTER
+               JMP            START
+
+vagy, ha nem akarunk szimbolikus konstansokat haszn lni:
+
+               DAT        0
+     START     ADD   #4   -1
+               MOV   -2  @-2
+               JMP        -2
+
+A START nev– konstansra szks‚g van, hiszen ¡gy adhatjuk meg, melyik a
+program  kezd“  utas¡t sa. Az els“ utas¡t s a DAT 0. Ez egy  sz ml l¢,
+melynek kezdeti ‚rt‚ke 0. A m sodik (a kezd“) utas¡t s az ADD  #4  -1.
+Ez  a -1 relat¡v c¡m–, vagyis a megel“z“ mem¢riarekesz B param‚ter‚hez
+(teh t  a sz ml l¢nkhoz) hozz ad 4-et. A harmadik utas¡t s a t‚nyleges
+'bombasz¢r¢':  MOV  -2 @-2. Ez a -2 relat¡v c¡m– utas¡t st,  vagyis  a
+legels“  (‚s  v‚grehajthatatlan) DAT utas¡t st  m solja  a  sz ml l¢nk
+ ltal   mutatott   mem¢riac¡mre.  A  T”rpe  teh t   fut sa   sor n   4
+mem¢riac¡menk‚nt elsz¢r egy-egy 'bomb t'.
+
+
+5. A Bajnoks g
+
+Az  Els“   Magyar   Mem¢riah bor£  Bajnoks gon  b rki  r‚sztvehet.   A
+bajnoks gra kiz r¢lag saj t k‚sz¡t‚s– csataprogrammal lehet nevezni. A
+bajnoks gra  a  kihirdet‚st“l  (1993. j£nius 20.)  kezdve folyamatosan
+lehet  kldeni  a  nevezett  programokat  pap¡ron  vagy  floppylemezen
+egyar nt a k”vetkez“ c¡mre:
+
+Mem¢riah bor£ Bajnoks g
+Kalm r L szl¢ Sz m¡t stechnikai Szakk”z‚piskola
+1027 Budapest, Jur nyi u. 1.
+
+A  bajnoks g   ll s t  folyamatosan  k”zvet¡ti a PC-ABC c¡m– m–sor, az
+eredm‚nyhirdet‚sre  is  a m–sor keret‚ben kerl sor 1993 december‚ben.
+
+Ha  a  fent  le¡rtakkal  kapcsolatban   esetleges   tov bbi   k‚rd‚sek
+merln‚nek fel,  a PC-ABC  szak‚rt“i k‚zs‚ggel  llnak rendelkez‚sre az
+ad s ideje alatt.  K‚rd‚seket  lev‚lben  is fel lehet tenni, amelyekre
+v laszt szint‚n a m–sor ad.
+
+
+
+                                         Kov cs Tam s  ‚s  Nagy Zolt n
+
+

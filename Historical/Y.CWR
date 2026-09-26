@@ -1,0 +1,19 @@
+;
+; BATTLE-PROGRAM:HARVEST
+; T¢th L szl¢ 1993.10.11.
+;
+
+DEL	JMP	CATCH	<-4	;mindenkit az END-re ir ny¡t
+	JMP	CATCH	<-2	;‚s belepiszk l a h ta m”g‚.
+KILL	DAT	#-3             ;a -3-as c¡mt“l kezdve
+CATCH	JMP	END	#10	;10-szer megy v‚gig az ARENA-n ‚s
+START	MOV	DEL	<KILL   ;a DEL-lel bomb z
+	MOV	DEL	<KILL   ;2-szer.
+	CMP	#15	KILL    ;ha m‚g nem futott v‚gig,
+	JMP	START	<KILL   ;cs”kkenti m‚g eggyel a sz ml l¢t,
+	MOV	#-3	KILL    ;kl”nben £jra kezdi el”lr“l.
+	DJN	START	CATCH   ;Ezt 10-szer megcsin lja.
+	MOV	KILL	END     ;ha megvolt 10-szer, akkor SZšRET !
+	JMP	START	<-4	;ezent£l csak 2-es‚vel bomb zgat,
+END	JMP	END	<DEL-1  ;¡gy minden mem¢riahelyet fell¡r.
+

@@ -1,0 +1,4 @@
+- A v‚geredm‚ny grafikus  br zol s ra assembly programot ¡rni. (Histogram,
+  Pie-Chart)
+- Œrni forg¢ 3D s¡kkal az E003-b¢l egy CoreWar rekl mot.
+- Minim lisan n‚h ny l‚p‚snek le kell futnia, hogy a j t‚k ‚rv‚nyes legyen !

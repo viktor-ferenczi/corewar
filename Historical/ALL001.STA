@@ -1,0 +1,37 @@
+CoreWar MARS V1.0 by GM 1993
+
+E:\COREWAR\PRB003.CWR
+
+E:\COREWAR\PRB006.CWR
+
+E:\COREWAR\PRB008.CWR
+
+E:\COREWAR\PRB009.CWR
+
+E:\COREWAR\KILLER02.CWR
+
+E:\COREWAR\KILLER03.CWR
+
+E:\COREWAR\CHANG2.CWR
+
+E:\COREWAR\MICE.CWR
+
+E:\COREWAR\TORPE.CWR
+
+CoreWar MARS V1.0 Statistics:
+
+Number of full wars         = 20
+Maximal war length in steps = 200000
+Queue length (Max. PCs)     = 64
+Execute each other was enabled.
+
+ProgNum   Average PC  Win     Lose    Progam name
+1         7           1       15      E:\COREWAR\PRB003.CWR
+2         48          1       4       E:\COREWAR\PRB006.CWR
+3         5           0       18      E:\COREWAR\PRB008.CWR
+4         3           0       18      E:\COREWAR\PRB009.CWR
+5         10          0       17      E:\COREWAR\KILLER02.CWR
+6         3           0       18      E:\COREWAR\KILLER03.CWR
+7         27          0       6       E:\COREWAR\CHANG2.CWR
+8         54          2       2       E:\COREWAR\MICE.CWR
+9         6           0       17      E:\COREWAR\TORPE.CWR
