@@ -85,9 +85,9 @@ def name_of(program: str) -> str:
     return program.removesuffix(".CWR")
 
 
-def dosbox_conf(workdir: Path, commands: list[str], cycles: str, window: bool) -> Path:
+def dosbox_conf(workdir: Path, commands: list[str], cycles: str, window: str | None = None) -> Path:
     # A DOS command tail is limited to 127 characters, the short D:\ paths keep it well below that.
-    video = "[sdl]\noutput=opengl\nwindowresolution=1280x800\n[render]\naspect=true\n" if window else ""
+    video = f"[sdl]\noutput=openglnb\nwindowresolution={window}\n[render]\naspect=true\n" if window else ""
     conf = f"""{video}[dosbox]
 machine=vgaonly
 memsize=4
@@ -155,7 +155,7 @@ def play_pair(a: str, b: str, games_per_order: int, max_steps: int, cycles: str)
             f"D:\\MARS D:\\{b} D:\\{a} {opts} /F=BA.LOG > BA.STA",
         ]
         started = time.monotonic()
-        run_dosbox(dosbox_conf(workdir, commands, cycles, window=False), headless=True, timeout=4 * 3600)
+        run_dosbox(dosbox_conf(workdir, commands, cycles), headless=True, timeout=4 * 3600)
         seconds = round(time.monotonic() - started, 1)
         rows = []
         for first, second, sta in ((a, b, "AB.STA"), (b, a, "BA.STA")):
@@ -198,7 +198,7 @@ def watch(args: argparse.Namespace) -> None:
             sys.exit(f"No such program in {HISTORICAL}: {program}")
     with tempfile.TemporaryDirectory(prefix="mars-") as tmp:
         command = f"D:\\MARS D:\\{args.first} D:\\{args.second} /S={args.delay} /M={args.max_steps}"
-        run_dosbox(dosbox_conf(Path(tmp), [command], args.cycles, window=True), headless=False)
+        run_dosbox(dosbox_conf(Path(tmp), [command], args.cycles, args.window), headless=False)
 
 
 def main() -> None:
@@ -211,6 +211,7 @@ def main() -> None:
     p.add_argument("--delay", type=int, default=0, help="MARS /S slow-down loop count per step (default 0)")
     p.add_argument("--cycles", default="fixed 3000", help="DOSBox CPU cycles, 3000 is about a 286 (default)")
     p.add_argument("--max-steps", type=int, default=600000, help="MARS /M war length (default 600000)")
+    p.add_argument("--window", default="1280x800", help="DOSBox window size (default 1280x800)")
     p.set_defaults(func=watch)
 
     p = sub.add_parser("tournament", help="play every pair of PROGRAMS, resumes from results/runs.csv")
