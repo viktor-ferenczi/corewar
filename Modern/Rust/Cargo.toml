@@ -6,7 +6,14 @@ description = "Native reimplementation of the 1993 CoreWar MARS V1.0 (MARS.COM) 
 license = "MIT"
 publish = false
 
+[features]
+default = ["gpu"]
+# Tournaments on GPUs through wgpu (Vulkan on Linux). Build without it for a CPU-only binary.
+gpu = ["dep:wgpu", "dep:pollster"]
+
 [dependencies]
+wgpu = { version = "30", optional = true }
+pollster = { version = "0.4", optional = true }
 
 [profile.release]
 lto = true

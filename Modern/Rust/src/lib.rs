@@ -6,6 +6,8 @@
 
 pub mod compiler;
 pub mod engine;
+#[cfg(feature = "gpu")]
+pub mod gpu;
 pub mod report;
 pub mod rng;
 pub mod tournament;
