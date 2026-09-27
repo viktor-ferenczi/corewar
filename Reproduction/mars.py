@@ -14,12 +14,14 @@ import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 HISTORICAL = HERE.parent / "Historical"
 RAW_DIR = HERE / "raw"
+RAW_ZIP = HERE / "raw.zip"
 RUNS_CSV = HERE / "results" / "runs.csv"
 
 # Meaningful programs from the Historical folder. Left out: NONE.CWR (idle loop),
@@ -168,7 +170,21 @@ def play_pair(a: str, b: str, games_per_order: int, max_steps: int, cycles: str)
         return rows
 
 
+def zip_raw(raw: Path) -> None:
+    """Pack the .sta files of a raw folder into raw.zip next to it, as raw/NAME.sta. Sorted names
+    and fixed timestamps keep the archive the same for the same files."""
+    with zipfile.ZipFile(raw.with_suffix(".zip"), "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for path in sorted(raw.glob("*.sta")):
+            z.writestr(
+                zipfile.ZipInfo(f"raw/{path.name}", (1980, 1, 1, 0, 0, 0)), path.read_bytes(), zipfile.ZIP_DEFLATED
+            )
+
+
 def tournament(args: argparse.Namespace) -> None:
+    # A resumed tournament keeps the outputs of the earlier runs in the archive.
+    if RAW_ZIP.exists() and not RAW_DIR.exists():
+        with zipfile.ZipFile(RAW_ZIP) as z:
+            z.extractall(HERE)
     RAW_DIR.mkdir(exist_ok=True)
     RUNS_CSV.parent.mkdir(exist_ok=True)
     done = set()
@@ -190,6 +206,7 @@ def tournament(args: argparse.Namespace) -> None:
                 csv.DictWriter(f, RUN_FIELDS, lineterminator="\n").writerows(rows)
             a, b = futures[future]
             print(f"[{n}/{len(pairs)}] {a} vs {b} in {rows[0]['seconds']} s", flush=True)
+    zip_raw(RAW_DIR)
 
 
 def watch(args: argparse.Namespace) -> None:

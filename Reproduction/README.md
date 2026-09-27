@@ -14,7 +14,7 @@ Viktor's 1993 `MARS.COM` under DOSBox.
 - Published site, made from this folder by the CI workflow on `main`: https://viktor-ferenczi.github.io/corewar/
 - Results report: [Markdown](results/report.md), [HTML](results/report.html), [ODT](results/report.odt)
 - Raw results, one row per pair and start order: [results/runs.csv](results/runs.csv)
-- Unprocessed MARS statistics output of every run: [raw/](raw)
+- Unprocessed MARS statistics output of every run, zipped: [raw.zip](raw.zip)
 - Example screenshots and videos: [media/](media)
 
 ## Results
@@ -79,7 +79,9 @@ D:\MARS D:\KILLER.CWR D:\MICE.CWR /P=500 /M=600000 /V /F=BA.LOG > BA.STA
 
 `/P` is the statistics mode with the number of games, `/V` switches off the arena display, and the
 statistics go to standard output. The script keeps each output in `raw/` and appends the parsed
-numbers to `results/runs.csv`. When it is started again it skips the pairs already in the CSV.
+numbers to `results/runs.csv`. At the end it packs `raw/` into `raw.zip`; only the archive is in the
+repository. When it is started again it skips the pairs already in the CSV, and unpacks `raw.zip` first
+if `raw/` is missing.
 `report.py` turns the CSV into the report in three formats (it needs `pandoc`).
 
 ## Running MARS

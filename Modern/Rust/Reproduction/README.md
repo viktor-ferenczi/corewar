@@ -11,7 +11,7 @@ reimplementation of `MARS.COM` in [`Modern/Rust`](..) instead of `MARS.COM` unde
 
 - Results report: [Markdown](results/report.md), [HTML](results/report.html), [ODT](results/report.odt)
 - Raw results, one row per pair and start order, with the random seed of each run: [results/runs.csv](results/runs.csv)
-- Statistics output of every run, in the format `MARS.COM` prints: [raw/](raw)
+- Statistics output of every run, in the format `MARS.COM` prints, zipped: [raw.zip](raw.zip)
 - The same tournament with another master seed, for the comparison in the report: [results/baseline.csv](results/baseline.csv)
 - Run time and machine: [results/timing.json](results/timing.json)
 

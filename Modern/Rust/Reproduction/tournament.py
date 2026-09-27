@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Play the round robin of Reproduction/mars.py on the native Rust engine.
 
-Same programs, same order, 500 games per start order, the MARS defaults. Writes raw/*.sta,
-results/runs.csv and results/timing.json (wall clock time and machine) next to this script.
+Same programs, same order, 500 games per start order, the MARS defaults. Writes raw/*.sta (packed
+into raw.zip), results/runs.csv and results/timing.json (wall clock time and machine) next to this script.
 
 With --baseline the tournament is played once more with another master seed, and only its runs.csv
 is kept as results/baseline.csv. The report compares the two to show how much two tournaments differ
@@ -25,7 +25,7 @@ HERE = Path(__file__).resolve().parent
 RUST = HERE.parent
 REPRODUCTION = RUST.parent.parent / "Reproduction"
 sys.path.insert(0, str(REPRODUCTION))
-from mars import HISTORICAL, PROGRAMS  # noqa: E402
+from mars import HISTORICAL, PROGRAMS, zip_raw  # noqa: E402
 
 
 def cpu_model() -> str:
@@ -58,6 +58,7 @@ def main() -> None:
     started = time.monotonic()
     play(HERE, args.seed)
     seconds = time.monotonic() - started
+    zip_raw(HERE / "raw")
     rustc = subprocess.run(["rustc", "--version"], capture_output=True, text=True, check=True).stdout.strip()
     timing = {
         "date": date.today().isoformat(),
