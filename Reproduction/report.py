@@ -145,8 +145,7 @@ subtitle: A reproduction, not the original competition results
 Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.csv).
 
 > These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
-> The entries of that competition did not all survive, Viktor's own entry is missing too, and some
-> programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up of the 1985 championship). This is a new
+> Some programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up of the 1985 championship). This is a new
 > round robin played in {date.today().year} between the programs found in the `Historical` folder, so the
 > ranking says nothing about how the original competition ended.
 

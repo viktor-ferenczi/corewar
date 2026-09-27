@@ -4,8 +4,7 @@ A round robin between the CoreWar programs in the [`Historical`](../Historical) 
 Viktor's 1993 `MARS.COM` under DOSBox.
 
 > This is **not** the original competition data. The First Hungarian Memory War (CoreWar) Championship
-> announced its results in December 1993, but not all of its entries survived, and Viktor's own entry is missing too.
-> Some programs here were never entries at all. The results below come from a new tournament played in
+> announced its results in December 1993. Some programs here were never entries at all. The results below come from a new tournament played in
 > 2026 and do not tell how the original competition ended.
 
 ![MICE against KILLER in MARS](media/MICE_vs_KILLER_opening_25.png)
