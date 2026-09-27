@@ -1,0 +1,10 @@
+; labels on their own, several per line, forward and backward
+FIRST
+SECOND THIRD MOV FIRST SECOND
+ JMP THIRD
+LOOP JMP LOOP
+   LAB2   
+ DJN LOOP LAB2
+START MOV FWD BACK
+BACK DAT 0
+FWD DAT 1

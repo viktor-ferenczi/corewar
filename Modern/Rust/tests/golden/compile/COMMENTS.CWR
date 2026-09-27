@@ -1,0 +1,6 @@
+; comment words after a label become labels themselves
+X ; alpha beta
+Y ; jmp y
+START MOV X Y ; a normal comment
+ DAT ALPHA
+ DAT BETA

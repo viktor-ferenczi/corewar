@@ -1,0 +1,7 @@
+; missing parameters
+START MOV 1
+ JMP
+ JMZ 1
+ CMP
+ ADD ;none
+ DAT 1

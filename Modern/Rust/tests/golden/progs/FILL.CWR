@@ -1,0 +1,5 @@
+; fills the process queue, then bombs
+START	SPL	0
+	MOV	<-5	<-9
+	ADD	#13	-1
+	JMP	START

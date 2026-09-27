@@ -1,0 +1,17 @@
+; every instruction with unusual addressing modes
+START	MOV	#5	@P
+	MOV	<P	<Q
+	ADD	@P	<Q
+	SUB	<P	@Q
+	CMP	@P	<Q
+	CMP	#1	#1
+	JMZ	2	#0
+	DAT	#0
+	JMN	START	<Q
+	DJN	START	#3
+	DJN	@P	<P
+	JMP	@P	#7
+P	DAT	#20
+Q	DAT	@-30
+	SPL	<P	<Q
+	JMP	START

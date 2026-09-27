@@ -1,0 +1,9 @@
+; symbols in expressions are relative to the current instruction
+A DAT 0
+B DAT A
+ DAT B-A
+ DAT A+B
+ DAT A*2
+ DAT B/2
+ MOV A+1 B-A
+START JMP -1

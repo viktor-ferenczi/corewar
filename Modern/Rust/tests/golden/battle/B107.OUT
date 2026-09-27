@@ -1,0 +1,16 @@
+CoreWar MARS V1.0 by GM 1993
+
+SPLIT.CWR
+
+VIKTOR05.CWR
+
+CoreWar MARS V1.0 Statistics:
+
+Number of full wars         = 20
+Maximal war length in steps = 600000
+Queue length (Max. PCs)     = 64
+Execute each other was disabled.
+
+ProgNum   Average PC  Win     Lose    Progam name
+1         16          5       15      SPLIT.CWR
+2         1           15      5       VIKTOR05.CWR

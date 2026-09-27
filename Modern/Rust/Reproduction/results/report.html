@@ -1,0 +1,4113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Tournament of the surviving 1993 CoreWar programs on the native engine</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style>
+  body { max-width: none; font-family: sans-serif; }
+  table { border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #ccc; padding: 2px 5px; text-align: right; }
+  th:nth-child(2), td:nth-child(2) { text-align: left; }
+  thead th { background: #eee; position: sticky; top: 0; }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Tournament of the surviving 1993 CoreWar programs on
+the native engine</h1>
+<p class="subtitle">A reproduction, not the original competition
+results</p>
+</header>
+<p>Generated on 2026-09-27 by <code>report.py</code> from <a
+href="runs.csv"><code>runs.csv</code></a>.</p>
+<blockquote>
+<p>These are <strong>not</strong> the results of the First Hungarian
+Memory War (CoreWar) Championship of 1993. Some programs here were never
+entries (by their own comments MICE and CHANG are the winner and
+runner-up of the 1985 championship). This is the tournament of <a
+href="../../../../Reproduction"><code>Reproduction</code></a> played
+again, between the programs found in the <code>Historical</code> folder,
+so the ranking says nothing about how the original competition
+ended.</p>
+</blockquote>
+<h2 id="setup">Setup</h2>
+<ul>
+<li>Engine: the native Rust reimplementation of Viktor’s
+<code>MARS.COM</code> in <code>Modern/Rust</code>, with the same
+compiler and simulator. Its test suite compares it with
+<code>MARS.COM</code> under DOSBox: the compiled code of every program
+and the exact statistics of 168 recorded battles with fixed random seeds
+are the same.</li>
+<li>The rules are the defaults of MARS, like in the DOSBox tournament:
+8000 cell arena, at most 64 processes per program, programs may execute
+each other’s code, a war is a draw after 600000 steps, and a war without
+any DAT left in the arena ends as a draw.</li>
+<li>36 programs, 630 pairs, 1000 games per pair (half of them with each
+program starting first), 630000 games in total.</li>
+<li>Random seeds: MARS seeds its generator from the BIOS clock. Here
+every run gets a tick count derived from the master seed 1993, stored in
+the <code>seed</code> column of <code>runs.csv</code>, so the tournament
+can be repeated exactly. Like in DOSBox, both start orders of a pair run
+one after the other in one emulated DOS session, where the second run
+inherits the memory after the arena from the first.</li>
+<li>Start order: over all games the program starting first won 157283,
+the second one won 158248, and 314469 games were draws. In DOSBox these
+were 157527, 158283 and 314190.</li>
+</ul>
+<h2 id="speed">Speed</h2>
+<p>The whole tournament took 132 seconds of wall clock time on 16
+threads (AMD Ryzen 7 9800X3D 8-Core Processor, 16 logical CPUs, rustc
+1.90.0 (1159e78c4 2025-09-14)).</p>
+<p>The DOSBox tournament took less than 4 hours with 8 DOSBox instances
+in parallel. Summed over the pairs, DOSBox needed 29.6 hours and the
+Rust engine 35.0 minutes, 51 times less. The pair times of both are wall
+clock times with other pairs running in parallel, so this is a rough
+comparison.</p>
+<h2 id="comparison-with-the-dosbox-tournament">Comparison with the
+DOSBox tournament</h2>
+<p>The two tournaments used different random seeds, so single results
+differ, but if the engines behave the same, the differences are only
+random. For every pair the test below compares the mean score per game
+(win 1, draw 1/2) of the 1000 games in each tournament, in standard
+errors (z).</p>
+<p>Between DOSBox and this tournament 40 of the 630 pairs are above |z|
+= 2 and 6 above 3, the largest |z| is 3.48. For independent games about
+29 and 1.7 would be expected. The games are not quite independent
+though: MARS places the programs with the next outputs of a shift
+register, so the placements of consecutive wars are related, and the
+results of 500 wars in one run vary more than the test assumes. To see
+how much two tournaments differ by chance alone, the Rust engine played
+the tournament once more with another master seed (<a
+href="baseline.csv"><code>baseline.csv</code></a>). Between the two Rust
+tournaments 38 pairs are above 2 and 2 above 3, the largest |z| is 3.45,
+about the same as between DOSBox and Rust.</p>
+<p>The pairs with the largest difference:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Pair</th>
+<th style="text-align: right;">DOSBox score %</th>
+<th style="text-align: right;">Rust score %</th>
+<th style="text-align: right;">z</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">KILLER2 - TORPE</td>
+<td style="text-align: right;">97.2</td>
+<td style="text-align: right;">95.0</td>
+<td style="text-align: right;">3.48</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">KILLER - TORPE</td>
+<td style="text-align: right;">90.6</td>
+<td style="text-align: right;">87.2</td>
+<td style="text-align: right;">3.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">KILLER01 - PRB008</td>
+<td style="text-align: right;">37.6</td>
+<td style="text-align: right;">31.0</td>
+<td style="text-align: right;">3.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">MICE - TORPE</td>
+<td style="text-align: right;">95.8</td>
+<td style="text-align: right;">97.8</td>
+<td style="text-align: right;">3.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">ARTUR-3 - TORPE</td>
+<td style="text-align: right;">84.8</td>
+<td style="text-align: right;">81.3</td>
+<td style="text-align: right;">3.06</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">KILLER01 - PRB004</td>
+<td style="text-align: right;">3.5</td>
+<td style="text-align: right;">1.4</td>
+<td style="text-align: right;">3.06</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">MICE2 - PRB002</td>
+<td style="text-align: right;">60.0</td>
+<td style="text-align: right;">62.8</td>
+<td style="text-align: right;">2.98</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">IMP - KILLER2</td>
+<td style="text-align: right;">44.2</td>
+<td style="text-align: right;">41.9</td>
+<td style="text-align: right;">2.87</td>
+</tr>
+</tbody>
+</table>
+<p>Ranking of both tournaments side by side:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Rank</th>
+<th style="text-align: left;">Program</th>
+<th style="text-align: right;">Elo</th>
+<th style="text-align: right;">DOSBox rank</th>
+<th style="text-align: right;">DOSBox Elo</th>
+<th style="text-align: right;">Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">PRB004</td>
+<td style="text-align: right;">1677</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1673</td>
+<td style="text-align: right;">+4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">PRB011</td>
+<td style="text-align: right;">1662</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1662</td>
+<td style="text-align: right;">-0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">MICE</td>
+<td style="text-align: right;">1654</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1651</td>
+<td style="text-align: right;">+3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">PRB005</td>
+<td style="text-align: right;">1648</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1649</td>
+<td style="text-align: right;">-2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">MICE2</td>
+<td style="text-align: right;">1634</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1635</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">PRB007</td>
+<td style="text-align: right;">1629</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1628</td>
+<td style="text-align: right;">+0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">KILLER2</td>
+<td style="text-align: right;">1625</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1625</td>
+<td style="text-align: right;">+0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">HARVKILL</td>
+<td style="text-align: right;">1615</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1614</td>
+<td style="text-align: right;">+0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">PRB003</td>
+<td style="text-align: right;">1593</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1594</td>
+<td style="text-align: right;">-0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">Y</td>
+<td style="text-align: right;">1587</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1586</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">KILLER</td>
+<td style="text-align: right;">1579</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">1578</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">PRB006</td>
+<td style="text-align: right;">1578</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">1577</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">ARTUR-2</td>
+<td style="text-align: right;">1569</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1568</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">ARTUR-3</td>
+<td style="text-align: right;">1553</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">1550</td>
+<td style="text-align: right;">+3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">PRB009</td>
+<td style="text-align: right;">1544</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">1546</td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">PRB001</td>
+<td style="text-align: right;">1532</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">1533</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">KILLER01</td>
+<td style="text-align: right;">1497</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">1500</td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">GABOR1</td>
+<td style="text-align: right;">1496</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">1497</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">KILLER03</td>
+<td style="text-align: right;">1496</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1492</td>
+<td style="text-align: right;">+4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">PRB010</td>
+<td style="text-align: right;">1490</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1492</td>
+<td style="text-align: right;">-2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">CHANG2</td>
+<td style="text-align: right;">1478</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">1477</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">CHANG</td>
+<td style="text-align: right;">1476</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">1475</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">VIKTOR01</td>
+<td style="text-align: right;">1474</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">1475</td>
+<td style="text-align: right;">-0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">24</td>
+<td style="text-align: left;">KILLER02</td>
+<td style="text-align: right;">1473</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">1471</td>
+<td style="text-align: right;">+2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25</td>
+<td style="text-align: left;">PRB002</td>
+<td style="text-align: right;">1454</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">1457</td>
+<td style="text-align: right;">-4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">26</td>
+<td style="text-align: left;">VIKTOR05</td>
+<td style="text-align: right;">1447</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">1447</td>
+<td style="text-align: right;">+0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">IMP</td>
+<td style="text-align: right;">1423</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">1426</td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">PRB008</td>
+<td style="text-align: right;">1407</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">1404</td>
+<td style="text-align: right;">+3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">VIKTOR02</td>
+<td style="text-align: right;">1406</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">1406</td>
+<td style="text-align: right;">-0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">TORPE</td>
+<td style="text-align: right;">1405</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">1402</td>
+<td style="text-align: right;">+3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">31</td>
+<td style="text-align: left;">VIKTOR03</td>
+<td style="text-align: right;">1402</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">1403</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">ARTUR-1</td>
+<td style="text-align: right;">1398</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1400</td>
+<td style="text-align: right;">-2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">33</td>
+<td style="text-align: left;">VIKTOR04</td>
+<td style="text-align: right;">1302</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">1306</td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">34</td>
+<td style="text-align: left;">CREEPER</td>
+<td style="text-align: right;">1290</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">1292</td>
+<td style="text-align: right;">-2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">35</td>
+<td style="text-align: left;">ROHAMO</td>
+<td style="text-align: right;">1254</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">1254</td>
+<td style="text-align: right;">+0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">36</td>
+<td style="text-align: left;">ANTIIMP</td>
+<td style="text-align: right;">1254</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">1253</td>
+<td style="text-align: right;">+1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scoring">Scoring</h2>
+<p>Elo is a maximum likelihood Bradley-Terry rating on the Elo scale
+(400 points means 10:1 odds), where a draw counts as half a win. It is
+fitted to all games at once, so unlike a running Elo it does not depend
+on the order of the games. The average rating is 1500. Each pair gets
+one extra virtual draw, which keeps the rating of a program that never
+scores finite.</p>
+<p>Points use the usual CoreWar tournament scoring: 3 for a win and 1
+for a draw, averaged per 100 games (at most 300). Score % is wins plus
+half the draws as a percentage of the games played.</p>
+<h2 id="ranking">Ranking</h2>
+<p>The ranking is by Elo.</p>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 15%" />
+<col style="width: 8%" />
+<col style="width: 11%" />
+<col style="width: 13%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 11%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Rank</th>
+<th style="text-align: left;">Program</th>
+<th style="text-align: right;">Elo</th>
+<th style="text-align: right;">Points</th>
+<th style="text-align: right;">Score %</th>
+<th style="text-align: right;">Wins</th>
+<th style="text-align: right;">Draws</th>
+<th style="text-align: right;">Losses</th>
+<th style="text-align: right;">Games</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">PRB004</td>
+<td style="text-align: right;">1677</td>
+<td style="text-align: right;">195.6</td>
+<td style="text-align: right;">72.3</td>
+<td style="text-align: right;">17863</td>
+<td style="text-align: right;">14877</td>
+<td style="text-align: right;">2260</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">PRB011</td>
+<td style="text-align: right;">1662</td>
+<td style="text-align: right;">189.1</td>
+<td style="text-align: right;">70.5</td>
+<td style="text-align: right;">16810</td>
+<td style="text-align: right;">15750</td>
+<td style="text-align: right;">2440</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">MICE</td>
+<td style="text-align: right;">1654</td>
+<td style="text-align: right;">183.5</td>
+<td style="text-align: right;">69.7</td>
+<td style="text-align: right;">15431</td>
+<td style="text-align: right;">17916</td>
+<td style="text-align: right;">1653</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">PRB005</td>
+<td style="text-align: right;">1648</td>
+<td style="text-align: right;">185.3</td>
+<td style="text-align: right;">68.9</td>
+<td style="text-align: right;">16612</td>
+<td style="text-align: right;">15005</td>
+<td style="text-align: right;">3383</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">MICE2</td>
+<td style="text-align: right;">1634</td>
+<td style="text-align: right;">172.8</td>
+<td style="text-align: right;">67.2</td>
+<td style="text-align: right;">13442</td>
+<td style="text-align: right;">20171</td>
+<td style="text-align: right;">1387</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">PRB007</td>
+<td style="text-align: right;">1629</td>
+<td style="text-align: right;">173.5</td>
+<td style="text-align: right;">66.6</td>
+<td style="text-align: right;">14128</td>
+<td style="text-align: right;">18352</td>
+<td style="text-align: right;">2520</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">KILLER2</td>
+<td style="text-align: right;">1625</td>
+<td style="text-align: right;">169.3</td>
+<td style="text-align: right;">66.2</td>
+<td style="text-align: right;">12956</td>
+<td style="text-align: right;">20403</td>
+<td style="text-align: right;">1641</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">HARVKILL</td>
+<td style="text-align: right;">1615</td>
+<td style="text-align: right;">164.4</td>
+<td style="text-align: right;">64.8</td>
+<td style="text-align: right;">12135</td>
+<td style="text-align: right;">21122</td>
+<td style="text-align: right;">1743</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">PRB003</td>
+<td style="text-align: right;">1593</td>
+<td style="text-align: right;">175.2</td>
+<td style="text-align: right;">62.2</td>
+<td style="text-align: right;">17816</td>
+<td style="text-align: right;">7883</td>
+<td style="text-align: right;">9301</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">Y</td>
+<td style="text-align: right;">1587</td>
+<td style="text-align: right;">176.4</td>
+<td style="text-align: right;">61.4</td>
+<td style="text-align: right;">18763</td>
+<td style="text-align: right;">5442</td>
+<td style="text-align: right;">10795</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">KILLER</td>
+<td style="text-align: right;">1579</td>
+<td style="text-align: right;">144.0</td>
+<td style="text-align: right;">60.3</td>
+<td style="text-align: right;">8182</td>
+<td style="text-align: right;">25845</td>
+<td style="text-align: right;">973</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">PRB006</td>
+<td style="text-align: right;">1578</td>
+<td style="text-align: right;">144.0</td>
+<td style="text-align: right;">60.1</td>
+<td style="text-align: right;">8316</td>
+<td style="text-align: right;">25457</td>
+<td style="text-align: right;">1227</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">ARTUR-2</td>
+<td style="text-align: right;">1569</td>
+<td style="text-align: right;">149.8</td>
+<td style="text-align: right;">59.0</td>
+<td style="text-align: right;">11110</td>
+<td style="text-align: right;">19083</td>
+<td style="text-align: right;">4807</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">ARTUR-3</td>
+<td style="text-align: right;">1553</td>
+<td style="text-align: right;">144.0</td>
+<td style="text-align: right;">56.9</td>
+<td style="text-align: right;">10619</td>
+<td style="text-align: right;">18559</td>
+<td style="text-align: right;">5822</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">PRB009</td>
+<td style="text-align: right;">1544</td>
+<td style="text-align: right;">140.3</td>
+<td style="text-align: right;">55.7</td>
+<td style="text-align: right;">10134</td>
+<td style="text-align: right;">18701</td>
+<td style="text-align: right;">6165</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">PRB001</td>
+<td style="text-align: right;">1532</td>
+<td style="text-align: right;">129.4</td>
+<td style="text-align: right;">54.1</td>
+<td style="text-align: right;">7444</td>
+<td style="text-align: right;">22959</td>
+<td style="text-align: right;">4597</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">KILLER01</td>
+<td style="text-align: right;">1497</td>
+<td style="text-align: right;">139.2</td>
+<td style="text-align: right;">49.4</td>
+<td style="text-align: right;">14135</td>
+<td style="text-align: right;">6303</td>
+<td style="text-align: right;">14562</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">GABOR1</td>
+<td style="text-align: right;">1496</td>
+<td style="text-align: right;">118.7</td>
+<td style="text-align: right;">49.3</td>
+<td style="text-align: right;">7061</td>
+<td style="text-align: right;">20370</td>
+<td style="text-align: right;">7569</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">KILLER03</td>
+<td style="text-align: right;">1496</td>
+<td style="text-align: right;">132.7</td>
+<td style="text-align: right;">49.2</td>
+<td style="text-align: right;">12018</td>
+<td style="text-align: right;">10407</td>
+<td style="text-align: right;">12575</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">PRB010</td>
+<td style="text-align: right;">1490</td>
+<td style="text-align: right;">134.9</td>
+<td style="text-align: right;">48.4</td>
+<td style="text-align: right;">13337</td>
+<td style="text-align: right;">7191</td>
+<td style="text-align: right;">14472</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">CHANG2</td>
+<td style="text-align: right;">1478</td>
+<td style="text-align: right;">96.9</td>
+<td style="text-align: right;">46.8</td>
+<td style="text-align: right;">1129</td>
+<td style="text-align: right;">30532</td>
+<td style="text-align: right;">3339</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">CHANG</td>
+<td style="text-align: right;">1476</td>
+<td style="text-align: right;">97.6</td>
+<td style="text-align: right;">46.6</td>
+<td style="text-align: right;">1536</td>
+<td style="text-align: right;">29551</td>
+<td style="text-align: right;">3913</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">VIKTOR01</td>
+<td style="text-align: right;">1474</td>
+<td style="text-align: right;">94.4</td>
+<td style="text-align: right;">46.3</td>
+<td style="text-align: right;">633</td>
+<td style="text-align: right;">31155</td>
+<td style="text-align: right;">3212</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">24</td>
+<td style="text-align: left;">KILLER02</td>
+<td style="text-align: right;">1473</td>
+<td style="text-align: right;">128.5</td>
+<td style="text-align: right;">46.2</td>
+<td style="text-align: right;">12650</td>
+<td style="text-align: right;">7032</td>
+<td style="text-align: right;">15318</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25</td>
+<td style="text-align: left;">PRB002</td>
+<td style="text-align: right;">1454</td>
+<td style="text-align: right;">94.5</td>
+<td style="text-align: right;">43.6</td>
+<td style="text-align: right;">2565</td>
+<td style="text-align: right;">25376</td>
+<td style="text-align: right;">7059</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">26</td>
+<td style="text-align: left;">VIKTOR05</td>
+<td style="text-align: right;">1447</td>
+<td style="text-align: right;">90.3</td>
+<td style="text-align: right;">42.8</td>
+<td style="text-align: right;">1672</td>
+<td style="text-align: right;">26586</td>
+<td style="text-align: right;">6742</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">IMP</td>
+<td style="text-align: right;">1423</td>
+<td style="text-align: right;">79.6</td>
+<td style="text-align: right;">39.6</td>
+<td style="text-align: right;">161</td>
+<td style="text-align: right;">27377</td>
+<td style="text-align: right;">7462</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">PRB008</td>
+<td style="text-align: right;">1407</td>
+<td style="text-align: right;">94.8</td>
+<td style="text-align: right;">37.5</td>
+<td style="text-align: right;">6913</td>
+<td style="text-align: right;">12430</td>
+<td style="text-align: right;">15657</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">VIKTOR02</td>
+<td style="text-align: right;">1406</td>
+<td style="text-align: right;">87.5</td>
+<td style="text-align: right;">37.5</td>
+<td style="text-align: right;">4381</td>
+<td style="text-align: right;">17468</td>
+<td style="text-align: right;">13151</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">TORPE</td>
+<td style="text-align: right;">1405</td>
+<td style="text-align: right;">89.6</td>
+<td style="text-align: right;">37.3</td>
+<td style="text-align: right;">5267</td>
+<td style="text-align: right;">15565</td>
+<td style="text-align: right;">14168</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">31</td>
+<td style="text-align: left;">VIKTOR03</td>
+<td style="text-align: right;">1402</td>
+<td style="text-align: right;">92.7</td>
+<td style="text-align: right;">36.9</td>
+<td style="text-align: right;">6610</td>
+<td style="text-align: right;">12608</td>
+<td style="text-align: right;">15782</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">ARTUR-1</td>
+<td style="text-align: right;">1398</td>
+<td style="text-align: right;">82.3</td>
+<td style="text-align: right;">36.4</td>
+<td style="text-align: right;">3346</td>
+<td style="text-align: right;">18781</td>
+<td style="text-align: right;">12873</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">33</td>
+<td style="text-align: left;">VIKTOR04</td>
+<td style="text-align: right;">1302</td>
+<td style="text-align: right;">59.8</td>
+<td style="text-align: right;">25.3</td>
+<td style="text-align: right;">3200</td>
+<td style="text-align: right;">11337</td>
+<td style="text-align: right;">20463</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">34</td>
+<td style="text-align: left;">CREEPER</td>
+<td style="text-align: right;">1290</td>
+<td style="text-align: right;">63.7</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">5488</td>
+<td style="text-align: right;">5846</td>
+<td style="text-align: right;">23666</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">35</td>
+<td style="text-align: left;">ROHAMO</td>
+<td style="text-align: right;">1254</td>
+<td style="text-align: right;">42.4</td>
+<td style="text-align: right;">20.6</td>
+<td style="text-align: right;">415</td>
+<td style="text-align: right;">13607</td>
+<td style="text-align: right;">20978</td>
+<td style="text-align: right;">35000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">36</td>
+<td style="text-align: left;">ANTIIMP</td>
+<td style="text-align: right;">1254</td>
+<td style="text-align: right;">44.7</td>
+<td style="text-align: right;">20.6</td>
+<td style="text-align: right;">1253</td>
+<td style="text-align: right;">11891</td>
+<td style="text-align: right;">21856</td>
+<td style="text-align: right;">35000</td>
+</tr>
+</tbody>
+</table>
+<h2 id="score-matrix">Score matrix</h2>
+<p>The score of the row program against the column program in percent
+(wins plus half the draws). The column numbers are the ranks above.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 5%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Program</th>
+<th style="text-align: right;">1</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">3</th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">5</th>
+<th style="text-align: right;">6</th>
+<th style="text-align: right;">7</th>
+<th style="text-align: right;">8</th>
+<th style="text-align: right;">9</th>
+<th style="text-align: right;">10</th>
+<th style="text-align: right;">11</th>
+<th style="text-align: right;">12</th>
+<th style="text-align: right;">13</th>
+<th style="text-align: right;">14</th>
+<th style="text-align: right;">15</th>
+<th style="text-align: right;">16</th>
+<th style="text-align: right;">17</th>
+<th style="text-align: right;">18</th>
+<th style="text-align: right;">19</th>
+<th style="text-align: right;">20</th>
+<th style="text-align: right;">21</th>
+<th style="text-align: right;">22</th>
+<th style="text-align: right;">23</th>
+<th style="text-align: right;">24</th>
+<th style="text-align: right;">25</th>
+<th style="text-align: right;">26</th>
+<th style="text-align: right;">27</th>
+<th style="text-align: right;">28</th>
+<th style="text-align: right;">29</th>
+<th style="text-align: right;">30</th>
+<th style="text-align: right;">31</th>
+<th style="text-align: right;">32</th>
+<th style="text-align: right;">33</th>
+<th style="text-align: right;">34</th>
+<th style="text-align: right;">35</th>
+<th style="text-align: right;">36</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">PRB004</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">99</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">PRB011</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">95</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">MICE</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">96</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">PRB005</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">98</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">MICE2</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">93</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">PRB007</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">92</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">KILLER2</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">93</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">HARVKILL</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">92</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">PRB003</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">99</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">Y</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">KILLER</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">84</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">PRB006</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">87</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">ARTUR-2</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">96</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">ARTUR-3</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">88</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">PRB009</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">58</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">PRB001</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">KILLER01</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">GABOR1</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">KILLER03</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">PRB010</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">CHANG2</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">CHANG</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">53</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">VIKTOR01</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">48</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">24</td>
+<td style="text-align: left;">KILLER02</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25</td>
+<td style="text-align: left;">PRB002</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">69</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">26</td>
+<td style="text-align: left;">VIKTOR05</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">60</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">IMP</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">26</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">PRB008</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">VIKTOR02</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">76</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">TORPE</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">60</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">31</td>
+<td style="text-align: left;">VIKTOR03</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">67</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">ARTUR-1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">57</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">33</td>
+<td style="text-align: left;">VIKTOR04</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">89</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">34</td>
+<td style="text-align: left;">CREEPER</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">35</td>
+<td style="text-align: left;">ROHAMO</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">50</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">36</td>
+<td style="text-align: left;">ANTIIMP</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">-</td>
+</tr>
+</tbody>
+</table>
+<h2 id="win-matrix">Win matrix</h2>
+<p>The number of games the row program won against the column program
+out of 1000. The losses are in the mirrored cell, the draws are the
+rest.</p>
+<table>
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 5%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">#</th>
+<th style="text-align: left;">Program</th>
+<th style="text-align: right;">1</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">3</th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">5</th>
+<th style="text-align: right;">6</th>
+<th style="text-align: right;">7</th>
+<th style="text-align: right;">8</th>
+<th style="text-align: right;">9</th>
+<th style="text-align: right;">10</th>
+<th style="text-align: right;">11</th>
+<th style="text-align: right;">12</th>
+<th style="text-align: right;">13</th>
+<th style="text-align: right;">14</th>
+<th style="text-align: right;">15</th>
+<th style="text-align: right;">16</th>
+<th style="text-align: right;">17</th>
+<th style="text-align: right;">18</th>
+<th style="text-align: right;">19</th>
+<th style="text-align: right;">20</th>
+<th style="text-align: right;">21</th>
+<th style="text-align: right;">22</th>
+<th style="text-align: right;">23</th>
+<th style="text-align: right;">24</th>
+<th style="text-align: right;">25</th>
+<th style="text-align: right;">26</th>
+<th style="text-align: right;">27</th>
+<th style="text-align: right;">28</th>
+<th style="text-align: right;">29</th>
+<th style="text-align: right;">30</th>
+<th style="text-align: right;">31</th>
+<th style="text-align: right;">32</th>
+<th style="text-align: right;">33</th>
+<th style="text-align: right;">34</th>
+<th style="text-align: right;">35</th>
+<th style="text-align: right;">36</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">PRB004</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">336</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: right;">908</td>
+<td style="text-align: right;">830</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">514</td>
+<td style="text-align: right;">761</td>
+<td style="text-align: right;">579</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">984</td>
+<td style="text-align: right;">274</td>
+<td style="text-align: right;">753</td>
+<td style="text-align: right;">910</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">976</td>
+<td style="text-align: right;">246</td>
+<td style="text-align: right;">247</td>
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">908</td>
+<td style="text-align: right;">971</td>
+<td style="text-align: right;">657</td>
+<td style="text-align: right;">972</td>
+<td style="text-align: right;">912</td>
+<td style="text-align: right;">983</td>
+<td style="text-align: right;">986</td>
+<td style="text-align: right;">985</td>
+<td style="text-align: right;">984</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">PRB011</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">261</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">885</td>
+<td style="text-align: right;">695</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">366</td>
+<td style="text-align: right;">594</td>
+<td style="text-align: right;">570</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">958</td>
+<td style="text-align: right;">264</td>
+<td style="text-align: right;">702</td>
+<td style="text-align: right;">898</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">940</td>
+<td style="text-align: right;">203</td>
+<td style="text-align: right;">181</td>
+<td style="text-align: right;">153</td>
+<td style="text-align: right;">902</td>
+<td style="text-align: right;">762</td>
+<td style="text-align: right;">939</td>
+<td style="text-align: right;">891</td>
+<td style="text-align: right;">649</td>
+<td style="text-align: right;">951</td>
+<td style="text-align: right;">976</td>
+<td style="text-align: right;">922</td>
+<td style="text-align: right;">924</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">MICE</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: right;">147</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">215</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">749</td>
+<td style="text-align: right;">540</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">213</td>
+<td style="text-align: right;">371</td>
+<td style="text-align: right;">508</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">891</td>
+<td style="text-align: right;">318</td>
+<td style="text-align: right;">550</td>
+<td style="text-align: right;">717</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">940</td>
+<td style="text-align: right;">247</td>
+<td style="text-align: right;">230</td>
+<td style="text-align: right;">174</td>
+<td style="text-align: right;">806</td>
+<td style="text-align: right;">674</td>
+<td style="text-align: right;">960</td>
+<td style="text-align: right;">839</td>
+<td style="text-align: right;">676</td>
+<td style="text-align: right;">980</td>
+<td style="text-align: right;">980</td>
+<td style="text-align: right;">920</td>
+<td style="text-align: right;">926</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">PRB005</td>
+<td style="text-align: right;">407</td>
+<td style="text-align: right;">354</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">344</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">178</td>
+<td style="text-align: right;">859</td>
+<td style="text-align: right;">786</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">340</td>
+<td style="text-align: right;">559</td>
+<td style="text-align: right;">649</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">941</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">705</td>
+<td style="text-align: right;">683</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">907</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">822</td>
+<td style="text-align: right;">826</td>
+<td style="text-align: right;">743</td>
+<td style="text-align: right;">876</td>
+<td style="text-align: right;">826</td>
+<td style="text-align: right;">963</td>
+<td style="text-align: right;">977</td>
+<td style="text-align: right;">978</td>
+<td style="text-align: right;">977</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">MICE2</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">104</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">622</td>
+<td style="text-align: right;">648</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">232</td>
+<td style="text-align: right;">266</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">787</td>
+<td style="text-align: right;">278</td>
+<td style="text-align: right;">649</td>
+<td style="text-align: right;">522</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">873</td>
+<td style="text-align: right;">259</td>
+<td style="text-align: right;">229</td>
+<td style="text-align: right;">249</td>
+<td style="text-align: right;">665</td>
+<td style="text-align: right;">385</td>
+<td style="text-align: right;">924</td>
+<td style="text-align: right;">642</td>
+<td style="text-align: right;">420</td>
+<td style="text-align: right;">961</td>
+<td style="text-align: right;">962</td>
+<td style="text-align: right;">881</td>
+<td style="text-align: right;">863</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">PRB007</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">201</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">601</td>
+<td style="text-align: right;">498</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">144</td>
+<td style="text-align: right;">220</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">267</td>
+<td style="text-align: right;">863</td>
+<td style="text-align: right;">451</td>
+<td style="text-align: right;">736</td>
+<td style="text-align: right;">682</td>
+<td style="text-align: right;">106</td>
+<td style="text-align: right;">248</td>
+<td style="text-align: right;">106</td>
+<td style="text-align: right;">762</td>
+<td style="text-align: right;">456</td>
+<td style="text-align: right;">416</td>
+<td style="text-align: right;">445</td>
+<td style="text-align: right;">510</td>
+<td style="text-align: right;">409</td>
+<td style="text-align: right;">600</td>
+<td style="text-align: right;">642</td>
+<td style="text-align: right;">338</td>
+<td style="text-align: right;">821</td>
+<td style="text-align: right;">905</td>
+<td style="text-align: right;">837</td>
+<td style="text-align: right;">862</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">KILLER2</td>
+<td style="text-align: right;">103</td>
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">162</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">129</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">686</td>
+<td style="text-align: right;">444</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">193</td>
+<td style="text-align: right;">288</td>
+<td style="text-align: right;">279</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">814</td>
+<td style="text-align: right;">214</td>
+<td style="text-align: right;">637</td>
+<td style="text-align: right;">466</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">778</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">167</td>
+<td style="text-align: right;">642</td>
+<td style="text-align: right;">420</td>
+<td style="text-align: right;">910</td>
+<td style="text-align: right;">611</td>
+<td style="text-align: right;">446</td>
+<td style="text-align: right;">929</td>
+<td style="text-align: right;">944</td>
+<td style="text-align: right;">852</td>
+<td style="text-align: right;">859</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">HARVKILL</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">228</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">549</td>
+<td style="text-align: right;">527</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">272</td>
+<td style="text-align: right;">257</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">789</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">603</td>
+<td style="text-align: right;">792</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">654</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">689</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">900</td>
+<td style="text-align: right;">558</td>
+<td style="text-align: right;">295</td>
+<td style="text-align: right;">871</td>
+<td style="text-align: right;">895</td>
+<td style="text-align: right;">836</td>
+<td style="text-align: right;">863</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">PRB003</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">663</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">186</td>
+<td style="text-align: right;">345</td>
+<td style="text-align: right;">557</td>
+<td style="text-align: right;">329</td>
+<td style="text-align: right;">800</td>
+<td style="text-align: right;">719</td>
+<td style="text-align: right;">728</td>
+<td style="text-align: right;">833</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">420</td>
+<td style="text-align: right;">178</td>
+<td style="text-align: right;">845</td>
+<td style="text-align: right;">693</td>
+<td style="text-align: right;">672</td>
+<td style="text-align: right;">636</td>
+<td style="text-align: right;">841</td>
+<td style="text-align: right;">918</td>
+<td style="text-align: right;">934</td>
+<td style="text-align: right;">964</td>
+<td style="text-align: right;">976</td>
+<td style="text-align: right;">965</td>
+<td style="text-align: right;">978</td>
+<td style="text-align: right;">995</td>
+<td style="text-align: right;">993</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">Y</td>
+<td style="text-align: right;">146</td>
+<td style="text-align: right;">248</td>
+<td style="text-align: right;">400</td>
+<td style="text-align: right;">183</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">172</td>
+<td style="text-align: right;">439</td>
+<td style="text-align: right;">299</td>
+<td style="text-align: right;">336</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">850</td>
+<td style="text-align: right;">802</td>
+<td style="text-align: right;">257</td>
+<td style="text-align: right;">806</td>
+<td style="text-align: right;">596</td>
+<td style="text-align: right;">499</td>
+<td style="text-align: right;">383</td>
+<td style="text-align: right;">670</td>
+<td style="text-align: right;">948</td>
+<td style="text-align: right;">764</td>
+<td style="text-align: right;">926</td>
+<td style="text-align: right;">573</td>
+<td style="text-align: right;">412</td>
+<td style="text-align: right;">393</td>
+<td style="text-align: right;">441</td>
+<td style="text-align: right;">558</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">204</td>
+<td style="text-align: right;">946</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">743</td>
+<td style="text-align: right;">472</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">999</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">KILLER</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">220</td>
+<td style="text-align: right;">474</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">537</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">538</td>
+<td style="text-align: right;">408</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">383</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">333</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">778</td>
+<td style="text-align: right;">253</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">723</td>
+<td style="text-align: right;">892</td>
+<td style="text-align: right;">691</td>
+<td style="text-align: right;">683</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">PRB006</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">254</td>
+<td style="text-align: right;">515</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">182</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">552</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">491</td>
+<td style="text-align: right;">371</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">439</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">306</td>
+<td style="text-align: right;">103</td>
+<td style="text-align: right;">843</td>
+<td style="text-align: right;">261</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">725</td>
+<td style="text-align: right;">841</td>
+<td style="text-align: right;">711</td>
+<td style="text-align: right;">745</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">ARTUR-2</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">139</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">570</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">129</td>
+<td style="text-align: right;">113</td>
+<td style="text-align: right;">640</td>
+<td style="text-align: right;">242</td>
+<td style="text-align: right;">390</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">617</td>
+<td style="text-align: right;">210</td>
+<td style="text-align: right;">208</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">733</td>
+<td style="text-align: right;">478</td>
+<td style="text-align: right;">527</td>
+<td style="text-align: right;">583</td>
+<td style="text-align: right;">414</td>
+<td style="text-align: right;">904</td>
+<td style="text-align: right;">955</td>
+<td style="text-align: right;">873</td>
+<td style="text-align: right;">915</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">ARTUR-3</td>
+<td style="text-align: right;">112</td>
+<td style="text-align: right;">126</td>
+<td style="text-align: right;">54</td>
+<td style="text-align: right;">195</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">506</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">104</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">846</td>
+<td style="text-align: right;">396</td>
+<td style="text-align: right;">393</td>
+<td style="text-align: right;">188</td>
+<td style="text-align: right;">138</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">755</td>
+<td style="text-align: right;">317</td>
+<td style="text-align: right;">318</td>
+<td style="text-align: right;">292</td>
+<td style="text-align: right;">505</td>
+<td style="text-align: right;">326</td>
+<td style="text-align: right;">642</td>
+<td style="text-align: right;">362</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">899</td>
+<td style="text-align: right;">961</td>
+<td style="text-align: right;">530</td>
+<td style="text-align: right;">758</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">PRB009</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">104</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">354</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">673</td>
+<td style="text-align: right;">637</td>
+<td style="text-align: right;">722</td>
+<td style="text-align: right;">557</td>
+<td style="text-align: right;">640</td>
+<td style="text-align: right;">255</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">168</td>
+<td style="text-align: right;">632</td>
+<td style="text-align: right;">485</td>
+<td style="text-align: right;">372</td>
+<td style="text-align: right;">487</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">463</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">693</td>
+<td style="text-align: right;">842</td>
+<td style="text-align: right;">177</td>
+<td style="text-align: right;">163</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">PRB001</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">112</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">114</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">190</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">435</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">104</td>
+<td style="text-align: right;">374</td>
+<td style="text-align: right;">670</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: right;">672</td>
+<td style="text-align: right;">879</td>
+<td style="text-align: right;">398</td>
+<td style="text-align: right;">759</td>
+<td style="text-align: right;">996</td>
+<td style="text-align: right;">994</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">KILLER01</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">403</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">282</td>
+<td style="text-align: right;">119</td>
+<td style="text-align: right;">335</td>
+<td style="text-align: right;">610</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: right;">495</td>
+<td style="text-align: right;">993</td>
+<td style="text-align: right;">350</td>
+<td style="text-align: right;">662</td>
+<td style="text-align: right;">171</td>
+<td style="text-align: right;">706</td>
+<td style="text-align: right;">388</td>
+<td style="text-align: right;">396</td>
+<td style="text-align: right;">301</td>
+<td style="text-align: right;">310</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">239</td>
+<td style="text-align: right;">959</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">932</td>
+<td style="text-align: right;">816</td>
+<td style="text-align: right;">991</td>
+<td style="text-align: right;">1000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">GABOR1</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">499</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">406</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">377</td>
+<td style="text-align: right;">723</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">351</td>
+<td style="text-align: right;">289</td>
+<td style="text-align: right;">217</td>
+<td style="text-align: right;">388</td>
+<td style="text-align: right;">553</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">429</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">505</td>
+<td style="text-align: right;">883</td>
+<td style="text-align: right;">522</td>
+<td style="text-align: right;">500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">KILLER03</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">616</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">347</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">505</td>
+<td style="text-align: right;">387</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">809</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">454</td>
+<td style="text-align: right;">366</td>
+<td style="text-align: right;">370</td>
+<td style="text-align: right;">271</td>
+<td style="text-align: right;">441</td>
+<td style="text-align: right;">957</td>
+<td style="text-align: right;">252</td>
+<td style="text-align: right;">926</td>
+<td style="text-align: right;">996</td>
+<td style="text-align: right;">882</td>
+<td style="text-align: right;">853</td>
+<td style="text-align: right;">998</td>
+<td style="text-align: right;">1000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">PRB010</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">206</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">282</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">279</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">330</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">290</td>
+<td style="text-align: right;">707</td>
+<td style="text-align: right;">403</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">771</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">156</td>
+<td style="text-align: right;">191</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">907</td>
+<td style="text-align: right;">860</td>
+<td style="text-align: right;">563</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">130</td>
+<td style="text-align: right;">236</td>
+<td style="text-align: right;">251</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">899</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">616</td>
+<td style="text-align: right;">334</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">999</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">CHANG2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">441</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">CHANG</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">407</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">646</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">69</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">VIKTOR01</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">123</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">183</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">24</td>
+<td style="text-align: left;">KILLER02</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">149</td>
+<td style="text-align: right;">425</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">233</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">283</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">292</td>
+<td style="text-align: right;">263</td>
+<td style="text-align: right;">546</td>
+<td style="text-align: right;">998</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">372</td>
+<td style="text-align: right;">366</td>
+<td style="text-align: right;">284</td>
+<td style="text-align: right;">409</td>
+<td style="text-align: right;">995</td>
+<td style="text-align: right;">267</td>
+<td style="text-align: right;">960</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">986</td>
+<td style="text-align: right;">967</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">999</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25</td>
+<td style="text-align: left;">PRB002</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">151</td>
+<td style="text-align: right;">281</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">358</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">169</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">502</td>
+<td style="text-align: right;">437</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">26</td>
+<td style="text-align: left;">VIKTOR05</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">210</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">117</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">267</td>
+<td style="text-align: right;">325</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">IMP</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">PRB008</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">114</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">157</td>
+<td style="text-align: right;">254</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">690</td>
+<td style="text-align: right;">325</td>
+<td style="text-align: right;">557</td>
+<td style="text-align: right;">749</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">450</td>
+<td style="text-align: right;">590</td>
+<td style="text-align: right;">315</td>
+<td style="text-align: right;">462</td>
+<td style="text-align: right;">572</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">459</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">409</td>
+<td style="text-align: right;">253</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">VIKTOR02</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">548</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">487</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">630</td>
+<td style="text-align: right;">832</td>
+<td style="text-align: right;">363</td>
+<td style="text-align: right;">518</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">TORPE</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">126</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">760</td>
+<td style="text-align: right;">114</td>
+<td style="text-align: right;">748</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">732</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">192</td>
+<td style="text-align: right;">197</td>
+<td style="text-align: right;">311</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">392</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">497</td>
+<td style="text-align: right;">392</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">205</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">31</td>
+<td style="text-align: left;">VIKTOR03</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">553</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">503</td>
+<td style="text-align: right;">470</td>
+<td style="text-align: right;">469</td>
+<td style="text-align: right;">398</td>
+<td style="text-align: right;">244</td>
+<td style="text-align: right;">456</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">265</td>
+<td style="text-align: right;">739</td>
+<td style="text-align: right;">855</td>
+<td style="text-align: right;">370</td>
+<td style="text-align: right;">345</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">ARTUR-1</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">945</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">169</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">370</td>
+<td style="text-align: right;">686</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">147</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">33</td>
+<td style="text-align: left;">VIKTOR04</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">117</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">244</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">337</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">612</td>
+<td style="text-align: right;">649</td>
+<td style="text-align: right;">803</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">34</td>
+<td style="text-align: left;">CREEPER</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">392</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">154</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">126</td>
+<td style="text-align: right;">536</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">353</td>
+<td style="text-align: right;">746</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">381</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">218</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">999</td>
+<td style="text-align: right;">998</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">35</td>
+<td style="text-align: left;">ROHAMO</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">138</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">36</td>
+<td style="text-align: left;">ANTIIMP</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">397</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">135</td>
+<td style="text-align: right;">481</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

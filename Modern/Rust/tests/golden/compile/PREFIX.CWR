@@ -1,0 +1,6 @@
+; mode characters and signs
+START MOV #-1 $-2
+ MOV @+3 <-4
+ DAT #+5
+ CMP #-0 #+0
+ DAT $-7999

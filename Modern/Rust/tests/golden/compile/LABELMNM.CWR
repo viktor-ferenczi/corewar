@@ -1,0 +1,4 @@
+; a mnemonic right after a label and a colon label
+L1: DAT 1
+L2 DAT L1:
+START JMP L2

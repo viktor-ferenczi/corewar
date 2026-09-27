@@ -1,0 +1,8 @@
+; words that look like mnemonics
+MOVE DAT 1
+MO DAT 2
+DATA DAT 3
+DAT;X DAT 4
+START JMP MOVE
+ JMP MO
+ JMP DATA
