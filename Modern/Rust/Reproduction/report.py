@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate results/runs.csv of the Rust engine tournament and write the report as Markdown, HTML
+"""Evaluate results/runs.jsonl of the Rust engine tournament and write the report as Markdown, HTML
 and ODT (via pandoc), with a comparison to the DOSBox tournament in Reproduction."""
 
 import csv
@@ -7,16 +7,17 @@ import importlib.util
 import json
 import math
 import subprocess
+from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results"
-RUNS_CSV = RESULTS / "runs.csv"
+RUNS = RESULTS / "runs.jsonl"
 REPORT = RESULTS / "report"  # .md, .html, .odt
 DOSBOX = HERE.parent.parent.parent / "Reproduction"
 DOSBOX_CSV = DOSBOX / "results" / "runs.csv"
-BASELINE_CSV = RESULTS / "baseline.csv"
+BASELINE = RESULTS / "baseline.jsonl"
 
 # The helpers of the DOSBox report: pair totals, Elo, tables, ODT styles.
 _spec = importlib.util.spec_from_file_location("dosbox_report", DOSBOX / "report.py")
@@ -30,14 +31,37 @@ load_pairs, standings, md_table, matrix = (
 )
 
 
-def totals(path: Path) -> dict:
+def read_runs(path: Path) -> list[dict]:
+    """The runs of runs.jsonl, or of the DOSBox runs.csv, with numbers as numbers."""
+    if path.suffix == ".jsonl":
+        return [json.loads(line) for line in path.read_text().splitlines()]
     with path.open() as f:
-        runs = list(csv.DictReader(f))
-    games = sum(int(r["games"]) for r in runs)
-    first = sum(int(r["first_wins"]) for r in runs)
-    second = sum(int(r["second_wins"]) for r in runs)
-    # Both start orders of a pair ran in one session, both rows carry the time of the session.
-    seconds = sum(float(r["seconds"]) for r in runs) / 2
+        return [{k: v if k in ("first", "second") else float(v) for k, v in r.items()} for r in csv.DictReader(f)]
+
+
+def jsonl_pairs(path: Path) -> dict[tuple[str, str], dict]:
+    """Both start orders summed per pair, keyed (a, b) and (b, a), like load_pairs of the DOSBox report."""
+    pairs = defaultdict(lambda: {"games": 0, "wins": 0, "losses": 0, "draws": 0})
+    for r in read_runs(path):
+        for me, other, won, lost in (
+            (r["first"], r["second"], r["first_wins"], r["second_wins"]),
+            (r["second"], r["first"], r["second_wins"], r["first_wins"]),
+        ):
+            p = pairs[me, other]
+            p["games"] += r["games"]
+            p["wins"] += won
+            p["losses"] += lost
+            p["draws"] += r["draws"]
+    return pairs
+
+
+def totals(path: Path) -> dict:
+    runs = read_runs(path)
+    games = int(sum(r["games"] for r in runs))
+    first = int(sum(r["first_wins"] for r in runs))
+    second = int(sum(r["second_wins"] for r in runs))
+    # In the DOSBox CSV both start orders of a pair carry the time of the DOSBox session they ran in.
+    seconds = sum(r.get("seconds", 0) for r in runs) / 2
     return {
         "runs": runs,
         "games": games,
@@ -104,7 +128,7 @@ would be expected. The games are not quite independent though: MARS places the p
 outputs of a shift register, so the placements of consecutive wars are related, and the results of 500
 wars in one run vary more than the test assumes. To see how much two tournaments differ by chance
 alone, the Rust engine played the tournament once more with another master seed
-([`baseline.csv`](baseline.csv)). Between the two Rust tournaments {base2} pairs are above 2 and
+([`baseline.jsonl`](baseline.jsonl)). Between the two Rust tournaments {base2} pairs are above 2 and
 {base3} above 3, the largest |z| is {base_z[0][0]:.2f}, about the same as between DOSBox and Rust.
 
 The pairs with the largest difference:
@@ -118,17 +142,26 @@ Ranking of both tournaments side by side:
 
 
 def build_markdown() -> str:
-    rust_totals, dosbox_totals = totals(RUNS_CSV), totals(DOSBOX_CSV)
+    rust_totals, dosbox_totals = totals(RUNS), totals(DOSBOX_CSV)
     runs = rust_totals["runs"]
-    pairs = load_pairs(RUNS_CSV)
+    pairs = jsonl_pairs(RUNS)
     dosbox_pairs = load_pairs(DOSBOX_CSV)
     programs = sorted({p for p, _ in pairs})
     per_pair = sorted({v["games"] for v in pairs.values()})
     table = standings(programs, pairs)
     order = [r["program"] for r in table]
-    max_steps = sorted({r["max_steps"] for r in runs})
+    max_steps = sorted({str(r["max_steps"]) for r in runs})
     timing = json.loads((RESULTS / "timing.json").read_text())
-    speedup = dosbox_totals["seconds"] / rust_totals["seconds"]
+    seed = next(iter(timing.values()))["seed"]
+    speed = []
+    if "gpu" in timing:
+        g = timing["gpu"]
+        speed.append(f"- {len(g['devices'])} GPUs ({', '.join(g['devices'])}): {g['seconds']:.0f} seconds")
+    if "cpu" in timing:
+        c = timing["cpu"]
+        speed.append(f"- {c['jobs']} CPU threads ({c['cpu']}): {c['seconds']:.0f} seconds")
+    speed = "\n".join(speed)
+    rustc = next(iter(timing.values()))["rustc"]
 
     ranking = md_table(
         ["Rank", "Program", "Elo", "Points", "Score %", "Wins", "Draws", "Losses", "Games"],
@@ -156,7 +189,7 @@ title: Tournament of the surviving 1993 CoreWar programs on the native engine
 subtitle: A reproduction, not the original competition results
 ---
 
-Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.csv).
+Generated on {date.today().isoformat()} by `report.py` from [`runs.jsonl`](runs.jsonl).
 
 > These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
 > Some programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up
@@ -175,7 +208,7 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.cs
 - {len(programs)} programs, {len(runs) // 2} pairs, {"/".join(map(str, per_pair))} games per pair
   (half of them with each program starting first), {rust_totals['games']} games in total.
 - Random seeds: MARS seeds its generator from the BIOS clock. Here every run gets a tick count derived
-  from the master seed {timing['seed']}, stored in the `seed` column of `runs.csv`, so the tournament can be
+  from the master seed {seed}, stored in the `seed` field of `runs.jsonl`, so the tournament can be
   repeated exactly. Like in DOSBox, both start orders of a pair run one after the other in one
   emulated DOS session, where the second run inherits the memory after the arena from the first.
 - Start order: over all games the program starting first won {rust_totals['first']}, the second one won
@@ -184,17 +217,18 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.cs
 
 ## Speed
 
-The whole tournament took {timing['seconds']:.0f} seconds of wall clock time on {timing['jobs']} threads
-({timing['cpu']}, {timing['logical_cpus']} logical CPUs, {timing['rustc']}).
+Wall clock time of the whole tournament, built with {rustc}:
 
-The DOSBox tournament took less than 4 hours with 8 DOSBox instances in parallel. Summed over the pairs,
-DOSBox needed {d['seconds'] / 3600:.1f} hours and the Rust engine {rust_totals['seconds'] / 60:.1f} minutes,
-{speedup:.0f} times less. The pair times of both are wall clock times with other pairs running in
-parallel, so this is a rough comparison.
+{speed}
+
+The GPUs and the CPU give exactly the same results.
+
+The DOSBox tournament took less than 4 hours with 8 DOSBox instances in parallel, {d['seconds'] / 3600:.1f}
+hours summed over the pairs.
 
 ## Comparison with the DOSBox tournament
 
-{comparison(programs, pairs, dosbox_pairs, load_pairs(BASELINE_CSV), table)}
+{comparison(programs, pairs, dosbox_pairs, jsonl_pairs(BASELINE), table)}
 ## Scoring
 
 Elo is a maximum likelihood Bradley-Terry rating on the Elo scale (400 points means 10:1 odds), where a

@@ -179,7 +179,7 @@ the native engine</h1>
 results</p>
 </header>
 <p>Generated on 2026-09-27 by <code>report.py</code> from <a
-href="runs.csv"><code>runs.csv</code></a>.</p>
+href="runs.jsonl"><code>runs.jsonl</code></a>.</p>
 <blockquote>
 <p>These are <strong>not</strong> the results of the First Hungarian
 Memory War (CoreWar) Championship of 1993. Some programs here were never
@@ -206,23 +206,26 @@ any DAT left in the arena ends as a draw.</li>
 program starting first), 630000 games in total.</li>
 <li>Random seeds: MARS seeds its generator from the BIOS clock. Here
 every run gets a tick count derived from the master seed 1993, stored in
-the <code>seed</code> column of <code>runs.csv</code>, so the tournament
-can be repeated exactly. Like in DOSBox, both start orders of a pair run
-one after the other in one emulated DOS session, where the second run
-inherits the memory after the arena from the first.</li>
+the <code>seed</code> field of <code>runs.jsonl</code>, so the
+tournament can be repeated exactly. Like in DOSBox, both start orders of
+a pair run one after the other in one emulated DOS session, where the
+second run inherits the memory after the arena from the first.</li>
 <li>Start order: over all games the program starting first won 157283,
 the second one won 158248, and 314469 games were draws. In DOSBox these
 were 157527, 158283 and 314190.</li>
 </ul>
 <h2 id="speed">Speed</h2>
-<p>The whole tournament took 132 seconds of wall clock time on 16
-threads (AMD Ryzen 7 9800X3D 8-Core Processor, 16 logical CPUs, rustc
-1.90.0 (1159e78c4 2025-09-14)).</p>
+<p>Wall clock time of the whole tournament, built with rustc 1.90.0
+(1159e78c4 2025-09-14):</p>
+<ul>
+<li>2 GPUs (NVIDIA GeForce RTX 4090, NVIDIA GeForce RTX 4090): 22
+seconds</li>
+<li>16 CPU threads (AMD Ryzen 7 9800X3D 8-Core Processor): 135
+seconds</li>
+</ul>
+<p>The GPUs and the CPU give exactly the same results.</p>
 <p>The DOSBox tournament took less than 4 hours with 8 DOSBox instances
-in parallel. Summed over the pairs, DOSBox needed 29.6 hours and the
-Rust engine 35.0 minutes, 51 times less. The pair times of both are wall
-clock times with other pairs running in parallel, so this is a rough
-comparison.</p>
+in parallel, 29.6 hours summed over the pairs.</p>
 <h2 id="comparison-with-the-dosbox-tournament">Comparison with the
 DOSBox tournament</h2>
 <p>The two tournaments used different random seeds, so single results
@@ -238,9 +241,9 @@ register, so the placements of consecutive wars are related, and the
 results of 500 wars in one run vary more than the test assumes. To see
 how much two tournaments differ by chance alone, the Rust engine played
 the tournament once more with another master seed (<a
-href="baseline.csv"><code>baseline.csv</code></a>). Between the two Rust
-tournaments 38 pairs are above 2 and 2 above 3, the largest |z| is 3.45,
-about the same as between DOSBox and Rust.</p>
+href="baseline.jsonl"><code>baseline.jsonl</code></a>). Between the two
+Rust tournaments 38 pairs are above 2 and 2 above 3, the largest |z| is
+3.45, about the same as between DOSBox and Rust.</p>
 <p>The pairs with the largest difference:</p>
 <table>
 <thead>

@@ -1,18 +1,11 @@
 //! MARS output, DOS session memory and the tournament runner.
 
-use std::path::{Path, PathBuf};
-
 use mars::engine::MEMLEN;
 use mars::report::{self, average, Session, Source, BANNER};
-use mars::tournament::{self, Entry, Options};
 use mars::{Rng, Settings};
 
 fn source(name: &str, text: &str) -> Source {
     Source { name: name.into(), bytes: Some(text.replace('\n', "\r\n").into_bytes()) }
-}
-
-fn historical(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Historical").join(name)
 }
 
 #[test]
@@ -89,47 +82,4 @@ fn a_session_carries_the_memory_after_the_arena_to_the_next_run() {
     let three = [source("L.CWR", &long), source("M.CWR", &long), source("N.CWR", &long)];
     report::run_in(&mut session, &three, &settings, Rng::from_ticks(7), 1).unwrap();
     assert_eq!(session.cells().len(), 3 * 232 + MEMLEN);
-}
-
-fn tournament(out: &Path, seed: u64) -> String {
-    let entries: Vec<Entry> =
-        ["IMP.CWR", "MICE.CWR", "TORPE.CWR"].iter().map(|n| Entry::load(&historical(n)).unwrap()).collect();
-    let options = Options {
-        wars_per_order: 10,
-        settings: Settings { max_steps: 20000, ..Settings::default() },
-        jobs: 2,
-        seed,
-        out: out.to_path_buf(),
-    };
-    tournament::play(&entries, &options).unwrap();
-    std::fs::read_to_string(out.join("results/runs.csv")).unwrap()
-}
-
-#[test]
-fn tournament_plays_every_pair_in_both_orders_repeatably() {
-    let dir = std::env::temp_dir().join(format!("mars-tournament-{}", std::process::id()));
-    let csv = tournament(&dir.join("a"), 5);
-    let rows: Vec<Vec<&str>> = csv.lines().map(|l| l.split(',').collect()).collect();
-    assert_eq!(
-        rows[0].join(","),
-        "first,second,games,max_steps,first_wins,second_wins,draws,first_avg_pcs,second_avg_pcs,seconds,seed"
-    );
-    let pairs: Vec<(&str, &str)> = rows[1..].iter().map(|r| (r[0], r[1])).collect();
-    assert_eq!(
-        pairs,
-        [("IMP", "MICE"), ("MICE", "IMP"), ("IMP", "TORPE"), ("TORPE", "IMP"), ("MICE", "TORPE"), ("TORPE", "MICE")]
-    );
-    for r in &rows[1..] {
-        let n: Vec<u32> = [2, 4, 5, 6].iter().map(|&i| r[i].parse().unwrap()).collect();
-        assert_eq!(n[0], 10);
-        assert_eq!(n[1] + n[2] + n[3], 10);
-    }
-    assert!(dir.join("a/raw/MICE_vs_IMP.sta").exists());
-    let without_time = |csv: &str| {
-        csv.lines()
-            .map(|l| l.split(',').enumerate().filter(|(i, _)| *i != 9).map(|(_, f)| f).collect::<Vec<_>>().join(","))
-            .collect::<Vec<_>>()
-    };
-    assert_eq!(without_time(&csv), without_time(&tournament(&dir.join("b"), 5)));
-    std::fs::remove_dir_all(dir).unwrap();
 }

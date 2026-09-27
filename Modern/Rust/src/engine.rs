@@ -187,10 +187,11 @@ impl Engine {
         Ok(self.fight())
     }
 
-    /// Clear the arena and load the programs, at random positions like MARS or at the given ones.
-    /// The cells after the arena are not cleared: a program copied there in an earlier war still
-    /// blocks those positions.
-    pub fn place(&mut self, positions: Option<&[u16]>) -> Result<(), PlaceError> {
+    /// Clear the arena and load the programs, at random positions like MARS or at the given ones,
+    /// and return the positions. The cells after the arena are not cleared: a program copied there
+    /// in an earlier war still blocks those positions.
+    pub fn place(&mut self, positions: Option<&[u16]>) -> Result<Vec<u16>, PlaceError> {
+        let mut placed = Vec::with_capacity(self.warriors.len());
         self.mem[..ARENALEN as usize].fill(Cell::default());
         self.dats = DAT_SCAN_LEN as u32;
         for w in 0..self.warriors.len() {
@@ -212,6 +213,7 @@ impl Engine {
             };
             // The start address is not reduced modulo ARENALEN. Past the arena the process can
             // never run, but it still counts, so the program can not lose.
+            placed.push(pos);
             let warrior = &mut self.warriors[w];
             warrior.set_pc(0, warrior.start + pos);
             let num = warrior.num;
@@ -222,7 +224,7 @@ impl Engine {
             }
         }
         self.alive = self.warriors.len();
-        Ok(())
+        Ok(placed)
     }
 
     /// Write a memory cell, keeping the DAT count of the DAT test up to date.

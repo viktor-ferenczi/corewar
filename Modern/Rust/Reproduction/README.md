@@ -10,15 +10,16 @@ reimplementation of `MARS.COM` in [`Modern/Rust`](..) instead of `MARS.COM` unde
 ## Documents
 
 - Results report: [Markdown](results/report.md), [HTML](results/report.html), [ODT](results/report.odt)
-- Raw results, one row per pair and start order, with the random seed of each run: [results/runs.csv](results/runs.csv)
-- Statistics output of every run, in the format `MARS.COM` prints, zipped: [raw.zip](raw.zip)
-- The same tournament with another master seed, for the comparison in the report: [results/baseline.csv](results/baseline.csv)
-- Run time and machine: [results/timing.json](results/timing.json)
+- Raw results, one JSON object per run (pair and start order) with its random seed: [results/runs.jsonl](results/runs.jsonl)
+- The same tournament with another master seed, for the comparison in the report: [results/baseline.jsonl](results/baseline.jsonl)
+- Run times and machines: [results/timing.json](results/timing.json)
 
 ## Results
 
-630 pairs, 630000 games, 138 seconds on a Ryzen 7 9800X3D (8 cores, 16 threads). The DOSBox
-tournament took almost 4 hours with 8 DOSBox instances in parallel.
+630 pairs, 630000 games: 135 seconds on the 16 threads of a Ryzen 7 9800X3D, 22 seconds on two
+RTX 4090 GPUs (with 32768 threads per GPU), with exactly the same results. The DOSBox tournament took
+almost 4 hours with 8 DOSBox instances in parallel. More timings are in the
+[Performance](../README.md#performance) section of the engine.
 
 The top five by Elo, see the [report](results/report.md) for the full ranking, the matrices and the
 comparison with the DOSBox results:
@@ -42,7 +43,7 @@ arena, 64 processes per program, programs may execute each other's code, a war i
 steps, and in statistics mode a war with no DAT left in the arena ends as a draw.
 
 `MARS.COM` seeds its random generator from the BIOS clock. Here each run gets a BIOS tick count derived
-from the master seed 1993, which is in the `seed` column of `runs.csv`. With the same seed, `mars run`
+from the master seed 1993, which is in the `seed` field of `runs.jsonl`. With the same seed, `mars run`
 plays exactly the same games, and so does `MARS.COM` patched to that seed (see `tools/golden.py`).
 
 `mars.py` played both start orders of a pair in one DOSBox, one after the other. `MARS.COM` never
@@ -51,14 +52,19 @@ started with what the first one left there. The Rust tournament emulates this to
 
 Requirements: Rust (tested with 1.90), Python 3.12, and `pandoc` for the report.
 
-Play the tournament, then the baseline with another seed, then make the report:
+Play the tournament on the CPU, then on all GPUs (optional, it gives the same results and records its
+time too), then the baseline with another seed, then make the report:
 
 ```bash
 ./tournament.py
 ```
 
 ```bash
-./tournament.py --baseline 2
+./tournament.py --gpu all
+```
+
+```bash
+./tournament.py --baseline 2 --gpu all
 ```
 
 ```bash

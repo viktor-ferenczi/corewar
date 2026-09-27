@@ -117,9 +117,35 @@ pub fn run_in(
     }
     session.cells[window].copy_from_slice(&engine.mem);
     let names: Vec<&str> = sources.iter().map(|s| s.name.as_str()).collect();
-    text += &statistics(&engine, &names);
-    let stats = engine.warriors.iter().map(|w| w.stats.clone()).collect();
-    Ok(Run { text, log: log(&engine), played: true, stats })
+    let stats: Vec<Stats> = engine.warriors.iter().map(|w| w.stats.clone()).collect();
+    text += &statistics(settings, engine.wars, &stats, &names);
+    Ok(Run { text, log: log(settings, engine.wars, &stats), played: true, stats })
+}
+
+/// The positions `run_in` would place the programs at in each of its wars, without playing them.
+/// This is possible because only placement uses the random generator and the cells after the arena,
+/// and no war can change them. Leaves the session like `run_in` would, as far as placement goes.
+pub fn place_run(
+    session: &mut Session,
+    programs: &[Program],
+    rng: Rng,
+    wars: u16,
+) -> Result<Vec<Vec<u16>>, PlaceError> {
+    let window = session.window(programs.len());
+    let settings = Settings::default();
+    let mut engine = Engine::with_memory(settings, programs, rng, session.cells[window.clone()].to_vec());
+    let placed = (0..wars.max(1)).map(|_| engine.place(None)).collect();
+    session.cells[window].copy_from_slice(&engine.mem);
+    placed
+}
+
+/// The text of a run that compiled and played without errors: what `run` returns in `Run::text`.
+pub fn run_text(settings: &Settings, wars: u16, stats: &[Stats], names: &[&str]) -> String {
+    let mut text = format!("{BANNER}\n");
+    for name in names {
+        text += &format!("\n{name}\n");
+    }
+    text + &statistics(settings, wars, stats, names)
 }
 
 /// Compile a source that must have no errors.
@@ -141,16 +167,15 @@ pub fn average(pcs: u32, wars: u16) -> u16 {
 
 /// The statistics block `WAR_QUIT` prints. `OUTSPACES` pads to a column but always prints at
 /// least one space.
-pub fn statistics(engine: &Engine, names: &[&str]) -> String {
-    let s = &engine.settings;
+pub fn statistics(s: &Settings, wars: u16, stats: &[Stats], names: &[&str]) -> String {
     let mut text = format!(
         "\nCoreWar MARS V1.0 Statistics:\n\nNumber of full wars         = {}\nMaximal war length in steps = {}\nQueue length (Max. PCs)     = {}\n{}\n\nProgNum   Average PC  Win     Lose    Progam name\n",
-        engine.wars,
+        wars,
         s.max_steps,
         s.queue_len,
         if s.exec_other { "Execute each other was enabled." } else { "Execute each other was disabled." },
     );
-    for (warrior, name) in engine.warriors.iter().zip(names) {
+    for (i, (stats, name)) in stats.iter().zip(names).enumerate() {
         let mut line = String::new();
         let pad = |line: &mut String, column: usize| {
             line.push(' ');
@@ -158,15 +183,15 @@ pub fn statistics(engine: &Engine, names: &[&str]) -> String {
                 line.push(' ');
             }
         };
-        line += &warrior.num.to_string();
+        line += &(i + 1).to_string();
         pad(&mut line, 10);
-        if engine.wars != 0 {
-            line += &average(warrior.stats.pcs, engine.wars).to_string();
+        if wars != 0 {
+            line += &average(stats.pcs, wars).to_string();
         }
         pad(&mut line, 22);
-        line += &warrior.stats.wins.to_string();
+        line += &stats.wins.to_string();
         pad(&mut line, 30);
-        line += &warrior.stats.losses.to_string();
+        line += &stats.losses.to_string();
         pad(&mut line, 38);
         text += &line;
         text += name;
@@ -176,13 +201,12 @@ pub fn statistics(engine: &Engine, names: &[&str]) -> String {
 }
 
 /// The binary log, 16 bit little endian words.
-pub fn log(engine: &Engine) -> Vec<u8> {
-    let s = &engine.settings;
+pub fn log(s: &Settings, wars: u16, stats: &[Stats]) -> Vec<u8> {
     let mut words =
-        vec![0x0100, engine.wars, s.max_steps as u16, (s.max_steps >> 16) as u16, s.queue_len, s.exec_other as u16];
-    for w in &engine.warriors {
-        let pcs = w.stats.pcs;
-        words.extend([w.num, pcs as u16, (pcs >> 16) as u16, average(pcs, engine.wars), w.stats.wins, w.stats.losses]);
+        vec![0x0100, wars, s.max_steps as u16, (s.max_steps >> 16) as u16, s.queue_len, s.exec_other as u16];
+    for (i, w) in stats.iter().enumerate() {
+        let pcs = w.pcs;
+        words.extend([i as u16 + 1, pcs as u16, (pcs >> 16) as u16, average(pcs, wars), w.wins, w.losses]);
     }
     words.iter().flat_map(|w| w.to_le_bytes()).collect()
 }

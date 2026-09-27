@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use mars::report::{self, Source};
-use mars::tournament::{self, Entry};
+use mars::tournament::{self, Backend, Entry, Format};
 use mars::{compile, Rng, Settings};
 
 const USAGE: &str = "\
@@ -14,12 +14,20 @@ Usage:
       Print the compiled program and the error messages of MARS.
   mars run [OPTIONS] FILE...
       Play wars between the programs and print the statistics like MARS /P.
-  mars tournament [OPTIONS] --out DIR FILE...
-      Round robin of the programs, every pair in both start orders.
-      Writes DIR/results/runs.csv and DIR/raw/FIRST_vs_SECOND.sta.
+  mars tournament [OPTIONS] --out PATH FILE...
+      Pairwise tournament of 2 to 256 programs, every pair in both start orders.
+      Writes one JSON object per run to the file PATH, or with --format sta
+      PATH/results/runs.csv and PATH/raw/FIRST_vs_SECOND.sta.
+  mars gpus
+      List the GPUs --gpu can use.
 
 Options:
-  --wars N            wars to play (run: 1, tournament: 500 per start order)
+  --wars N            run: wars to play (1)
+  --games N           tournament: games per pair, both start orders (1000)
+  --format F          tournament: jsonl (default) or sta
+  --cpu               tournament: play on CPU threads (default)
+  --gpu [LIST]        tournament: play on GPUs, the first one by default, or a
+                      list like 0,1, or all (all GPUs of the best kind present)
   --steps N           steps per war, both programs counted, 0 = 2^32 (600000)
   --queue N           processes per program, 1..256 (64)
   --no-exec-other     programs die when executing a cell another program wrote
@@ -27,14 +35,17 @@ Options:
   --seed N            run: BIOS tick count to seed from (default: time of day),
                       tournament: master seed (0)
   --log FILE          run: write the binary statistics log of MARS /F
-  --jobs N            tournament: parallel threads (all cores)
-  --out DIR           tournament: output folder
+  --jobs N            tournament: CPU threads (all cores)
+  --out PATH          tournament: output file (jsonl) or folder (sta)
 ";
 
 struct Args {
     command: String,
     files: Vec<PathBuf>,
     wars: Option<u16>,
+    games: u32,
+    format: Format,
+    gpu: Option<String>,
     settings: Settings,
     seed: Option<u64>,
     log: Option<PathBuf>,
@@ -43,7 +54,7 @@ struct Args {
 }
 
 fn parse() -> Result<Args, String> {
-    let mut it = std::env::args().skip(1);
+    let mut it = std::env::args().skip(1).peekable();
     let command = it.next().ok_or("missing command")?;
     if command == "-h" || command == "--help" {
         return Err(String::new());
@@ -52,6 +63,9 @@ fn parse() -> Result<Args, String> {
         command,
         files: Vec::new(),
         wars: None,
+        games: 1000,
+        format: Format::Jsonl,
+        gpu: None,
         settings: Settings::default(),
         seed: None,
         log: None,
@@ -59,6 +73,12 @@ fn parse() -> Result<Args, String> {
         out: None,
     };
     while let Some(arg) = it.next() {
+        if arg == "--gpu" {
+            let list =
+                it.next_if(|v| v == "all" || (!v.is_empty() && v.chars().all(|c| c.is_ascii_digit() || c == ',')));
+            args.gpu = Some(list.unwrap_or_else(|| "0".into()));
+            continue;
+        }
         let mut value = || it.next().ok_or(format!("{arg} needs a value"));
         let number = |v: String| v.parse::<u64>().map_err(|_| format!("{arg}: not a number: {v}"));
         match arg.as_str() {
@@ -66,6 +86,15 @@ fn parse() -> Result<Args, String> {
             "--steps" => {
                 args.settings.max_steps = u32::try_from(number(value()?)?).map_err(|_| "--steps is too large")?
             }
+            "--games" => args.games = u32::try_from(number(value()?)?).map_err(|_| "--games is too large")?,
+            "--format" => {
+                args.format = match value()?.as_str() {
+                    "jsonl" => Format::Jsonl,
+                    "sta" => Format::Sta,
+                    other => return Err(format!("unknown format {other}, use jsonl or sta")),
+                }
+            }
+            "--cpu" => args.gpu = None,
             "--queue" => args.settings.queue_len = number(value()?)?.clamp(1, 256) as u16,
             "--no-exec-other" => args.settings.exec_other = false,
             "--no-dat-test" => args.settings.dat_test = false,
@@ -78,7 +107,7 @@ fn parse() -> Result<Args, String> {
             _ => args.files.push(arg.into()),
         }
     }
-    if args.files.is_empty() {
+    if args.files.is_empty() && args.command != "gpus" {
         return Err("no program given".into());
     }
     Ok(args)
@@ -99,6 +128,7 @@ fn main() -> ExitCode {
         "compile" => compile_command(&args),
         "run" => run_command(&args),
         "tournament" => tournament_command(&args),
+        "gpus" => gpus_command(),
         other => Err(format!("unknown command {other}")),
     };
     match result {
@@ -147,19 +177,63 @@ fn run_command(args: &Args) -> Result<ExitCode, String> {
 }
 
 fn tournament_command(args: &Args) -> Result<ExitCode, String> {
-    let entries = args
-        .files
-        .iter()
-        .map(|p| Entry::load(p).map_err(|e| format!("{}: {e}", p.display())))
-        .collect::<Result<Vec<_>, _>>()?;
-    let options = tournament::Options {
-        wars_per_order: args.wars.unwrap_or(500),
-        settings: args.settings.clone(),
-        jobs: args.jobs,
-        seed: args.seed.unwrap_or(0),
-        out: args.out.clone().ok_or("--out is required")?,
+    let entries = args.files.iter().map(|p| Entry::load(p)).collect::<Result<Vec<_>, _>>()?;
+    let backend = match &args.gpu {
+        None => Backend::Cpu { jobs: args.jobs },
+        Some(list) => Backend::Gpu { devices: gpu_devices(list)? },
     };
-    let wall = tournament::play(&entries, &options)?;
-    println!("Finished in {wall:.1} s");
+    let options = tournament::Options {
+        games: args.games,
+        settings: args.settings.clone(),
+        backend,
+        seed: args.seed.unwrap_or(0),
+        format: args.format,
+        out: args.out.clone().ok_or("--out is required")?,
+        progress: true,
+    };
+    let summary = tournament::play(&entries, &options)?;
+    println!(
+        "{} wars, {} steps in {:.1} s, {:.2} billion steps per second",
+        summary.wars,
+        summary.steps,
+        summary.seconds,
+        summary.steps as f64 / summary.seconds / 1e9
+    );
     Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(feature = "gpu")]
+fn gpu_devices(list: &str) -> Result<Vec<usize>, String> {
+    let adapters = mars::gpu::adapters();
+    let count = adapters.len();
+    if count == 0 {
+        return Err("no usable GPU found".into());
+    }
+    if list == "all" {
+        return Ok(mars::gpu::best_of_kind(&adapters));
+    }
+    list.split(',')
+        .map(|d| match d.parse::<usize>() {
+            Ok(i) if i < count => Ok(i),
+            _ => Err(format!("no GPU {d}, see mars gpus")),
+        })
+        .collect()
+}
+
+#[cfg(not(feature = "gpu"))]
+fn gpu_devices(_: &str) -> Result<Vec<usize>, String> {
+    Err("this build has no GPU support (cargo feature gpu)".into())
+}
+
+#[cfg(feature = "gpu")]
+fn gpus_command() -> Result<ExitCode, String> {
+    for (i, info) in mars::gpu::adapters().iter().enumerate() {
+        println!("{i}  {}  ({:?}, {:?}, {})", info.name, info.device_type, info.backend, info.driver);
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(not(feature = "gpu"))]
+fn gpus_command() -> Result<ExitCode, String> {
+    gpu_devices("").map(|_| ExitCode::SUCCESS)
 }

@@ -1,9 +1,21 @@
 {
-  "date": "2026-09-27",
-  "seconds": 132.5,
-  "jobs": 16,
-  "seed": 1993,
-  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
-  "logical_cpus": 16,
-  "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)"
+  "gpu": {
+    "date": "2026-09-27",
+    "seconds": 22.3,
+    "seed": 1993,
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)",
+    "devices": [
+      "NVIDIA GeForce RTX 4090",
+      "NVIDIA GeForce RTX 4090"
+    ]
+  },
+  "cpu": {
+    "date": "2026-09-27",
+    "seconds": 135.0,
+    "seed": 1993,
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)",
+    "jobs": 16,
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "logical_cpus": 16
+  }
 }
