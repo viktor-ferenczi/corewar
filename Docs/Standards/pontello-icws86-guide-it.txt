@@ -1,0 +1,1168 @@
+
+                ------------------------------------
+                Guida a Core War & Redcode - ICWS-86
+                         By Marco Pontello
+                ------------------------------------
+
+                Prima stesura       : 08/01/1996
+                Ultimo aggiornamento: 14/10/2002
+
+
+    La guida e` stata redatta come facente parte di XRK, ovvero il kit di
+    sviluppo per Core War dello stesso autore; per questa ragione, gli
+    esempi pratici di compilazione di programmi e/o esecuzione di scontri
+    si riferiscono allo stesso kit.
+
+    Ciononostante, la trattazione delle caratteristiche generali di Core
+    War, nonche` del linguaggio Redcode e relativi programmi e schemi
+    esplicativi, sono comunque di interesse generale, visto che si
+    rifanno allo standard ICWS-86 (International Core Wars Society).
+
+
+    Questo testo e` diviso in 4 sezioni:
+
+    1 - INTRODUZIONE
+        Rapida panoramica della simulazione
+
+    2 - CARATTERISTICHE GENERALI
+        Concetti base e caratteristiche della simulazione
+
+    3 - IL LINGUAGGIO Redcode
+        Dettagli sul linguaggio e quindi sulla programmazione
+        di programmi da battaglia
+
+    4 - STRATEGIA E TECNICA
+        Considerazioni e consigli sulle varie strategie d'attacco,
+        difesa, sopravvivenza; vari programmi ed esempi pratici,
+        con valutazione di guerrieri ormai famosi
+
+
+    ----------------
+    1 - INTRODUZIONE
+    ----------------
+
+    Core War sta, letteralmente, per "Guerra dei Nuclei", o giu` di li.
+    Piu` significativamente, si puo` dire che presuppone un qualche tipo
+    di scontro (cruento?!) nella zona piu` profonda, piu` interna, di un
+    computer; ovvero nel nucleo di cui prima.
+    Abbiamo gia` una prima definizione, quindi, un'idea di quello che ci
+    aspetta: battaglie elettroniche, combattute da guerrieri tutti d'un
+    bit, pronti a disputarsi la vittoria.
+
+    Di conseguenza, l'interattivita` e il grado di intervento dei
+    giocatori nella simulazione/gioco che dir si voglia, possono essere
+    nulli o totali, a seconda dei punti di vista.
+
+    Nulli nel senso che, una volta avviato lo scontro, tutto e` lasciato
+    ai due guerrieri elettronici; il giocatore non ha possibilita` di
+    influenzare in alcun modo il risultato, a meno che non speri di
+    portare maggior fortuna al suo paladino facendo un tifo da stadio!
+
+    Totali perche`, in fondo, ogni guerriero e` in realta` il riflesso
+    dell'astuzia e della creativita` del suo programmatore, che ne ha
+    stabilito la tattica, la strategia, etc.
+
+    Possiamo vederlo quindi come una specie di Wargame in differita, se
+    vogliamo.
+
+
+    ----------------------------
+    2 - CARATTERISTICHE GENERALI
+    ----------------------------
+
+    Andando un po' piu` sul pratico, vediamo quali sono le
+    caratteristiche dell'ambiente teatro degli scontri, e le modalita`
+    con cui avvengono.
+
+    C'e` da precisare subito che alcune di queste, come altri dettagli
+    implementativi della simulazione, dipendono dallo standard a cui si
+    fa riferimento; ne parliamo piu` diffusamente in seguito, per ora
+    basti sapere che lo standard a cui si rifa` tutto XRK e`, attualmente,
+    il primo, ovvero il cosiddetto ICWS-86.
+
+    L'arena, il "Core", e` costituito da una matrice composta da 8.192
+    locazioni; 8K, se preferite. La sua caratteristica principale, che
+    condiziona tutti gli aspetti della simulazione, e` quella di essere
+    "anulare", o "circolare", e di non avere quindi un inizio o una fine
+    prestabiliti; semplicemente, e` una catena chiusa di 8.192 elementi.
+    Percorrendo quindi le locazioni una dopo l'altra, si finirebbe per
+    tornare sui propri passi.
+
+          +--> [LOC.] -> [LOC.] -> [LOC.] ... [LOC.] -> [LOC.] ---+
+          |                                                       |
+          +-------------------------------------------------------+
+
+    Non esistendo di fatto una locazione "0", non si possono fare dei
+    riferimenti assoluti in base al numero di locazione; ci si puo` solo
+    riferire, ad esempio, ad una locazione 3 posizioni piu` avanti,
+    oppure 2 posizioni piu` indietro (-2), ma non alla locazione "15",
+    semplicemente perche` non esiste nessuna locazione "15"!
+
+                                  |   ...  |
+                       +--------> [LOC. X  ]
+                       |          [LOC. X+1]
+                       +--- -2 -- [LOC. X+2] --- +3 --+
+                                  [LOC. X+3]          |
+                                  [LOC. X+4]          |
+                                  [LOC. X+5] <--------+
+                                  |   ...  |
+
+    Si parla quindi di indirizzamento relativo (alla posizione corrente),
+    piuttosto che di indirizzamento assoluto.
+
+    Come gia` accennato, come conseguenza della struttura "continua"
+    della matrice, data una posizione "X", spostandosi di 8.192 locazioni,
+    si ottiene esattamente la stessa posizione di partenza. Analogamente,
+    spostarsi di -1 locazioni, oppure di (+)8.191, e` esattamente la stessa
+    cosa!
+    Tanto per semplificare, se non fosse gia` chiaro, immaginiamo una
+    matrice anulare di sole 4 locazioni, numerate da 0 a 3.
+    Se ci si trova alla locazione 0, avanzando di 4 posizioni si torna al
+    punto di partenza, ovvero la locazione 0.
+
+                            Start      1
+                        +-> [LOC. 0]  --> [LOC. 1] --+
+                      4 |                            |
+                        |                            | 2
+                        +-- [LOC. 3]  <-- [LOC. 2] <-+
+                                       3
+
+    Di conseguenza avanzare di 3 posizioni o arretrare di -1 posizioni e`
+    identico, si arriva sempre alla locazione 3.
+
+                            Start      1
+                        +-- [LOC. 0]  --> [LOC. 1] --+
+                     -1 |                            |
+                        |                            | 2
+                        +-> [LOC. 3]  <-- [LOC. 2] <-+
+                                       3
+
+    Detto questo, veniamo allo scontro.
+    Ogni guerriero viene realizzato/programmato sfruttando un particolare
+    linguaggio, detto Redcode (descritto nei dettagli piu` avanti).
+    Ognuna delle istruzione di cui si compone, occupa fisicamente una
+    locazione della matrice. Esiste un limite alla dimensione massima di
+    ogni programma, fissato in 512 istruzioni/locazione occupate.
+    Ogni locazione e` un aggregato di 5 diversi campi, all'interno dei
+    quali vengono codificate le vari componenti di un'istruzione.
+
+    Al momento di iniziare uno scontro tra i due contendenti,
+    succede piu` o meno questo.
+
+    Ogni concorrente viene caricato in memoria, in una posizione casuale
+    e ignota all'avversario, con l'unico vincolo di una distanza minima
+    di 2048 locazioni tra i due.
+    In pratica, stabilito che il programma "A" debba iniziare dalla
+    locazione "X", il suo codice viene caricato nel Core a partite da
+    quella locazione, un'istruzione dopo l'altra.
+    Banalmente, dunque, un programma di 10 istruzioni andra` ad occupare,
+    in questa fase iniziale, esattamente dieci locazioni.
+    Lo stesso succede con il programma "B", piazzato a partire dalla
+    locazione "Y".
+
+    A questo punto, il programma che si occupa di gestire la simulazione
+    comincia ad eseguire un'istruzione per ogni combattente,
+    alternativamente. Ogni istruzione eseguita corrisponde ad un ciclo di
+    "clock" della CPU virtuale (MARS, da Memory Array Redcode Simulator)
+    in cui girano i programmi.
+
+                    Cicli di Clock:   0 1 2 3 4 5 6 7 ...
+                    -------------------------------------
+                    Programma "A":    x   x   x   x
+                    Programma "B":      x   x   x   x
+
+    Le istruzioni di cui si compone un programma vengono eseguite una
+    dopo l'altra, nello stesso ordine in cui compaiono nella matrice, a
+    meno che il programma non esegua un salto ad un'altra locazione.
+    Infatti, ad ogni ciclo di clock il Program Counter (PC), ovvero il
+    puntatore alla prossima istruzione da eseguire, viene incrementato di
+    una unita`.
+
+    La simulazione continua di questo passo, finche` si raggiunge il
+    limite massimo di cicli, stabilito in 50.000; in questo caso, lo
+    scontro viene dichiarato pari.
+
+    Tuttavia, e` molto piu` probabile, nonche` auspicabile, che la
+    disputa abbia termine prima del limite di cicli, per prematura morte
+    di uno dei due contendenti.
+
+    Ma cos'e` che si disputano i due player, e come si vince/muore?
+
+    L'oggetto della disputa e` semplice; i due programmi si contendono
+    l'esistenza, la sopravvivenza fino all'ultimo ciclo. Come dire: "Non
+    c'e` spazio per entrambi, in questa zona di memoria!".
+    Conseguentemente, il vincitore e` il programma che sopravvive alla
+    morte dell'avversario.
+
+    Tra le varie istruzione Redcode (che vedremo in dettaglio piu`
+    avanti), infatti, ce n'e` una un po' particolare: si tratta di "DAT".
+    Si puo` considerare alla stregua di una istruzione nulla, non
+    eseguibile, utilizzata comunemente per contenere dati, puntatori,
+    etc.
+
+    Quando un programma cerca di eseguire tale istruzione, viene
+    terminato (proprio nel senso del film di fantascienza!), in quanto si
+    presume che sia il risultato di un sabotaggio dell'avversario.
+
+    Appare chiaro, quindi, che il fine ultimo di un programma guerriero,
+    e` quello di riuscire a piazzare un "DAT" nel codice dell'avversario,
+    in modo tale da provocarne il decesso.
+
+    In pratica, poi, la vita e la morte di un programma e` leggermente
+    piu` complessa, in quanto ogni player puo` generare degli ulteriori
+    sotto programmi (ovvero altri Task), funzionanti parallelamente, in
+    perfetto time-sharing; si puo` arrivare ad un massimo di 64 Task
+    attivi per ogni guerriero.
+
+    In questo caso, i cicli di clock vengono ripartiti seguendo le stesse
+    regole descritte sopra, con la differenze che i cicli pari e dispari,
+    rispettivamente, sono ripartiti tra i vari Task attivi per il primo
+    ed il secondo concorrente. Non esistono quindi priorita` diverse, ogni
+    Task dispone dello stesso tempo macchina.
+
+    Riprendendo l'esempio di prima, e supponendo che il Programma "A" sia
+    composto da 3 Task, mentre il "B" da 2, abbiamo:
+
+             Cicli di Clock:   0  1  2  3  4  5  6  7  8  9 ...
+             ---------------------------------------------------
+             Programma "A":    a1    a2    a3    a1    a2
+             Programma "B":       b1    b2    b1    b2    b1
+
+    E` chiaro che, ad esempio, "b1" viene eseguito piu` velocemente di
+    "a1", avendo a disposizione piu` cicli di clock, visto che li deve
+    dividere solo con il suo compagno "b2".
+
+    A questo punto, bisogna rivedere un attimo il concetto di morte:
+    quando un Task incappa in un "DAT", viene terminato solo il Task in
+    questione; un programma si definisce distrutto quando tutti i suoi
+    Task sono stati terminati, ovvero quando non c'e` piu` nessun Task
+    attivo.
+
+    Con questo abbiamo concluso, in merito alla logica generale di Core
+    War, e possiamo passare a vedere in dettaglio come si costruisce o
+    programma un guerriero.
+
+
+    -------------------------
+    3 - IL LINGUAGGIO Redcode
+    -------------------------
+
+    Tanto per rompere il ghiaccio, vediamo subito (finalmente!) che
+    aspetto puo` avere un combattente tipo:
+
+    ; Bomber4.RED
+    ; By Pinco Pallino
+    ;
+    Target  DAT     1024
+    Start   MOV     Bomb, @Target
+            ADD     #4, Target
+            JMP     Start
+    Bomb    DAT     0
+
+    Come? Solo 5 righe?
+    Si, solo 5! Scrivere un guerriero semplice semplice non e` affatto
+    cosa lunga e macchinosa, anzi.
+    Vediamo di descriverne velocemente il funzionamento, poi andremo a
+    dettagliare maggiormente.
+
+    La tattica del programma e` molto semplice; esso si limita a
+    depositare una serie di "DAT" nelle matrice, uno ogni 4 locazioni.
+    Si puo` dire che Bomber4 e` un semplice bombardiere a passo 4 (da cui,
+    con estrema fantasia, il nome); in pratica e` solo una variante
+    dell'originale Dwarf di A.K.Dewdney, che risale a circa 10 anni fa,
+    quando lo stesso Dewdney presento` Core War sulle pagine di
+    "Scientific American".
+    La speranza di vittoria su cui si basa un simile programma, e` quindi
+    quella di riuscire a piazzare una (o piu`) delle sue bombe nel codice
+    avversario.
+    La cosa interessante e` che, contrariamente a quanto forse potrebbe
+    sembrare in un primo momento, Bomber4 non corre nessun rischio di
+    autodistruggersi. Infatti, essendo 4 un sottomultiplo di 8.192, le
+    bombe saranno depositate sempre nelle stesse posizioni, dopo aver
+    completato il giro di tutta la matrice; visto che Bomber4 e` lungo 3
+    istruzioni (i DAT non vengono eseguiti), il programma ha cura di
+    bombardare in modo tale da stare giusto in mezzo alle bombe a lui
+    piu` vicine!
+
+    Sapendo questo, il listato di Bomber4 dovrebbe gia` risultare
+    abbastanza comprensibile; in ogni caso, entro la fine del testo
+    saranno fugati (si spera!) tutti gli eventuali dubbi del caso!
+
+    Il linguaggio utilizzato per scrivere i sorgenti, come si vede, e`
+    molto simile ad un (semplice) Assembly. Come tale, quindi, per poter
+    essere eseguito dall'XRS (Extra Redcode Simulator), il sorgente deve
+    essere prima compilato/assemblato con un apposito programma, XRA
+    (Extra Redcode Assembler).
+    I file con i sorgenti hanno l'estensione ".RED", mentre i programmi
+    compilati ".RBJ" (da Redcode oBJect).
+
+    Volendo provare Bomber4, dunque, si procede cosi`:
+
+    - Utilizzando un editor qualsiasi si salva il sorgente come
+      BOMBER4.RED
+
+    - Si compila il programma, utilizzando XRA. Basta digitare:
+
+      C:\XRK> xra bomber4
+
+      In caso di errori di qualche tipo, il compilatore si occupa di
+      segnalarlo evidenziando anche la linea e la posizione
+      dell'errore stesso. Nel caso, correggere e rilanciare XRA.
+      A compilazione terminata, viene generato il corrispondente
+      file BOMBER4.RBJ.
+
+    - A questo punto e` possibile provare ad eseguire BOMBER4,
+      utilizzando il simulatore; digitare:
+
+      C:\XRK> xrs bomber4
+
+
+    Il sorgente si usa dividere essenzialmente in tre campi/colonne.
+    La colonna delle label/etichette, quella dei comandi e quella degli
+    operandi. I simboli che precedono gli operandi si dicono "modi di
+    indirizzamento", e sono considerati parte dell'operando.
+
+    I 3 campi sono in genere separati da un tab, per questioni estetiche,
+    visto che il compilatore non e` comunque molto schizzinoso.
+    L'importante e` che label, comandi e operatori di una stessa linea
+    siano comunque separati; che poi si usino tab, spazi o virgole (per
+    gli operatori) e` solo una questione di colpo d'occhio.
+    In ogni caso, il formato in cui ho riportato il programma e` quello
+    comunemente ritenuto piu` gradevole e soprattutto chiaro.
+    E` possibile anche inserire dei commenti, nel listato, ovvero del
+    testo che verra` semplicemente ignorato, al momento della
+    compilazione. Basta farlo precedere da un punto e virgola (;),
+    un'accento (') o la stringa REM.
+
+    Le label servono solo per semplificarsi la vita nel momento in cui,
+    in una istruzione, si fa riferimento ad un'altra istruzione. Il
+    programma di cui prima, infatti, poteva anche essere scritto in
+    questo modo:
+
+            DAT     1024
+    Start   MOV     3, @-1
+            SUB     #4, -2
+            JMP     -2
+            DAT     0
+
+    Funzionalmente analogo, ma molto piu` arduo sia da seguire che da
+    scrivere; utilizzando le label, invece, si delega al compilatore il
+    compito di calcolarsi tutti i riferimenti, semplificando il tutto.
+
+    La label "Start" ha poi un'ulteriore funzione: indicare al MARS
+    quella che deve essere considerata la prima istruzione da eseguire.
+    Nel caso di Bomber4, infatti, se l'esecuzione cominciasse dalla prima
+    istruzione che appare nel listato (un DAT!), il programma verrebbe
+    terminato al primo ciclo di clock!
+
+    Vediamo ora come Bomber4 appare nel momento in cui viene depositato
+    in memoria, prima di iniziare uno scontro, confrontandolo con il
+    sorgente senza label.
+
+                          | DAT | # |    0 | # |    0 |
+                          -----------------------------
+                Loc. X    | DAT | # |    0 | # | 1024 |   DAT   1024
+       Start >> Loc. X+1  | MOV | $ |    3 | @ |   -1 |   MOV   3, @-1
+                Loc. X+2  | SUB | # |    4 | $ |   -2 |   SUB   #4, -2
+                Loc. X+3  | JMP | $ |   -2 | # |    0 |   JMP   -2
+                Loc. X+4  | DAT | # |    0 | # |    0 |   DAT   0
+                          -----------------------------
+                          | DAT | # |    0 | # |    0 |
+
+    Questo e` in pratica il disassemblato del nostro prode, ottenibile
+    direttamente anche utilizzando l'apposito XRD (Extra Redcode
+    Disassembler). Basta digitare:
+
+      C:\XRK> xrd bomber4
+
+    Oltre alla codifica dell'istruzione nei 5 campi (che ora puo`
+    apparire un po' strana), salta all'occhio il fatto che le locazioni
+    non interessate dal caricamento del programma, quelle vuote (azzerate)
+    quindi, corrispondono esattamente a "DAT 0"; questo e` dovuto al
+    modo in cui vengono codificate internamente le istruzioni, come si
+    vedra` dopo.
+
+    I 5 campi di cui e` composta ogni locazione sono:
+
+    0 - Comando
+        (A)
+    1 - Modo di indirizzamento dell'operando A
+    2 - Operando A
+        (B)
+    3 - Modo di indirizzamento dell'operando B
+    4 - Operando B
+
+    Vediamo quali sono i comandi a disposizione, e relativa
+    codifica degli operandi:
+
+    Opcode | Comando | Operandi | Funzione
+    -------+---------+----------+-----------------------------------------
+       0   |   DAT   |      B   | Ineseguibile; il tentativo di esecuzione
+           |         |          | porta alla morte del Task
+           |         |          | Si utilizza per contenere dati/puntatori
+           |         |          | oppure come "bomba"
+    -------+---------+----------+-----------------------------------------
+       1   |   MOV   |  A   B   | Copia A su B; agisce solo sul 5^ campo
+           |         |          | se uno dei due operandi ha modo di
+           |         |          | indirizzamento immediato
+    -------+---------+----------+-----------------------------------------
+       2   |   ADD   |  A   B   | Aggiunge A a B; agisce solo sul 5^ campo
+    -------+---------+----------+-----------------------------------------
+       3   |   SUB   |  A   B   | Sottrae A a B; agisce solo sul 5^ campo
+    -------+---------+----------+-----------------------------------------
+       4   |   JMP   |  A       | Salta ad A
+    -------+---------+----------+-----------------------------------------
+       5   |   JMZ   |  A   B   | Salta ad A se B = 0
+    -------+---------+----------+-----------------------------------------
+       6   |   JMN   |  A   B   | Salta ad A se B <> 0
+    -------+---------+----------+-----------------------------------------
+       7   |   DJN   |  A   B   | Decrementa B di una unita`; poi salta
+           |         |          | ad A se B <> 0
+    -------+---------+----------+-----------------------------------------
+       8   |   CMP   |  A   B   | Se A = B salta un'istruzione; viene
+           |         |          | confrontato solo il 5^ campo se uno dei
+           |         |          | due operandi ha modo di indirizzamento
+           |         |          | immediato
+    -------+---------+----------+-----------------------------------------
+      10   |   SPL   |      B   | Attiva in parallelo un Task alla        
+           |         |          | locazione B
+    -------+---------+----------+-----------------------------------------
+
+    Soli 10 comandi (da 0 a 10, il 9^ e` volutamente inutilizzato) possono
+    sembrare molto pochi; in realta`, si possono generare una varieta` di
+    programmi da battaglia, anche molto diversi tra loro.
+
+    Per quanto riguarda i comandi, considerando anche l'esempio di
+    Bomber4, la situazione dovrebbe gia` essere abbastanza chiara.
+
+    Giusto qualche parola sulla teoria dietro all'SPL, che comunque
+    piu` avanti vedremo all'opera "sul campo"!
+    Abbiamo detto che i programmi Redcode possono sfruttare il
+    Multi-Tasking in time sharing, e di conseguenza abbiamo gia` visto
+    come vengono ripartiti i cicli di clock/esecuzione tra i vari Task di
+    un guerriero.
+    All'interno del MARS viene quindi mantenuta una lista
+    con un entry per ogni Task, contenente il relativo Program Counter.
+    Quando incontra un'istruzione SPL, il MARS controlla innanzitutto che
+    non ci siano gia` 64 Task attivi, nel qual caso l'istruzione viene
+    semplicemente ignorata e il Program Counter viene incrementato.
+    Nel caso invece si possa effettuare lo split, viene creata una nuova
+    entry per il nuovo Task, con Program Counter che punta all'istruzione
+    referenziata dall'operando B di SPL.
+    La cosa da tenere a mente, perche` determinante e all'uopo sfruttata
+    da molti guerrieri, e` che la new entry viene posizionata nella lista
+    dei Task in modo tale da essere la prossima ad essere eseguita.
+
+    Esemplificando, se in un dato momento il guerriero "A" ha 3 Task attivi,
+    ed il Task "a2" splitta un'altro Task, abbiamo:
+
+               Cicli di clock: 0  1  2  3  4  5  6  7  8  9 10
+               -----------------------------------------------
+               Programma "A"  a1 a2 a3 a1 a2 a4 a3 a1 a2 a4 a3
+                                           |
+                                          SPL
+
+    Un po' piu` complessa e` invece la questione dei modi di
+    indirizzamento, per i quali ci sara` bisogno di qualche ulteriore
+    esempio.
+
+    Opcode | Simbolo | Modo di indirizzamento
+    -------+---------+---------------------------------------------------
+       0   |    #    | Immediato
+    -------+---------+---------------------------------------------------
+       1   |    $    | Diretto (utilizzato di default)
+    -------+---------+---------------------------------------------------
+       2   |    @    | Indiretto
+    -------+---------+---------------------------------------------------
+       3   |    <    | Indiretto Autodecrementato
+    -------+---------+---------------------------------------------------
+
+    Con queste due tabelle sottomano, risulta piu` chiaro come si passa
+    dal sorgente senza label alla rappresentazione nel Core vista prima.
+
+    Le locazioni vuote sono viste come DAT #0, per il semplice fatto che
+    opcode del comando, del modo di indirizzamento e operatore valgono
+    entrambi 0; visto che il Core e` inizialmente azzerato, lo si puo`
+    a ragione considerare come una una distesa di DAT #0!
+
+    Risulta anche evidente perche` l'operando dell'istruzione che chiude
+    il loop del bombardiere "JMP" sia stata codificata nel campo A,
+    mentre il "1024" del "DAT" nel campo B.
+
+    Si vede inoltre da dove arriva il simbolo "$" nelle istruzioni
+    "MOV" e "JMP"; e` la modalita` di indirizzamento utilizzata
+    di default, ovvero quando non diversamente specificato indicando
+    espressamente uno degli altri simboli.
+
+    Vediamo piu` in dettaglio come vengono usate le diverse modalita` di
+    indirizzamento, che sostanzialmente modificano il modo in cui viene
+    valutato l'operando che precedono.
+
+    - Immediato "#"
+
+    Quando il MARS incontra un'indirizzamento di questo genere, il valore
+    dell'operando a cui si riferisce e` disponibile immediatamente (e da
+    qui il nome), in quanto gia` contenuto nell'attuale locazione;
+    l'operando viene in pratica preso cosi` com'e`, senza bisogno di
+    ulteriori elaborazioni.
+    L'utilizzo piu` comune e`, ad esempio, nell'incrementare un puntatore
+    al bersaglio, un contatore, etc. Ex:
+
+            ADD     #5, Target
+            SUB     #2, Counter
+
+
+    - Diretto "$" (default)
+    E` sicuramente quello piu` usato, infatti non per niente puo` essere
+    omesso! In questo caso, l'operando a cui e` associato viene
+    interpretato come un puntatore ad un'altra locazione; praticamente
+    indica l'offset, relativamente all'istruzione attuale, in cui si
+    trova la locazione che interessa. Ex:
+
+            DAT     0
+            MOV     #17, -1
+
+    Copia 17 nel 5^ campo dell'istruzione precedente, che diventera`
+    quindi un DAT 17.
+
+    Pippo   JMP     Pippo                    JMP    0
+    Pluto   DAT     0                   ->   DAT    0
+            MOV     Pippo, Pluto             MOV    -2, -1
+
+    Copia Pippo (che in fase di compilazione viene trasformato in -2)
+    sopra Pluto (-1).
+
+    Da notare che, mentre in questo caso tutta la locazione Pippo andra`
+    a rimpiazzare Pluto, che quindi diventera` anch'essa "JMP 0"; nel
+    primo esempio invece veniva alterato solo il 5^ campo del DAT; questo
+    perche`, come da tabella dei comandi su riportata, il comando MOV si
+    comporta diversamente a seconda del fatto che uno degli operandi
+    abbia modo di indirizzamento immediato o meno.
+
+
+    - Indiretto "@"
+    Questo modo di indirizzamento e` in qualche modo simile al precedente,
+    ma prevede "un passo in piu`"; l'operatore a cui si associa, infatti,
+    punta ad una locazione in cui a suo volta e` contenuto il puntatore
+    ad un'altra locazione.
+    Riprendendo l'esempio di Bomber4.RED:
+
+    Target  DAT     1024
+    Start   MOV     Bomb, @Target
+    [...]
+
+    Alla linea Start si dice, in pratica, di copiare la locazione a cui
+    fa riferimento la label Bomb, alla locazione puntata da target; la
+    bomba verra` dunque piazzata 1024 locazioni piu` avanti, cominciando
+    a contare da Target.
+
+
+    - Indiretto Autodecrementato "<"
+    E` concettualmente identico all'Indiretto, ma in questo caso il
+    puntatore viene decrementato di una unita`, prima di essere
+    utilizzato.
+    Nell'esempio precedente, dunque, utilizzando "<" al posto di "@", il
+    contenuto del 5^ campo di target diventerebbe 1023, e quindi la bomba
+    verrebbe copiata una locazione prima.
+
+
+    A questo punto, visti tutti i comandi e relativi modi di
+    indirizzamento, riguardando il listing di Bomber4.RED non ci
+    dovrebbero piu` essere dubbi circa suo il funzionamento.
+
+    Resta da vedere come progettare un valoroso guerriero da zero, ovvero
+    cosa conviene e cosa non conviene cercare di fare, per sopravvivere
+    il piu` a lungo possibile o, meglio ancora, per ben figurare in un
+    Torneo vero e proprio.
+
+
+    -----------------------
+    4 - STRATEGIA E TECNICA
+    -----------------------
+
+    Che possibilita` di vittoria avrebbe Bomber4.RED? Un programma cosi`
+    semplice puo` resistere all'attacco di guerrieri piu` complessi?
+    Che senso ha non sfruttare l'istruzione SPL, e quindi rinunciare alla
+    possibilita` del Multi-Tasking?
+    Gli interrogativi potrebbero essere moltissimi, come molto lunghe
+    potrebbero essere le varie disquisizioni con cui cercare di
+    rispondere in modo esauriente ed esaustivo.
+
+    Tuttavia, tutti i vari discorsi ruoterebbero e deriverebbero da una
+    ben piu` breve serie di concetti fondamentali, che in qualche modo sono
+    strettamente correlati uno all'altro; si potrebbe dire che si
+    rincorrono l'un l'altro, a volte smentendosi reciprocamente.
+
+    Vediamo di introdurne qualcuno, con relativi esempi, cominciando
+    proprio dalla base.
+
+    Una fondamentale caratteristica di ogni guerriero, e` la sua
+    dimensione; e` infatti ovvio che, tanto maggiore sara` la dimensione
+    di un programma, tanto maggiore sara` la probabilita` che venga
+    colpito.
+    Conseguentemente pero`, e` anche vero che un programma grande puo`
+    essere molto piu` sofisticato ed intelligente di uno molto breve.
+
+    Il Redcode e` infatti un linguaggio "computazionalmente" completo,
+    nel senso che ci si puo` fare praticamente qualsiasi cosa
+    (relativamente all'ambito per cui e` stato ideato), a patto pero` di
+    avere sufficente spazio.
+    Il set di istruzioni e` molto limitato, e queste stesse istruzioni
+    sono molto semplici, elementari, per cui devono essere adeguatamente
+    combinate per ottenere qualcosa di interessante.
+    Diciamo che somiglia molto all'Assembly di un processore RISC, se
+    vogliamo.
+
+    Una abilita` fondamentale nel programmare un guerriero Redcode, dunque,
+    e` innanzitutto l'ottimizzazione del codice.
+    Se un programma in Basic, Pascal o cos'altro non e` ottimizzato al
+    massimo (come spesso accade, purtroppo), la conseguenza e` che il
+    programma risultera` piu` lungo e piu` lento di un programma "ideale";
+    tutto sommato, pero`, spesso questo non e` un problema.
+
+    Ma per un programma Redcode, essere piu` grande e piu` lento
+    dell'avversario, si rivelera` invariabilmente un disastro su tutta la
+    linea! Un guerriero lento dara` piu` tempo all'avversario per
+    sferrare un attacco, e un guerriero grande sara` piu`
+    vulnerabile agli stessi attacchi.
+
+    Bisogna quindi imparare a sfruttare le possibilita` del linguaggio
+    nel modo migliore, in modo da mettere in pratica una certa idea nel
+    modo piu` veloce e meno dispendioso possibile.
+
+    Parlando di programmi brevi brevi, vediamo quelle che senz'altro e`
+    il micro programma piu` conosciuto: IMP!
+
+    ; IMP
+    ;
+    Start   MOV     0,1
+
+    ?? Si, anche se non sembrerebbe, questo e` un guerriero completo,
+    semovente, e che puo` pure dare qualche fastidio!
+    Il trucco c'e`, e si vede, se ci si pensa un attimo.
+    IMP non fa altro che ricopiare se stesso, nella locazione successiva;
+    al resto ci pensa il MARS, visto che il Program Counter, ovvero il
+    puntatore alla prossima istruzione da eseguire per ogni Task attivo,
+    viene incrementato ad ogni ciclo.
+    In questo modo, risulta che IMP si sposta lungo il Core, a passi di
+    una locazione per ciclo di clock.
+    L'unico problemino di IMP sta nella sua capacita` offensiva; tutto
+    quello che puo` sperare di fare e` (evitare di essere colpito e)
+    sovrascrivere l'avversario, passandoci letteralmente sopra; il fatto
+    e` che, in questo caso, l'avversario sara` trasformato anch'esso in
+    un IMP, e due IMP che si spostano lungo il Core non hanno altra
+    possibilita` se non pareggiare!
+
+    Un'altro programma piccolo piccolo potrebbe essere questo:
+
+    ; DJN
+    ;
+    Start   DJN     0, <-1
+
+    DJN non fa altro che decrementare di una unita` il 5^ campo (ovvero
+    l'operando B) di tutte le locazioni del Core, a partire da quella
+    immediatamente precedente, a passi di una ogni ciclo di clock.
+    Un sistematico decremento del 5^ campo delle istruzioni
+    dell'avversario potra` non causare il massimo dei danni, pero` e`
+    sicuramente in grado di compromettere e/o alterare in modo anche
+    notevole il comportamento di parecchi programmi, soprattutto quelli
+    piu` complessi.
+    Il suo tallone d'achille e` pero` proprio l'IMP appena visto; visto
+    che IMP contiene sempre il valore 1 nell'operando B, viene a non
+    verificarsi il salto condizionato di DJN (decrementa B, e salta ad A
+    se B <> 0); quindi, DJN si troverebbe a tentare di eseguire
+    l'istruzione successiva, ovvero una locazione vuota, suicidandosi!
+
+    Ma passiamo ad un guerriero di almeno qualche riga, e vediamo
+    l'ipotesi di un programma che si riprometta di bombardare a tappeto
+    la matrice, in modo tale da riuscire a colpire anche l'avversario
+    piu` piccolo, senza che questo possa rischiare di sfuggirgli,
+    infilandosi tra una bomba e l'altra. Memori dell'esempio di Bomber4,
+    si potrebbe scrivere qualcosa del genere:
+
+    ; Bomber1.RED
+    ;
+    Target  DAT     0
+    Start   MOV     Bomb, @Target
+            SUB     #1, Target
+            JMP     Start
+    Bomb    DAT     0
+
+    Bomber1 comincia a bombardare la locazione immediatamente precedente,
+    poi quella prima, e cosi` via. Una volta completato il giro del Core
+    finirebbe per suicidarsi, ma l'idea e` quella che nessun programma
+    puo` sfuggire ad un bombardamento a passo 1, per cui l'incontro si
+    concluderebbe prima di spararsi addosso.
+    Si puo` pure provare ad assemblarlo ed eseguirlo, da solo, e si
+    vedra` che finisce col liberarci della sua presenza dopo 49.140 cicli,
+    ovvero giusto poco prima di terminare la simulazione: decisamente un
+    po' sfortunato!
+    OK. Per funzionare funziona, pero` e` mostruosamente inefficente.
+    Vediamo se si puo` fare di meglio:
+
+    ; Bomber2.RED
+    ;
+    Target  DAT     0
+    Start   MOV     Target, <Target
+            JMP     Start
+
+    Da notare come si utilizza Target anche come bomba (e` sempre un DAT,
+    in fondo), e come si puo` fare a meno di SUB, per decrementare il
+    puntatore, sfruttando invece l'indirizzamento autodecrementato.
+    Bomber2 e` piu` piccolo: 3 locazioni occupate invece di 5, e solo 2
+    istruzioni eseguibili contro le 3 di Bomber1.
+    E` ovvio che 2 istruzioni da eseguire invece di 3, per fare la stessa
+    cosa, comportano una velocita` maggiore di circa il 30%! La
+    matematica (anche in Core War) non e` un'opinione, ed infatti Bomber2
+    impiega solo 32.760 cicli per completare il bombardamento dell'intera
+    matrice e (eventualmente) autodistruggersi.
+
+    Giusto per vedere se la pratica conferma la teoria, proviamo a far
+    scontrare i due mini-bombardieri.
+    Una considerazione: visto che entrambi sparano "all'indietro", e`
+    chiaro che l'esito dello scontro dipende anche dalla posizione dei
+    due avversari all'interno del Core, ovvero dal numero di locazioni
+    che separano i due baldi guerrieri.
+    Questo e` particolarmente evidente in questo caso, ma e` comunque un
+    principio comune a qualsiasi scontro, in Core War. E` per questo
+    che ogni Match, per avere un risultato significativo, deve essere
+    ripetuto per un certo numero di Rounds, in modo da garantire una
+    casistica adeguata.
+
+    Veniamo quindi al confronto:
+
+      C:\XRK> xrs bomber1 bomber2 /r:100
+
+    Oppure, per un maggiore effetto coreografico (che non guasta!):
+
+      C:\XRK> xrs bomber1 bomber2 /r:100 /g
+
+    I risultati della pugna confermano in pieno le supposizioni: Bomber2,
+    in virtu` della sua maggiore velocita`, vince il 70% degli incontri,
+    Bomber1 solo il 30%. Naturalmente, nessun pareggio, visto che in ogni
+    caso uno dei due finisce con l'essere terminato.
+
+    Negli scontri Core War, la convenzione standard per l'assegnazione
+    dei punteggi e` di 3 punti al vincitore, oppure 1 ciascuno in caso di
+    pareggio. Quindi, Bomber2 batte Bomber1 210 a 90!
+
+    Si puo` comunque fare ancora meglio, considerando altri aspetti della
+    simulazione. Si e`detto, ad esempio, che la distanza minima che deve
+    intercorrere tra i due concorrenti, al momento dell'inizio dello
+    scontro, e` di 2.048 locazioni; ne consegue che nella quasi totalita`
+    dei casi sia una perdita di tempo bombardare le 2K locazioni
+    immediatamente precedenti, e che si puo` quindi cominciare piu`
+    indietro. E` quello che fa Bomber3.RED:
+
+    ; Bomber3.RED
+    ;
+    Target  DAT     -2048
+    Start   MOV     Target, <Target
+            JMP     Start
+
+    L'aumento di potenziale sperato e` confermato dai risultati:
+    Bomber3 vs Bomber1 267 a 33!
+    Bomber3 vs Bomber2 222 a 78!
+
+
+    Cominciamo a vedere qualcosa di piu` sofisticato. Dicevamo che la
+    posizione relativa all'avversario ha un'importanza notevole: dunque,
+    come aumentare l'efficenza del nostro bombardiere, in modo da
+    renderlo pericoloso anche per avversari che si avvicinino troppo?
+    Semplice, oltre a sparare all'indietro, si puo` sparare anche in
+    avanti!
+
+    ; BiBomb.RED
+    ;
+    TargetA DAT     -2048
+    Start   MOV     TargetA, <TargetA
+            MOV     TargetB, @TargetB
+            ADD     #1, TargetB
+            JMP     Start
+    TargetB DAT     2048
+
+    Visto che l'autodecrementato funziona solo in un verso, abbiamo
+    bisogno di utilizzare un ADD per incrementare il puntatore per le
+    bombe "in avanti". Questo comporta una certa inefficenza, ma comunque
+    dovrebbe fare la sua onesta figura. Proviamolo, dunque, contro
+    Bomber3:
+
+    BiBomb vs Bomber3 99 - 201
+
+    Decisamente BiBomb non soddisfa le aspettative. Controllando le
+    simulazioni in grafica, o soffermandosi con piu` attenzione sul
+    listato, ci si accorge pure del perche`.
+    La velocita` di fuoco, intesa come rapporto tra locazioni alterate ed
+    istruzioni eseguite, e` la medesima per entrambi: 2 ogni 4 per BiBomb,
+    1 ogni 2 per Bomber3. Ciononostante, il singolo fronte di fuoco di
+    Bomber3 viaggia comunque a velocita` doppia rispetto ad ognuno dei
+    due fronti di BiBomb, e questo comporta un certo vantaggio, in un
+    certo numero di situazioni posizionali.
+
+    Vediamo di migliorarlo in qualche modo:
+
+    ; BiBomb2.RED
+    ;
+    TargetA DAT     -2048
+    Start   MOV     TargetA, <TargetA
+            MOV     TargetB, <TargetB
+            JMP     Start
+    TargetB DAT     4096
+
+    Questo e` decisamente meglio. Anziche` avere due fronti di fuoco
+    contrapposti, ne abbiamo due paralleli; in questo modo possiamo
+    sfruttare l'autodecremento, risparmiando un'istruzione.
+    La velocita` di fuoco aumenta, visto che il rapporto di cui prima
+    diventa di 2/3.
+
+    Riproviamo, dunque, con la prova del 9, e otteniamo:
+
+    BiBomb2 vs Bomber3 183 - 117
+
+    Vediamo ora una modifica a Bomber3, tale da renderlo ancora piu`
+    temibile:
+
+    ; Bomber3d.RED
+    ;
+    Target  DAT     -2048
+    Start   MOV     Target, <Target
+            Djn     Start, Target
+
+    Bello, eh? Utilizzando un opportuno DJN al posto del solito JMP,
+    riusciamo a decrementare ulteriormente Target, senza utilizzare
+    ulteriori istruzioni; in questo modo, il fronte di fuoco viaggera` a
+    velocita` doppia, visto che lo step sara` di 2 anziche` 1; d'altra
+    parte, il bombardamento effettuato non sara` piu` a tappeto, ma
+    lascera` invariata una locazione ogni due. Poco male comunque, visto
+    che non esistono molti avversari di lunghezza pari a 1 locazione!
+
+    Da notare che il programma puo` essere accorciato ulteriormente,
+    ottenendo quello che normalmente di chiama "Micron". Vi pare
+    impossibile? Pensateci su...
+
+    Riprovando lo scontro di prima:
+
+    BiBomb2 vs Bomber3d 117 - 183
+
+    E le parti si invertono, dunque!
+
+    Ora, proviamo a ripescare il primo programma d'esempio, e fare un
+    piccolo torneo tra questi 3 guerrieri.
+    Il tutto e` semplice ed automatico, utilizzando XRC. Basta lanciarlo,
+    ed indicare i nomi dei concorrenti, uno dopo l'altro; invio a vuoto
+    sul 4 concorrente, e i risultati non tarderanno ad arrivare:
+
+    -----------------------------------------
+    N. Name     Eff.   Pts  Won   Lost  Drawn
+    -----------------------------------------
+     1 Bomber3d 74.5%  447 74.5% 25.5%  0.0%
+     2 Bomber4  39.0%  234 39.0% 61.0%  0.0%
+     3 BiBomb2  36.5%  219 36.5% 63.5%  0.0%
+
+    Bomber3d risulta quindi il migliore, con un'efficenza di tutto
+    rispetto (per efficenza si intende il rapporto tra i punti
+    totalizzati, e i punti che avrebbe realizzato un ipotetico programma
+    ideale, in grado di vincere regolarmente tutti gli scontri).
+
+    Visti i risultati, qualche considerazione e` d'obbligo.
+    Bomber4 e` il piu` veloce a sparare, visto che il fronte di fuoco si
+    muove di 4 locazioni per volta; quanto basta per battere BiBomb2.
+    Bomber3d, pero`, e` cosi` piccolo da riuscire, il piu` delle volte, a
+    resistere al bombardamento di Bomber4, passando illeso tra una bomba
+    e l'altra; potendo contare su una velocita` d'attacco comunque di
+    tutto rispetto, riesce a comportarsi ottimamente con entrambi gli
+    avversari.
+
+    Morale: bisogna sapersi destreggiare bene nel bilanciare
+    l'occupazione del programma, la sua velocita` di fuoco e
+    l'accuratezza dello stesso.
+    Piu` facile a dirsi che a farsi, naturalmente, ma il bello e` proprio
+    qui.
+
+    Tanto per complicare la faccenda, cominciamo a vedere qualcosa che
+    sfrutti anche il Multi-Tasking, tramite l'istruzione SPL, modificando
+    un attimo BiBomb.
+
+    ; BiBombS.RED
+    ;
+    A       DAT     0               ; Bombardiere vero e proprio
+    B       MOV     A, <A
+    C       JMP     B
+    Start   MOV     A, (Start+2048) ; Prima copia
+            MOV     B, (Start+2049)
+            MOV     C, (Start+2050)
+            MOV     A, (Start+6144) ; Seconda copia
+            MOV     B, (Start+6145)
+            MOV     C, (Start+6146)
+            SPL     (Start+2049)    ; Attivazione delle copie
+            SPL     (Start+6145)
+
+    Il programma copia un bombardiere come quello di Bomber2, in due
+    diverse zone del Core; da notare che (Start+2048) e` un modo per
+    riferirsi ad una locazione posta 2.048 posizioni piu` avanti rispetto
+    a Start; questo tipo di espressioni viene risolto in fase di
+    compilazione, ed infatti utilizzando XRD disassemblare il programma,
+    si potranno vedere i valori calcolati.
+    Indi, le copie vengono attivate in parallelo. Subito dopo i due SPL,
+    si avranno in effetti 3 Task attivi, ovvero quello principale, piu` i
+    due appena attivati; il Task principale si autotermina subito dopo,
+    pero`, in quanto l'esecuzione cerca di continuare nella prima
+    locazione vuota dopo il programma.
+
+    Provando un po' di scontri, si vedra` subito che BiBombS riesce a
+    battere senza troppi problemi tutti i guerrieri visti fino a questo
+    momento. Le sua carte vincenti sono essenzialmente due: essendoci due
+    bombardieri in esecuzione, anche nel caso che uno venga colpito a
+    morte l'altro puo` continuare la sua opera, a velocita` maggiore;
+    inoltre, visto che il programma si riloca in posizione arbitrarie,
+    vengono a cadere gli assunti di alcuni dei guerrieri, secondo cui non
+    era necessario bombardare le 2.048 zone limitrofe.
+
+    Il programma puo` essere ulteriormente migliorato, ad esempio
+    implementando un bombardiere come quello utilizzato in Bomber3d, o
+    anche quello di Bomber4, al posto di quello utilizzato ora. Oppure si
+    potrebbe provare ad attivare piu` copie, in posizioni diverse.
+
+
+    Ma proviamo ad esaminare un programma veramente tosto.
+    Diamo un'occhiata all'ormai celebre "Mice"; questo e` un pezzo grosso,
+    ovvero il vincitore del primo torneo mondiale di Core War,
+    organizzato dall'ICWS oltre una decina d'anni fa.
+    La sua strategia, e il suo modo di utilizzare l'SPL, al tempo
+    suscitarono non poca sorpresa e ammirazione!
+
+    ; Mice By Chip Wendell
+    ;
+    Num     DAT     0           ; Contatore istruzioni da copiare
+    Start   MOV     #12,Num     ; Set del contatore
+    Loop    MOV     @Num,<Ptr   ; Loop di copia
+            DJN     Loop,Num
+            SPL     @Ptr        ; Attivazione della copia
+            ADD     #653,Ptr    ; Incremento puntatore alla prossima
+            JMZ     Start,Num   ; Ricomincia il ciclo se e` tutto OK
+    Ptr     DAT     833         ; puntatore alla prossima copia
+
+    Visto cosi` forse non fa piu` di tanta impressione; ma provate ad
+    assemblarlo ed eseguirlo e avrete modo di ricredervi!
+
+    Visto?!
+
+    Mice presenta uno sfruttamento dell'SPL da manuale. E` un Multi-
+    Splitter, ovvero un programma che replica se stesso lungo il Core, e
+    attiva le varie copie in Multi-Tasking.
+    Il primo MOV serve ad impostare il contatore delle istruzioni copiate;
+    il loop di 2 istruzioni immediatamente seguente e` il ciclo di copia
+    vero e proprio.
+    Fatta la copia, essa viene attivata; indi si incrementa il puntatore
+    alla prossima copia, e si riparte dall'inizio.
+    Due cose che potrebbero sfuggire: Mice copia qualche istruzione in
+    piu` del necessario (quindi presumibilmente delle locazioni vuote,
+    ovvero dei DAT) in modo tale che, se la copia viene a posizionarsi in
+    prossimita` di un avversario, questo possa vedersi piovere sulla
+    testa un bel po' di letali DAT.
+    Inoltre, l'ultimo JMZ che chiude il loop e ricomincia tutto daccapo,
+    e` un'ulteriore misura di sicurezza. Infatti, se tutto si svolge
+    regolarmente, Num sara` 0 e quindi si riprende il ciclo; altrimenti,
+    significa che si e` pericolosamente mescolato il codice della copia
+    con quello di qualche avversario: per evitare effetti collaterali
+    spiacevoli, si opta per la soppressione del Task mutato!
+
+    Provando a far combattere Mice con i guerrieri visti fin'ora, si vede
+    subito che quest'ultimi non possono nulla contro questo campione;
+    nuove copie vengono prodotte e attivate dove il fronte di fuoco e`
+    gia` passato, e quindi vengono lasciate indisturbate.
+    Contemporaneamente, i vari bombardieri completano il giro della
+    matrice senza aver terminato l'avversario, e dunque arrivano a morte
+    certa!
+
+    La tecnica d'attacco dei bombardieri visti fin'ora e` semplicemente
+    inadeguata a questo tipo di avversari.
+    Il problema e` che risulta impossibile riuscire a bombardare
+    contemporaneamente tutti i Task che sono attivi.
+    Mice sfugge come un'anguilla, continuando a replicarsi lungo il
+    Core. Anche bombardieri come Bomber4, che non si autodistruggono e
+    continuano a scagliare bombe ad oltranza, non hanno nessuna speranza
+    di vittoria.
+
+    Occorre qualcosa di diverso, di piu` efficace del solito DAT.
+    La risposta ci arriva dallo stesso comando sfruttato da Mice, l'SPL.
+
+    ; Icer.RED
+    ;
+    Target  DAT     -2048
+    Count   DAT     2046
+    Ice     SPL     0               ; Bomba paralizzante
+    Start   MOV     Ice, @Target    ; Bombardiere paralizzante
+            SUB     #3, Target
+            DJN     Start, Count
+    Loop    MOV     Count, <Count   ; Bombardiere a tappeto
+            JMP     Loop
+
+    La particolarita` del programma e` sicuramente l'uso di un SPL 0 come
+    bomba. Una istruzione di questo tipo ha infatti la particolarita` di
+    rallentare enormemente l'avversario, in quanto vengono in un attimo
+    generati tanti Task, alla stessa posizione, da saturare il limite del
+    MARS, fissato in 64 Task massimi per concorrente.
+
+    Poniamo il caso che un SPL 0 riesca a colpire una delle copie di Mice,
+    quando questo e` gia` riuscito ad attivare 5 Task. Tenendo presente
+    che il nuovo Task creato da un SPL viene inserito nella coda di
+    esecuzione dei Task immediatamente dopo il Task generante, otteniamo
+    che per i successivi 59 cicli d'esecuzione riservati a Mice, sara`
+    eseguito sempre e solo l'SPL 0. Arrivati a 64 Task attivi, ogni
+    ulteriore tentativo di SPL verra` semplicemente ignorato; Mice si
+    ritrovera` quindi con 5 Task utili su 64, vale a dire che per i 59/64
+    dei cicli di clock a disposizione si ritrovera` a non fare niente di
+    costruttivo.
+    In pratica con un SPL 0 si riesce a sottrarre una quantita` di tempo
+    macchina all'avversario, ottenendo quindi di rallentarlo quel tanto
+    che baste per poter poi bombardarne tutti i Task con i soliti DAT.
+
+    Dando un'occhiata al programma, si vede l'utilizzo in un primo
+    momento di un bombardiere a passo 3 a base di SPL 0; in Count viene
+    tenuto il conto di quanti colpi sono stati sparati, in maniera da
+    potersi fermare prima di danneggiarsi.
+    Subito dopo, parte un'altro bombardiere a passo 1, che utilizza sia
+    come bomba che puntatore Count; non basta infatti paralizzare
+    l'avversario, ma bisogna pure ucciderlo, naturalmente!
+
+    E questo ci porta ad altre interessanti considerazioni.
+    Un Anti-Splitter, come si puo` classificare Icer, ha la possibilita`
+    di vincere sia contro uno Splitter come Mice, che contro avversari
+    Mono-Tasking; un Anti-Splitter e` pero` per forza di cose piu`
+    complesso di un normale Bomber basato su DAT, in quanto occorre prima
+    il passaggio con le bombe paralizzanti, e poi con i DAT: c'e` del
+    lavoro in piu` da fare, in pratica, e per poterlo svolgere occorrono
+    delle istruzioni in piu`, uguale piu` locazioni occupate, uguale
+    maggiore vulnerabilita` e anche lentezza, in molti casi.
+
+    Inoltre, un Bomber spesso non si preoccupa di prendere le
+    dovute precauzioni per non colpirsi, in quanto puo` pensare di aver
+    gia` distrutto l'avversario prima di arrivare a centrarsi; un Anti
+    Splitter, invece, deve quanto meno fare in modo che il primo
+    bombardamento sia organizzato in modo da fermarsi in tempo, per poter
+    portare a termine anche la seconda fase; e questo significa,
+    ancora una volta, codice in piu`.
+
+    E` importante anche la scelta dello step con cui piazzare le bombe,
+    per bilanciare il bisogno di completare il bombardamento nel minor
+    tempo possibile, per evitare che l'avversario abbia la possibilita`
+    di arrecare danno, e il bisogno di non lasciare superstiti; un
+    avversario molto piccolo potrebbe infatti sfuggire alla trama Step 3
+    di Icer.
+
+    Vediamo uno degli Anti Splitter piu` famosi, acclamato vincitore del
+    secondo torneo mondiale di CW: Ferret:
+
+    ; Ferret By Robert R. Reed
+    ;
+    start   MOV     #4908,B
+    f       CMP     <a,<b
+            MOV     s,@b
+            CMP     <a,<b
+    a       MOV     s,-5
+            DJN     f,b
+    k       MOV     w,<k
+            DJN     k,<w
+            ADD     #3,w
+    b       JMP     k
+    w       DAT     -10
+    s       SPL     0
+
+    Come si puo` vedere, qui si sfruttano al massimo vari sotterfugi, in
+    modo da contenere il piu` possibile la dimensione del programma.
+    Interessante e`, ad esempio, l'uso del campo B di un'istruzione JMP,
+    quindi non normalmente non utilizzato, come puntatore.
+
+    Anche la velocissima tecnica di "scansione" del Core, invece di un
+    piu` convenzionale bombardamento piu` o meno a casaccio, e` notevole.
+    Ferret, infatti, sfrutta CMP in modo da confrontare due locazioni
+    distanti; se queste sono entrambe vuote, l'esecuzione salta
+    un'istruzione e si procede continuando a decrementare i due puntatori.
+    Nel caso invece si rilevi una differenza, probabile segno della
+    presenza di codice nemico in almeno una delle due locazioni, entrambe
+    vengono bombardate con bombe paralizzanti.
+    Al termine di questa prima parte, scatta un bombardiere a tappeto che
+    spiana ogni rimanenza!
+    Date le sue caratteristiche, un programma come questo si dimostra un
+    osso duro sia contro avversari Mono-Tasking che Multi-Splitter.
+
+    Da notare che, per mettere un po` i bastoni tra le ruote a programmi
+    che scansionano la memoria come Ferret, e` asupicabile utilizzare per
+    i propri bombardamenti delle bombe "colored", ovvero diverse da un
+    DAT 0, e possibilmente con qualcosa di diverso da 0 sul 5^ campo; in
+    questo modo, un programma tipo Ferret perderebbe del tempo anche
+    cercando di sparare sulle bombe dell'avversario!
+
+    Sempre sul tema di AntiSplitter, vediamo una delle varianti piu`
+    interessanti ed utilizzate sul tema delle bombe paralizzanti; si
+    tratta dei cosiddetti Virus o Vampire. Uno dei programmi che ne fanno
+    uso e` Warp, di uno degli autori del primo articolo di presentazione
+    delle Core War apparso ormai nell'87 sulle pagine di MC Microcomputer.
+
+    ; WARP By Andrea Giotti
+    ;
+    JmpHere ADD     #1,HowMany
+            CMP     #64,HowMany
+            JMP     Wait
+            MOV     HowMany,Wait
+    Wait    SPL     JmpHere
+            JMP     Wait
+    HowMany DAT     0
+    Start   MOV     #-1,Bomb
+    Loop    ADD     #2,Bomb
+            MOV     Bomb,<Pointer
+            DJN     Loop,Pointer
+            MOV     #(JmpHere-Pointer),Pointer
+            JMP     Start
+    Bomb    JMP     @Bomb
+    Pointer DAT     JmpHere
+
+    Il programma vero e` proprio comincia dalla linea Start; la parte
+    precedente, e` in realta` una porzione di codice che Warp non esegue
+    mai, per sua fortuna!
+    Le bombe utilizzate sono degli JMP @0, ovvero dei salti a quanto
+    contenuto nel 5^ campo del JMP stesso; Warp quindi, oltre ad
+    aggiornare il puntatore alla destinazione della bomba, aggiorna anche
+    il puntatore all'interno del JMP, in modo che il Task avversario che
+    dovesse trovarsi ad eseguire una di queste bombe-virus, si ritrovi
+    catapultato all'interno della parte di codice che inizia a JmpHere.
+    Una volta li`, si cominciano a generare una quantita` di Task nulli 
+    (come per SPL 0), per fiaccare l'avversario. Una volta catturati
+    tutti i 64 Task avversari, questi vengono fatti crashare in un DAT,
+    uccidendoli tutti in un colpo solo!
+
+    Sempre sfruttando varianti di queste tecniche di cattura
+    dell'avversario, sono stati realizzati anche programmi che
+    utilizzavano il nemico per bombardare a tappeto il Core, avendo cura
+    di saltare se stessi!
+
+
+    A questo punto la panoramica sulle piu` usate e conosciute tecniche
+    per Core War si puo` dire completa.
+    Dopo aver avuto un'idea di quello che si puo` fare, dunque, non resta
+    altro che cominciare a farlo sul serio, e darci dentro creando
+    temibili guerrieri con cui sfidare il solito amico!
+    La cosa migliore, per elevare il livello dei proprio combattenti e
+    per arrivare ad esplorare a fondo anche gli aspetti piu` reconditi
+    della programmazione in Redcode, e` proprio quella di impegnare i
+    proprio prodi in Tornei, magari tra un gruppo di avversari ormai noti
+    e conosciuto oppure, meglio ancora, con qualche altro amico anch'esso
+    appassionato di CW.
+
+    La necessita` aguzza l'ingegno, e il desiderio di piazzarsi nella
+    migliore posizione in classifica fa fare cose egregie!
+
+
+
+Marco Pontello
+
+Homepage: http://mark0.ngi.it
+
+E-mail  : marcopon@ngi.it
+          marcopon@myrealbox.com
+          marcopon@yahoo.it
+          marcopon@bigfoot.com
+
+          (almeno una di queste dovrebbe andare!)
+

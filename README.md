@@ -34,6 +34,9 @@ easily, since I could quickly see which ones performed better in a moderate,
 but already statistically significant number of competition rounds. In today's
 language it allowed for agile development.
 
+[Docs/Quirks.md](Docs/Quirks.md) lists the quirks of `MARS.COM` and compares it with the ICWS'86,
+'88 and '94 Redcode standards. Copies of the standards are in [Docs/Standards](Docs/Standards/README.md).
+
 ## `COREWAR.EXE` and `COREWAR.HLP`
 
 The CoreWar "reference" implementation I've got without sources, made by Kovacs Tamas in 1993.
