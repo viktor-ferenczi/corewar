@@ -16,6 +16,7 @@ import hashlib
 import random
 import shutil
 import subprocess
+import sys
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -31,11 +32,10 @@ RANDOMIZE_SEED = 0x1566  # MOV AX,[046CH] / MOV BX,[046EH]
 ENTRY_CALL_WAR = 0xA84  # MOV AX,13H / INT 10H / CALL WAR
 USAGE_TEXT = 0x136  # M_NOPROG at 236H, 1288 bytes
 
-# The programs of the tournament, plus the ones it left out and the test programs.
-TOURNAMENT = """ANTIIMP.CWR ARTUR-1 ARTUR-2 ARTUR-3 CHANG.CWR CHANG2.CWR CREEPER.CWR GABOR1.CWR HARVKILL.CWR
-IMP.CWR KILLER.CWR KILLER01.CWR KILLER02.CWR KILLER03.CWR KILLER2.CWR MICE.CWR MICE2 PRB001.CWR PRB002.CWR
-PRB003.CWR PRB004.CWR PRB005.CWR PRB006.CWR PRB007.CWR PRB008.CWR PRB009.CWR PRB010.CWR PRB011.CWR
-ROHAMO.CWR TORPE.CWR VIKTOR01.CWR VIKTOR02.CWR VIKTOR03.CWR VIKTOR04.CWR VIKTOR05.CWR Y.CWR""".split()
+# The programs of the tournament in Reproduction/mars.py, plus the ones it left out and the test programs.
+sys.path.insert(0, str(RUST.parent.parent / "Reproduction"))
+from mars import PROGRAMS as TOURNAMENT  # noqa: E402
+
 EXTRA = ["NONE.CWR", "TEST.CWR", "ROHANO.CWR"]
 SPECIAL = sorted(p.name for p in (GOLDEN / "progs").glob("*.CWR"))
 

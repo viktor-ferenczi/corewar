@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use mars::engine::MEMLEN;
 use mars::report::{self, average, Session, Source};
 use mars::tournament::{self, Entry, Options};
 use mars::{Rng, Settings};
@@ -83,7 +84,7 @@ fn a_session_carries_the_memory_after_the_arena_to_the_next_run() {
     // With one program more the arena starts 232 cells higher.
     let three = [source("L.CWR", &long), source("M.CWR", &long), source("N.CWR", &long)];
     report::run_in(&mut session, &three, &settings, Rng::from_ticks(7), 1).unwrap();
-    assert_eq!(session.cells().len(), 3 * 232 + 8099);
+    assert_eq!(session.cells().len(), 3 * 232 + MEMLEN);
 }
 
 fn tournament(out: &Path, seed: u64) -> String {

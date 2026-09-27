@@ -44,6 +44,9 @@ struct Args {
 fn parse() -> Result<Args, String> {
     let mut it = std::env::args().skip(1);
     let command = it.next().ok_or("missing command")?;
+    if command == "-h" || command == "--help" {
+        return Err(String::new());
+    }
     let mut args = Args {
         command,
         files: Vec::new(),
