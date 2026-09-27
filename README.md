@@ -6,6 +6,12 @@ Historical implementations and programs from 1993.
 
 The folder also contains CoreWar programs from that era, including mine and some from others.
 
+## Reproduction
+
+A 2026 tournament between the programs in `Historical`, played with `MARS.COM` under DOSBox.
+It is not the original 1993 competition data. See [Reproduction](Reproduction/README.md) for details,
+and the published results at https://viktor-ferenczi.github.io/corewar/
+
 ## `MARS.COM` and `MARS.ASM`
 
 My own implementation of the MARS assembler and emulator. Comments are in half English and
@@ -25,9 +31,3 @@ language it allowed for agile development.
 ## `COREWAR.EXE` and `COREWAR.HLP`
 
 The CoreWar "reference" implementation I've got without sources, made by Kovacs Tamas in 1993.
-
-## Reproduction
-
-A 2026 tournament between the programs in `Historical`, played with `MARS.COM` under DOSBox.
-It is not the original 1993 competition data. See [Reproduction](Reproduction/README.md) for details,
-and the published results at https://viktor-ferenczi.github.io/corewar/
