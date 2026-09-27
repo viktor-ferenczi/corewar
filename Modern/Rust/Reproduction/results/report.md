@@ -31,12 +31,12 @@ Generated on 2026-09-27 by `report.py` from [`runs.csv`](runs.csv).
 
 ## Speed
 
-The whole tournament took 138 seconds of wall clock time on 16 threads
+The whole tournament took 132 seconds of wall clock time on 16 threads
 (AMD Ryzen 7 9800X3D 8-Core Processor, 16 logical CPUs, rustc 1.90.0 (1159e78c4 2025-09-14)).
 
 The DOSBox tournament took less than 4 hours with 8 DOSBox instances in parallel. Summed over the pairs,
-DOSBox needed 29.6 hours and the Rust engine 36.3 minutes,
-49 times less. The pair times of both are wall clock times with other pairs running in
+DOSBox needed 29.6 hours and the Rust engine 35.0 minutes,
+51 times less. The pair times of both are wall clock times with other pairs running in
 parallel, so this is a rough comparison.
 
 ## Comparison with the DOSBox tournament

@@ -140,9 +140,13 @@ impl Compiled {
     }
 }
 
-/// Compile a Redcode source exactly like MARS.COM does.
+/// Compile a Redcode source like MARS.COM does. MARS.COM only ends a line at a CR, and reads an LF
+/// as a space; here an LF without a CR before it ends the line too, so files with Unix line ends
+/// compile the same as with DOS ones. Sources with CR LF or CR line ends compile exactly as in
+/// MARS.COM.
 pub fn compile(source: &[u8]) -> Result<Compiled, Fatal> {
-    let mut c = Compiler::new(source);
+    let source = unix_line_ends(source);
+    let mut c = Compiler::new(&source);
     c.pass1()?;
     c.reader.seek0();
     c.pass2()?;
@@ -152,6 +156,18 @@ pub fn compile(source: &[u8]) -> Result<Compiled, Fatal> {
         c.message(MessageKind::ZeroLength);
     }
     Ok(Compiled { program: Program { code: c.code, start }, messages: c.messages })
+}
+
+/// Every LF not after a CR becomes a CR. The length stays the same, so do the positions the
+/// read buffer quirks depend on.
+fn unix_line_ends(source: &[u8]) -> Vec<u8> {
+    let mut out = source.to_vec();
+    for i in 0..out.len() {
+        if source[i] == b'\n' && (i == 0 || source[i - 1] != b'\r') {
+            out[i] = b'\r';
+        }
+    }
+    out
 }
 
 /// DOS file reading through the `PREREAD` buffer (`READBYTE`, `SEEK0`).

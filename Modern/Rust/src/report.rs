@@ -3,6 +3,10 @@
 use crate::engine::{Cell, PlaceError, Stats, MEMLEN};
 use crate::{compile, Engine, Fatal, Program, Rng, Settings};
 
+/// First line of the output. MARS.COM prints "CoreWar MARS V1.0 by GM 1993" there, the rest of the
+/// output has the same format.
+pub const BANNER: &str = "CoreWar MARS Rust V1.0 - Viktor Ferenczi 2026";
+
 /// A source to compile, with the name MARS prints for it.
 #[derive(Clone, Debug)]
 pub struct Source {
@@ -13,7 +17,8 @@ pub struct Source {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Run {
-    /// What MARS prints to standard output, with LF line ends instead of CR LF.
+    /// What MARS prints to standard output, with LF line ends instead of CR LF and `BANNER` as the
+    /// first line.
     pub text: String,
     /// The binary statistics log, empty when no war was played.
     pub log: Vec<u8>,
@@ -79,7 +84,7 @@ pub fn run_in(
     rng: Rng,
     wars: u16,
 ) -> Result<Run, (Fatal, String)> {
-    let mut text = String::from("CoreWar MARS V1.0 by GM 1993\n");
+    let mut text = format!("{BANNER}\n");
     let mut programs = Vec::new();
     let mut errors = 0;
     for source in sources {

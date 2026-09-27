@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use mars::report::{self, Session, Source};
+use mars::report::{self, Session, Source, BANNER};
 use mars::{compile, Rng, Settings};
 
 fn golden() -> PathBuf {
@@ -135,7 +135,9 @@ fn check_battle(session: &mut Session, case: &Case) -> Result<(), String> {
         .collect();
     let run = report::run_in(session, &sources, &case.settings, Rng::from_ticks(case.seed), case.wars)
         .map_err(|(e, _)| e.to_string())?;
-    let expected = std::fs::read_to_string(dir.join(format!("{}.OUT", case.id))).unwrap();
+    // Everything but the first line is the same as MARS.COM prints.
+    let recorded = std::fs::read_to_string(dir.join(format!("{}.OUT", case.id))).unwrap();
+    let expected = recorded.replacen("CoreWar MARS V1.0 by GM 1993", BANNER, 1);
     let log = std::fs::read(dir.join(format!("{}.LOG", case.id))).unwrap();
     if run.text != expected || run.log != log {
         return Err(format!("{}: differs\n--- MARS.COM\n{expected}--- Rust\n{}", case.id, run.text));

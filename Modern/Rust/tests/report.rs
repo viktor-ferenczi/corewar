@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use mars::engine::MEMLEN;
-use mars::report::{self, average, Session, Source};
+use mars::report::{self, average, Session, Source, BANNER};
 use mars::tournament::{self, Entry, Options};
 use mars::{Rng, Settings};
 
@@ -32,7 +32,8 @@ fn statistics_text() {
     assert!(run.played);
     assert_eq!(
         run.text,
-        "CoreWar MARS V1.0 by GM 1993\n\nD:\\IMP.CWR\n\nD:\\DIE.CWR\n
+        format!(
+            "{BANNER}\n\nD:\\IMP.CWR\n\nD:\\DIE.CWR\n
 CoreWar MARS V1.0 Statistics:
 
 Number of full wars         = 3
@@ -44,6 +45,7 @@ ProgNum   Average PC  Win     Lose    Progam name
 1         1           3       0       D:\\IMP.CWR
 2         0           0       3       D:\\DIE.CWR
 "
+        )
     );
     let words: Vec<u16> = run.log.chunks(2).map(|w| u16::from_le_bytes([w[0], w[1]])).collect();
     assert_eq!(words, [0x100, 3, 0x27C0, 9, 64, 1, 1, 3, 0, 1, 3, 0, 2, 0, 0, 0, 0, 3]);
@@ -56,8 +58,10 @@ fn errors_stop_mars_before_the_war() {
     assert!(!run.played);
     assert_eq!(
         run.text,
-        "CoreWar MARS V1.0 by GM 1993\n\nA.CWR\nUndefined symbol at line 1 in program A.CWR !\nCan't open B.CWR !\n\
+        format!(
+            "{BANNER}\n\nA.CWR\nUndefined symbol at line 1 in program A.CWR !\nCan't open B.CWR !\n\
          Cannot execute war, while there are any errors !\n"
+        )
     );
     assert!(run.log.is_empty());
 }
@@ -67,7 +71,7 @@ fn a_fatal_source_returns_the_text_so_far() {
     let (fatal, text) =
         report::run(&[source("H.CWR", "START MOV 0 1\nX ")], &Settings::default(), Rng::from_ticks(1), 1).unwrap_err();
     assert_eq!(fatal, mars::Fatal::Hang { line: 2 });
-    assert_eq!(text, "CoreWar MARS V1.0 by GM 1993\n\nH.CWR\n");
+    assert_eq!(text, format!("{BANNER}\n\nH.CWR\n"));
 }
 
 #[test]

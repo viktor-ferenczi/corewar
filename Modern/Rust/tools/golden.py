@@ -14,6 +14,7 @@ MARS.COM itself is never modified, the patched copies live in temporary folders.
 import argparse
 import hashlib
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -60,6 +61,12 @@ def mars(seed: int | None = None, dump: bool = False) -> bytes:
         rel = 0x236 - (0x100 + ENTRY_CALL_WAR + 3)
         data[ENTRY_CALL_WAR : ENTRY_CALL_WAR + 8] = b"\xe8" + rel.to_bytes(2, "little", signed=True) + b"\x90" * 5
     return bytes(data)
+
+
+def copy_dos(source: Path, target: Path) -> None:
+    """Copy a source with DOS line ends: MARS.COM only ends a line at a CR, and a git checkout may
+    have LF line ends."""
+    target.write_bytes(re.sub(rb"(?<!\r)\n", b"\r\n", source.read_bytes()))
 
 
 def dosbox(workdir: Path, commands: list[str], timeout: float) -> bool:
@@ -111,7 +118,7 @@ def compile_golden(args: argparse.Namespace) -> None:
             (work / "MARSD.COM").write_bytes(mars(dump=True))
             commands = []
             for n, name in enumerate(batch):
-                shutil.copy(sources.get(name) or historical[name], work / name)
+                copy_dos(sources.get(name) or historical[name], work / name)
                 commands += [f"MARSD {name} > O{n}.TXT", f"if exist DUMP.BIN ren DUMP.BIN B{n}.BIN"]
             finished = dosbox(work, commands, timeout=30)
             for n, name in enumerate(batch):
@@ -185,9 +192,9 @@ def battle_batch(batch: list[tuple[str, int, list[str], list[str]]]) -> str:
     with tempfile.TemporaryDirectory(prefix="golden-") as tmp:
         work = Path(tmp)
         for name in TOURNAMENT + EXTRA:
-            shutil.copy(HISTORICAL / name, work / name)
+            copy_dos(HISTORICAL / name, work / name)
         for name in SPECIAL:
-            shutil.copy(GOLDEN / "progs" / name, work / name)
+            copy_dos(GOLDEN / "progs" / name, work / name)
         commands = []
         for id_, seed, options, programs in batch:
             (work / f"{id_}.COM").write_bytes(mars(seed=seed))

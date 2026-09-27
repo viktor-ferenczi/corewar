@@ -5,7 +5,15 @@ see [`Historical`](../../Historical)). With the same random seed a battle ends e
 down to the last process count in the statistics. It needs no DOSBox, and it plays the whole tournament
 of [`Reproduction`](../../Reproduction) in about two minutes instead of four hours.
 
-The command line is new; it does not take the `/X` options of `MARS.COM`.
+Where it differs from `MARS.COM` on purpose:
+
+- The command line is new; it does not take the `/X` options of `MARS.COM`.
+- The output has the same format, except for the first line, `CoreWar MARS Rust V1.0 - Viktor Ferenczi
+  2026`, so you can tell which one produced it.
+- `MARS.COM` ends a line only at a CR and reads an LF as a space, so a file with Unix line ends is one
+  long comment for it. The port takes an LF without a CR before it as a line end too, so sources work
+  with CR LF, LF and CR line ends alike. Files with DOS line ends compile exactly as in `MARS.COM`.
+- Where `MARS.COM` would hang or crash while compiling, the port stops with an error.
 
 ## Build and run
 
@@ -45,7 +53,7 @@ tournament of [`Reproduction`](Reproduction) was played this way.
 The code follows `MARS.ASM`, and a comparison of the assembled source with the binary showed that
 `MARS.COM` was built from it without changes. The tests check the port against `MARS.COM` itself:
 
-- `tests/golden/compile`: 37 test sources written to hit the odd corners of the compiler, and the
+- `tests/golden/compile`: 36 test sources written to hit the odd corners of the compiler, and the
   39 historical programs. `MARS.COM` printed the error messages, and a copy patched with a small
   dumper (`tools/dump.asm`) wrote out the compiled code. Both must match exactly.
 - `tests/golden/battle`: 168 battles recorded with copies of `MARS.COM` patched to a fixed random seed:
@@ -57,6 +65,7 @@ The code follows `MARS.ASM`, and a comparison of the assembled source with the b
 
 `cargo test` runs all of them in about a second. `tools/golden.py` records the reference data again. It
 needs DOSBox 0.74 and nasm, and never modifies `MARS.COM`; the patched copies live in temporary folders.
+It gives DOSBox the sources with CR LF line ends, whatever the checkout has.
 
 ## Quirks it reproduces
 
@@ -73,7 +82,7 @@ Compiler:
 - A label at instruction 59 leaves a `;` (59) in AL, so in the first pass the rest of its line counts as
   a comment.
 - Whitespace after a label runs over line ends without counting them, and at the end of the file
-  `MARS.COM` hangs. The port reports that as an error instead of hanging.
+  `MARS.COM` hangs.
 - A NUL byte ends the first pass. The second pass then reads the rest of the read buffer first, then the
   file again from its start.
 

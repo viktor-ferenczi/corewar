@@ -156,9 +156,17 @@ fn message_texts() {
 }
 
 #[test]
-fn only_carriage_returns_count_as_line_ends() {
-    assert_eq!(compile(b"; x\n DAT 1\n DAT X\n").unwrap().messages[0].line, 1);
-    assert_eq!(compile(b"; x\r DAT 1\r DAT X\r").unwrap().messages[0].line, 3);
+fn cr_lf_and_crlf_line_ends() {
+    // MARS.COM reads an LF as a space, the port takes one without a CR before it as a line end.
+    for source in [&b"; x\r\n DAT 1\r\n DAT X\r\n"[..], b"; x\n DAT 1\n DAT X\n", b"; x\r DAT 1\r DAT X\r"] {
+        let c = compile(source).unwrap();
+        assert_eq!((c.program.code.len(), c.messages[0].line), (2, 3), "{source:?}");
+    }
+    assert_eq!(compile(b"START MOV 0 1\n").unwrap(), compile(b"START MOV 0 1\r\n").unwrap());
+}
+
+#[test]
+fn line_counting() {
     // Whitespace after a label skips the line end without counting it.
     assert_eq!(messages("LAB   \n\n DAT 1\n DAT X\n"), [(MessageKind::Undefined, 2)]);
 }

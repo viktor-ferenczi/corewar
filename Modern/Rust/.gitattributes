@@ -1,2 +1,0 @@
-# Test sources and outputs recorded from MARS.COM: keep every byte, CR LF line ends included.
-tests/golden/** -text

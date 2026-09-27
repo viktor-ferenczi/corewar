@@ -6,7 +6,8 @@ use mars::tournament::{self, Entry};
 use mars::{compile, Rng, Settings};
 
 const USAGE: &str = "\
-CoreWar MARS V1.0 (1993) compiler and simulator, native reimplementation
+CoreWar MARS Rust V1.0 - Viktor Ferenczi 2026
+The compiler and simulator of MARS.COM (CoreWar MARS V1.0, 1993), reimplemented
 
 Usage:
   mars compile FILE
