@@ -15,7 +15,7 @@ HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results"
 RUNS = RESULTS / "runs.jsonl"
 REPORT = RESULTS / "report"  # .md, .html, .odt
-DOSBOX = HERE.parent.parent.parent / "Reproduction"
+DOSBOX = HERE.parent.parent / "Reproduction"
 DOSBOX_CSV = DOSBOX / "results" / "runs.csv"
 BASELINE = RESULTS / "baseline.jsonl"
 
@@ -193,13 +193,13 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.jsonl`](runs.
 
 > These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
 > Some programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up
-> of the 1985 championship). This is the tournament of [`Reproduction`](../../../../Reproduction) played
+> of the 1985 championship). This is the tournament of [`Reproduction`](../../../Reproduction) played
 > again, between the programs found in the `Historical` folder, so the ranking says nothing about how
 > the original competition ended.
 
 ## Setup
 
-- Engine: the native Rust reimplementation of Viktor's `MARS.COM` in `Modern/Rust`, with the same
+- Engine: the native Rust reimplementation of Viktor's `MARS.COM` in `Modern`, with the same
   compiler and simulator. Its test suite compares it with `MARS.COM` under DOSBox: the compiled code of
   every program and the exact statistics of 168 recorded battles with fixed random seeds are the same.
 - The rules are the defaults of MARS, like in the DOSBox tournament: 8000 cell arena, at most 64

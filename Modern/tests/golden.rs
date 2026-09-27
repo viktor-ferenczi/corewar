@@ -10,7 +10,7 @@ fn golden() -> PathBuf {
 }
 
 fn historical() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Historical")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../Historical")
 }
 
 fn word(bytes: &[u8], offset: usize) -> u16 {

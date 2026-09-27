@@ -16,7 +16,7 @@ fn programs() -> Vec<Program> {
     for name in
         ["IMP.CWR", "MICE.CWR", "CHANG.CWR", "TORPE.CWR", "KILLER.CWR", "KILLER2.CWR", "PRB004.CWR", "Y.CWR", "ARTUR-2"]
     {
-        paths.push(root.join("../../Historical").join(name));
+        paths.push(root.join("../Historical").join(name));
     }
     paths.sort();
     paths.iter().map(|p| report::compile_clean(&p.display().to_string(), &std::fs::read(p).unwrap()).unwrap()).collect()

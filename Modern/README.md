@@ -1,9 +1,9 @@
 # MARS in Rust
 
 A native reimplementation of the compiler and simulator of Viktor's 1993 `MARS.COM` (CoreWar MARS V1.0,
-see [`Historical`](../../Historical)). With the same random seed a battle ends exactly as in `MARS.COM`,
+see [`Historical`](../Historical)). With the same random seed a battle ends exactly as in `MARS.COM`,
 down to the last process count in the statistics. It needs no DOSBox, and it plays the whole tournament
-of [`Reproduction`](../../Reproduction) in about two minutes on the CPU instead of four hours, or in 22
+of [`Reproduction`](../Reproduction) in about two minutes on the CPU instead of four hours, or in 22
 seconds on two GPUs.
 
 Where it differs from `MARS.COM` on purpose:
@@ -34,13 +34,13 @@ cargo build --release --no-default-features
 Compile a program and list the result:
 
 ```bash
-./target/release/mars compile ../../Historical/MICE.CWR
+./target/release/mars compile ../Historical/MICE.CWR
 ```
 
 Play 500 wars and print the statistics the way `MARS /P=500` does:
 
 ```bash
-./target/release/mars run --wars 500 ../../Historical/MICE.CWR ../../Historical/KILLER.CWR
+./target/release/mars run --wars 500 ../Historical/MICE.CWR ../Historical/KILLER.CWR
 ```
 
 Options of `run`: `--steps` (war length, 600000), `--queue` (processes per program, 64),
@@ -53,7 +53,7 @@ A tournament plays every pair of 2 to 256 programs in both start orders, 1000 ga
 default, on all CPU cores:
 
 ```bash
-./target/release/mars tournament --out results.jsonl --seed 1 ../../Historical/*.CWR
+./target/release/mars tournament --out results.jsonl --seed 1 ../Historical/*.CWR
 ```
 
 Every pair plays two MARS runs, one per start order, with random seeds derived from the master seed
