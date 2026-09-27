@@ -11,6 +11,7 @@ Viktor's 1993 `MARS.COM` under DOSBox.
 
 ## Documents
 
+- Published site, made from this folder by the CI workflow on `main`: https://viktor-ferenczi.github.io/corewar/
 - Results report: [Markdown](results/report.md), [HTML](results/report.html), [ODT](results/report.odt)
 - Raw results, one row per pair and start order: [results/runs.csv](results/runs.csv)
 - Unprocessed MARS statistics output of every run: [raw/](raw)
