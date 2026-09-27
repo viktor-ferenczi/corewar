@@ -1,0 +1,16 @@
+CoreWar MARS V1.0 by GM 1993
+
+PRB002.CWR
+
+MICE.CWR
+
+CoreWar MARS V1.0 Statistics:
+
+Number of full wars         = 500
+Maximal war length in steps = 600000
+Queue length (Max. PCs)     = 64
+Execute each other was enabled.
+
+ProgNum   Average PC  Win     Lose    Progam name
+1         22          4       121     PRB002.CWR
+2         59          121     4       MICE.CWR

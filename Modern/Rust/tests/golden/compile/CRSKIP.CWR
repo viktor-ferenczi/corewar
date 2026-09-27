@@ -1,0 +1,5 @@
+; a label with trailing spaces skips the line end without counting it
+LAB   
+   
+ DAT 1
+ DAT UNKNOWN

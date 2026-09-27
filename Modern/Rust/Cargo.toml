@@ -1,0 +1,18 @@
+[package]
+name = "mars"
+version = "1.0.0"
+edition = "2021"
+description = "Native reimplementation of the 1993 CoreWar MARS V1.0 (MARS.COM) compiler and simulator"
+license = "MIT"
+publish = false
+
+[dependencies]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# The tests play hundreds of full wars, too slow without optimization.
+[profile.test]
+opt-level = 3

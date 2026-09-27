@@ -1,0 +1,9 @@
+; parameter syntax errors
+START MOV 1;x 2
+ DAT 5;comment
+ MOV 1,2
+ DAT 32770
+ DAT 99999
+ DAT 5 6 7
+ DAT (5)
+ DAT 5)

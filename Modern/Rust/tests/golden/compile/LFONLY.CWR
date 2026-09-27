@@ -1,0 +1,3 @@
+; LF only line ends are not counted as lines
+ START MOV 1 2
+ DAT UNKNOWN

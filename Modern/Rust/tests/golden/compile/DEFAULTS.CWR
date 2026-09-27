@@ -1,0 +1,13 @@
+; default modes and the one parameter DAT
+ DAT 5
+ DAT #5
+ DAT $5
+ DAT 5 6
+ DAT
+ DAT ;nothing
+ MOV 1 2
+ JMP 3
+ SPL 4
+ JMZ 1 2
+ CMP 1 2
+ DAT -5

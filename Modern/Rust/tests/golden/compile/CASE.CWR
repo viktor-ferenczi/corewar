@@ -1,0 +1,4 @@
+; lower case, tabs and a character above 127: ια
+start	mov	0	1
+	dat	#-1
+Loop	JmP	loop

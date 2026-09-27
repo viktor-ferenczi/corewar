@@ -12,6 +12,12 @@ A 2026 tournament between the programs in `Historical`, played with `MARS.COM` u
 It is not the original 1993 competition data. See [Reproduction](Reproduction/README.md) for details,
 and the published results at https://viktor-ferenczi.github.io/corewar/
 
+## Modern
+
+[Modern/Rust](Modern/Rust/README.md) is a native reimplementation of the `MARS.COM` compiler and
+simulator. Its tests check that it gives exactly the same results as `MARS.COM`. The tournament of
+`Reproduction` played again on it is in [Modern/Rust/Reproduction](Modern/Rust/Reproduction/README.md).
+
 ## `MARS.COM` and `MARS.ASM`
 
 My own implementation of the MARS assembler and emulator. Comments are in half English and

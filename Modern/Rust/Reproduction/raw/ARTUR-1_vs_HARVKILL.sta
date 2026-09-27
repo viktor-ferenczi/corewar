@@ -1,0 +1,16 @@
+CoreWar MARS V1.0 by GM 1993
+
+ARTUR-1
+
+HARVKILL.CWR
+
+CoreWar MARS V1.0 Statistics:
+
+Number of full wars         = 500
+Maximal war length in steps = 600000
+Queue length (Max. PCs)     = 64
+Execute each other was enabled.
+
+ProgNum   Average PC  Win     Lose    Progam name
+1         39          32      146     ARTUR-1
+2         54          146     32      HARVKILL.CWR

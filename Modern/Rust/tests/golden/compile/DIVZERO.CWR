@@ -1,0 +1,4 @@
+; division by zero
+START DAT 5/0
+ DAT -5/0
+ DAT 5%0

@@ -1,0 +1,16 @@
+CoreWar MARS V1.0 by GM 1993
+
+TORPE.CWR
+
+VIKTOR03.CWR
+
+CoreWar MARS V1.0 Statistics:
+
+Number of full wars         = 500
+Maximal war length in steps = 600000
+Queue length (Max. PCs)     = 64
+Execute each other was enabled.
+
+ProgNum   Average PC  Win     Lose    Progam name
+1         1           202     218     TORPE.CWR
+2         4           218     202     VIKTOR03.CWR

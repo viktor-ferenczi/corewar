@@ -1,0 +1,7 @@
+; predecrements on the executing cell itself
+START	MOV	<0	<0
+	ADD	<1	<1
+	DJN	@0	<0
+	SPL	<-1	@-1
+	MOV	@0	<1
+	JMP	START

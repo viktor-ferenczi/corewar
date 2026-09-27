@@ -1,0 +1,13 @@
+; splits, jumps and compares with all kinds of modes
+START	SPL	BODY
+	JMP	START
+BODY	MOV	<TGT	@TGT
+	DJN	BODY	#5
+	SPL	@PTR
+	CMP	#0	<TGT
+	JMN	BODY	@PTR
+	SUB	#7	TGT
+	JMZ	START	PTR
+	JMP	BODY
+PTR	DAT	#3
+TGT	DAT	#-40

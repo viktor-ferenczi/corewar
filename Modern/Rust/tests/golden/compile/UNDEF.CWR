@@ -1,0 +1,6 @@
+; undefined symbols count as 1
+START MOV NOWHERE 1
+ DAT 5+NOPE
+ JMP START+
+ MOV # 1
+ DAT 3*-2

@@ -1,0 +1,33 @@
+; every instruction with every mode it accepts
+START DAT #1
+ DAT $2
+ DAT @3
+ DAT <4
+ DAT #1 #2
+ DAT $1 @2
+ DAT <1 <2
+ MOV #1 $2
+ MOV $1 @2
+ MOV @1 <2
+ MOV <1 $2
+ ADD #1 $2
+ ADD <1 @2
+ SUB #1 <2
+ SUB @1 $2
+ JMP 1
+ JMP $1 #2
+ JMP @1 $2
+ JMP <1 @2
+ JMP 1 <2
+ JMZ 1 #2
+ JMZ @1 <2
+ JMN <1 $2
+ JMN $1 @2
+ DJN 1 #2
+ DJN @1 <2
+ CMP #1 #2
+ CMP $1 @2
+ CMP <1 <2
+ SPL 1
+ SPL @1 #2
+ SPL <1 <2
