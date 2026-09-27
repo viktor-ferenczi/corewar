@@ -156,10 +156,11 @@ def build_markdown() -> str:
     speed = []
     if "gpu" in timing:
         g = timing["gpu"]
-        speed.append(f"{g['seconds']:.0f} seconds on {len(g['devices'])} GPUs ({', '.join(g['devices'])})")
+        speed.append(f"- {len(g['devices'])} GPUs ({', '.join(g['devices'])}): {g['seconds']:.0f} seconds")
     if "cpu" in timing:
         c = timing["cpu"]
-        speed.append(f"{c['seconds']:.0f} seconds on {c['jobs']} CPU threads ({c['cpu']})")
+        speed.append(f"- {c['jobs']} CPU threads ({c['cpu']}): {c['seconds']:.0f} seconds")
+    speed = "\n".join(speed)
     rustc = next(iter(timing.values()))["rustc"]
 
     ranking = md_table(
@@ -216,8 +217,11 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.jsonl`](runs.
 
 ## Speed
 
-The whole tournament took {" and ".join(speed)} of wall clock time ({rustc}). Both give exactly the
-same results.
+Wall clock time of the whole tournament, built with {rustc}:
+
+{speed}
+
+The GPUs and the CPU give exactly the same results.
 
 The DOSBox tournament took less than 4 hours with 8 DOSBox instances in parallel, {d['seconds'] / 3600:.1f}
 hours summed over the pairs.

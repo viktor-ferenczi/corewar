@@ -31,8 +31,12 @@ Generated on 2026-09-27 by `report.py` from [`runs.jsonl`](runs.jsonl).
 
 ## Speed
 
-The whole tournament took 22 seconds on 2 GPUs (NVIDIA GeForce RTX 4090, NVIDIA GeForce RTX 4090) and 135 seconds on 16 CPU threads (AMD Ryzen 7 9800X3D 8-Core Processor) of wall clock time (rustc 1.90.0 (1159e78c4 2025-09-14)). Both give exactly the
-same results.
+Wall clock time of the whole tournament, built with rustc 1.90.0 (1159e78c4 2025-09-14):
+
+- 2 GPUs (NVIDIA GeForce RTX 4090, NVIDIA GeForce RTX 4090): 22 seconds
+- 16 CPU threads (AMD Ryzen 7 9800X3D 8-Core Processor): 135 seconds
+
+The GPUs and the CPU give exactly the same results.
 
 The DOSBox tournament took less than 4 hours with 8 DOSBox instances in parallel, 29.6
 hours summed over the pairs.

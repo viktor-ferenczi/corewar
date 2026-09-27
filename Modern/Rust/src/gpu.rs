@@ -138,13 +138,13 @@ impl Gpu {
         }))
         .map_err(|e| format!("{}: {e}", info.name))?;
         // Enough threads to keep the GPU busy, but not more: every thread has a 64 KB arena, and
-        // with many more the caches stop holding them. On an RTX 4090 32768 threads play as fast as
-        // 65536, and 131072 at half the speed. Fewer on integrated and software devices, which
-        // share the system memory.
+        // with many more the caches stop holding them. An RTX 4090 played as fast with 32768
+        // threads as with 65536 and half as fast with 131072; a Radeon AI PRO R9700 played fastest
+        // with 16384. Fewer on integrated and software devices, which share the system memory.
         let wanted: u64 = match info.device_type {
-            wgpu::DeviceType::DiscreteGpu => 32768,
             wgpu::DeviceType::Cpu => 1024,
-            _ => 8192,
+            wgpu::DeviceType::IntegratedGpu => 8192,
+            _ => 16384,
         };
         let fits = limits.max_storage_buffer_binding_size.min(limits.max_buffer_size) / ARENA_BYTES;
         let threads = (wanted.min(fits) as u32 / WORKGROUP * WORKGROUP).max(WORKGROUP);
