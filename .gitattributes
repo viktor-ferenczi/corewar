@@ -1,0 +1,2 @@
+# Keep the original DOS files byte for byte (CRLF, no EOL conversion)
+Historical/** -text
