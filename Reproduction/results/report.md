@@ -1,5 +1,5 @@
 ---
-title: Round robin of the surviving 1993 CoreWar programs
+title: Tournament of the surviving 1993 CoreWar programs
 subtitle: A reproduction, not the original competition results
 ---
 
@@ -7,7 +7,7 @@ Generated on 2026-09-27 by `report.py` from [`runs.csv`](runs.csv).
 
 > These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
 > Some programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up of the 1985 championship). This is a new
-> round robin played in 2026 between the programs found in the `Historical` folder, so the
+> tournament played in 2026 between the programs found in the `Historical` folder, so the
 > ranking says nothing about how the original competition ended.
 
 ## Setup

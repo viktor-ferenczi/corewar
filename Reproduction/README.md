@@ -1,6 +1,6 @@
 # Reproduction
 
-A round robin between the CoreWar programs in the [`Historical`](../Historical) folder, played with
+A tournament between the CoreWar programs in the [`Historical`](../Historical) folder, played with
 Viktor's 1993 `MARS.COM` under DOSBox.
 
 > This is **not** the original competition data of the First Hungarian Memory War (CoreWar)

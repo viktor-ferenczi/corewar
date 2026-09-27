@@ -2,7 +2,7 @@
 """Run the historical 1993 MARS.COM (CoreWar MARS V1.0 by GM) under DOSBox.
 
 watch       one battle with the VGA arena rendered in a DOSBox window
-tournament  round robin of all programs, every pair in both start orders
+tournament  play all programs against each other, every pair in both start orders
 """
 
 import argparse

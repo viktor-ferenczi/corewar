@@ -28,6 +28,6 @@ The CoreWar "reference" implementation I've got without sources, made by Kovacs 
 
 ## Reproduction
 
-A 2026 round robin between the programs in `Historical`, played with `MARS.COM` under DOSBox.
+A 2026 tournament between the programs in `Historical`, played with `MARS.COM` under DOSBox.
 It is not the original 1993 competition data. See [Reproduction](Reproduction/README.md) for details,
 and the published results at https://viktor-ferenczi.github.io/corewar/

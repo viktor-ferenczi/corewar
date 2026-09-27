@@ -138,7 +138,7 @@ def build_markdown(runs_path: Path) -> str:
     wins_matrix = matrix(order, pairs, lambda c: c["wins"])
 
     return f"""---
-title: Round robin of the surviving 1993 CoreWar programs
+title: Tournament of the surviving 1993 CoreWar programs
 subtitle: A reproduction, not the original competition results
 ---
 
@@ -146,7 +146,7 @@ Generated on {date.today().isoformat()} by `report.py` from [`runs.csv`](runs.cs
 
 > These are **not** the results of the First Hungarian Memory War (CoreWar) Championship of 1993.
 > Some programs here were never entries (by their own comments MICE and CHANG are the winner and runner-up of the 1985 championship). This is a new
-> round robin played in {date.today().year} between the programs found in the `Historical` folder, so the
+> tournament played in {date.today().year} between the programs found in the `Historical` folder, so the
 > ranking says nothing about how the original competition ended.
 
 ## Setup
