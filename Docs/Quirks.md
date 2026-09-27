@@ -11,7 +11,7 @@ copy the '88 table of legal instructions, without `SLT`, and use the '88 source 
 `CMP` work in ways of their own that match no standard. `CMP` doesn't match `SZABALY.TXT` either.
 
 Line numbers refer to `MARS.ASM`. The exact behavior of every quirk is pinned down by the tests of
-the Rust port, see [Modern/Rust](../Modern/Rust/README.md).
+the Rust port, see [Modern](../Modern/README.md).
 
 ## Sources
 
@@ -216,5 +216,5 @@ over.
 "Same" and "differs" in the '86 column rest on the secondary sources listed above.
 
 A port that has to give the same results as `MARS.COM` must keep all of this, as
-[Modern/Rust](../Modern/Rust/README.md) does. Running standard warriors would need a separate '88 or
+[Modern](../Modern/README.md) does. Running standard warriors would need a separate '88 or
 '94 mode: the scheduling, `CMP`, `ADD` and `SUB`, and the parser all differ.

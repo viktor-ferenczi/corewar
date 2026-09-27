@@ -1,7 +1,7 @@
 # Reproduction on the native engine
 
-The round robin of [`Reproduction`](../../../Reproduction) played again, this time on the Rust
-reimplementation of `MARS.COM` in [`Modern/Rust`](..) instead of `MARS.COM` under DOSBox.
+The round robin of [`Reproduction`](../../Reproduction) played again, this time on the Rust
+reimplementation of `MARS.COM` in [`Modern`](..) instead of `MARS.COM` under DOSBox.
 
 > This is **not** the original competition data of the First Hungarian Memory War (CoreWar)
 > Championship of 1993. Some programs here were never entries at all. The results come from a

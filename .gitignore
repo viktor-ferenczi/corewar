@@ -220,6 +220,5 @@ __marimo__/
 # LibreOffice lock files
 .~lock.*#
 
-# Raw MARS outputs of the tournaments, kept in the repository as raw.zip
+# Raw MARS outputs of the DOSBox tournament, kept in the repository as raw.zip
 Reproduction/raw/
-Modern/Rust/Reproduction/raw/

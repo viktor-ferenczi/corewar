@@ -7,7 +7,7 @@ use mars::tournament::{self, Backend, Entry, Format, Options, RunResult};
 use mars::{Rng, Settings};
 
 fn historical(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Historical").join(name)
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../Historical").join(name)
 }
 
 fn entries(names: &[&str]) -> Vec<Entry> {

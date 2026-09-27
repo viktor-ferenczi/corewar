@@ -22,7 +22,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RUST = HERE.parent
-REPRODUCTION = RUST.parent.parent / "Reproduction"
+REPRODUCTION = RUST.parent / "Reproduction"
 RESULTS = HERE / "results"
 TIMING = RESULTS / "timing.json"
 MARS = RUST / "target" / "release" / "mars"

@@ -14,9 +14,9 @@ and the published results at https://viktor-ferenczi.github.io/corewar/
 
 ## Modern
 
-[Modern/Rust](Modern/Rust/README.md) is a native reimplementation of the `MARS.COM` compiler and
+[Modern](Modern/README.md) is a native Rust reimplementation of the `MARS.COM` compiler and
 simulator. Its tests check that it gives exactly the same results as `MARS.COM`. The tournament of
-`Reproduction` played again on it is in [Modern/Rust/Reproduction](Modern/Rust/Reproduction/README.md).
+`Reproduction` played again on it is in [Modern/Reproduction](Modern/Reproduction/README.md).
 
 ## `MARS.COM` and `MARS.ASM`
 

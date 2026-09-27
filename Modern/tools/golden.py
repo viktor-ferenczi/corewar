@@ -25,7 +25,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 RUST = HERE.parent
 GOLDEN = RUST / "tests" / "golden"
-HISTORICAL = RUST.parent.parent / "Historical"
+HISTORICAL = RUST.parent / "Historical"
 MARS_MD5 = "a16f6bf1c8866c2c698cc1f310b844da"
 
 # File offsets in MARS.COM (loaded at 100H).
@@ -34,7 +34,7 @@ ENTRY_CALL_WAR = 0xA84  # MOV AX,13H / INT 10H / CALL WAR
 USAGE_TEXT = 0x136  # M_NOPROG at 236H, 1288 bytes
 
 # The programs of the tournament in Reproduction/mars.py, plus the ones it left out and the test programs.
-sys.path.insert(0, str(RUST.parent.parent / "Reproduction"))
+sys.path.insert(0, str(RUST.parent / "Reproduction"))
 from mars import PROGRAMS as TOURNAMENT  # noqa: E402
 
 EXTRA = ["NONE.CWR", "TEST.CWR", "ROHANO.CWR"]
