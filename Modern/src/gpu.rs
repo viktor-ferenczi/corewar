@@ -10,14 +10,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
 
+use crate::engine::{load_modifier, wide_modes};
 use crate::tournament::{Progress, War, WarResult};
-use crate::{Program, Settings, ARENALEN, MAXLEN};
+use crate::{Program, Settings, Standard};
 
-const ARENA_BYTES: u64 = ARENALEN as u64 * 8;
 /// `STATE_WORDS` in the shader.
-const STATE_BYTES: u64 = 544 * 4;
-/// `PROGRAM_WORDS` in the shader: length, start and the cells.
-const PROGRAM_WORDS: usize = 2 + 2 * MAXLEN;
+const SLOT_STATE_WORDS: u64 = 544;
 const WORKGROUP: u32 = 64;
 /// Chunks in the ring of wars on the GPU, see gpu.wgsl.
 const SLOTS: usize = 4;
@@ -77,14 +75,19 @@ pub fn fight(
     progress: &Progress,
 ) -> Result<Vec<WarResult>, String> {
     let adapters = sorted_adapters();
-    let mut table = vec![0u32; programs.len() * PROGRAM_WORDS];
+    let program_words = 2 + 2 * settings.program_len as usize;
+    let mut table = vec![0u32; programs.len() * program_words];
     for (p, program) in programs.iter().enumerate() {
-        let words = &mut table[p * PROGRAM_WORDS..(p + 1) * PROGRAM_WORDS];
+        let words = &mut table[p * program_words..(p + 1) * program_words];
         words[0] = program.code.len() as u32;
         words[1] = program.start as u32;
         for (i, ins) in program.code.iter().enumerate() {
-            words[2 + 2 * i] = ins.op as u32 | (ins.modes as u32) << 8 | (ins.a as u32) << 16;
-            words[3 + 2 * i] = ins.b as u32;
+            let modes = wide_modes(ins);
+            words[2 + 2 * i] = ins.op as u32
+                | (load_modifier(settings, ins) as u32) << 5
+                | (modes as u32) << 8
+                | ((ins.a % settings.core_size) as u32) << 16;
+            words[3 + 2 * i] = (ins.b % settings.core_size) as u32;
         }
     }
     let next = AtomicUsize::new(0);
@@ -146,7 +149,12 @@ impl Gpu {
             wgpu::DeviceType::IntegratedGpu => 8192,
             _ => 16384,
         };
-        let fits = limits.max_storage_buffer_binding_size.min(limits.max_buffer_size) / ARENA_BYTES;
+        let arena_bytes = settings.core_size as u64 * 8;
+        let state_words = SLOT_STATE_WORDS
+            + if settings.standard == Standard::Hu93 { 0 } else { 2 * (settings.queue_len as u64).div_ceil(2) };
+        let state_bytes = state_words * 4;
+        let binding_limit = limits.max_storage_buffer_binding_size.min(limits.max_buffer_size);
+        let fits = (binding_limit / arena_bytes).min(binding_limit / state_bytes);
         let threads = (wanted.min(fits) as u32 / WORKGROUP * WORKGROUP).max(WORKGROUP);
         // The ring holds twice as many wars as there are threads, so there is still work while the
         // oldest chunk waits for its last war.
@@ -162,7 +170,27 @@ impl Gpu {
             layout: None,
             module: &module,
             entry_point: Some("main"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &[
+                    ("ARENALEN", settings.core_size as f64),
+                    ("DAT_SCAN_LEN", settings.rules().dat_scan_len as f64),
+                    ("WRAP_PLACEMENT", settings.rules().wrap_placement as u8 as f64),
+                    ("STANDARD", (settings.standard != Standard::Hu93) as u8 as f64),
+                    ("FIFO_LEN", settings.queue_len as f64),
+                    ("PROGRAM_WORDS", (2 + 2 * settings.program_len as usize) as f64),
+                    ("STATE_WORDS", state_words as f64),
+                    (
+                        "EMPTY_X",
+                        if settings.standard == Standard::Hu93 {
+                            (4u32 << 5) as f64
+                        } else {
+                            ((4u32 << 5) | (9u32 << 8)) as f64
+                        },
+                    ),
+                    ("FETCHED_B", (settings.standard != Standard::Hu93 && settings.quirks) as u8 as f64),
+                ],
+                ..Default::default()
+            },
             cache: None,
         });
         let buffer = |label, size: u64, usage| {
@@ -173,15 +201,15 @@ impl Gpu {
         let programs = buffer("programs", table.len() as u64 * 4, U::STORAGE | U::COPY_DST);
         let ring = (chunk * SLOTS) as u64 * 8;
         let wars = buffer("wars", ring, U::STORAGE | U::COPY_DST);
-        let results = buffer("results", ring, U::STORAGE | U::COPY_SRC);
-        let arena = buffer("arena", threads as u64 * ARENA_BYTES, U::STORAGE);
-        let state = buffer("state", threads as u64 * STATE_BYTES, U::STORAGE | U::COPY_DST);
+        let results = buffer("results", ring * 2, U::STORAGE | U::COPY_SRC);
+        let arena = buffer("arena", threads as u64 * arena_bytes, U::STORAGE);
+        let state = buffer("state", threads as u64 * state_bytes, U::STORAGE | U::COPY_DST);
         let control = buffer("control", CONTROL_WORDS as u64 * 4, U::STORAGE | U::COPY_DST | U::COPY_SRC);
-        let readback = buffer("readback", (chunk as u64 * 8).max(CONTROL_WORDS as u64 * 4), U::MAP_READ | U::COPY_DST);
+        let readback = buffer("readback", (chunk as u64 * 16).max(CONTROL_WORDS as u64 * 4), U::MAP_READ | U::COPY_DST);
         queue.write_buffer(&programs, 0, &words(table));
         // Every thread starts without a war (NONE in its first state word).
-        let mut idle = vec![0u32; (STATE_BYTES / 4) as usize * threads as usize];
-        idle.chunks_mut((STATE_BYTES / 4) as usize).for_each(|s| s[0] = u32::MAX);
+        let mut idle = vec![0u32; state_words as usize * threads as usize];
+        idle.chunks_mut(state_words as usize).for_each(|s| s[0] = u32::MAX);
         queue.write_buffer(&state, 0, &words(&idle));
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("mars"),
@@ -230,7 +258,7 @@ impl Gpu {
                     .iter()
                     .flat_map(|w| {
                         [
-                            w.programs[0] as u32 | (w.programs[1] as u32) << 16,
+                            w.programs[0] as u32 | (w.first_mover as u32) << 15 | (w.programs[1] as u32) << 16,
                             w.positions[0] as u32 | (w.positions[1] as u32) << 16,
                         ]
                     })
@@ -272,16 +300,17 @@ impl Gpu {
                 let mut encoder = self.device.create_command_encoder(&Default::default());
                 encoder.copy_buffer_to_buffer(
                     &self.results,
-                    (slot * chunk * 8) as u64,
+                    (slot * chunk * 16) as u64,
                     &self.readback,
                     0,
-                    len as u64 * 8,
+                    len as u64 * 16,
                 );
                 self.queue.submit([encoder.finish()]);
-                let out = self.read(len as u64 * 8);
+                let out = self.read(len as u64 * 16);
                 let mut results = results.lock().unwrap();
-                for (i, r) in out.chunks(2).enumerate() {
-                    results[start + i] = WarResult { pcs: [r[0] as u16, (r[0] >> 16) as u16], steps: r[1] };
+                for (i, r) in out.chunks(4).enumerate() {
+                    results[start + i] =
+                        WarResult { pcs: [r[0] as u16, (r[0] >> 16) as u16], steps: r[1] as u64 | (r[2] as u64) << 32 };
                 }
                 ring.pop_front();
                 finished_chunks += 1;

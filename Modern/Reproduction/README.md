@@ -42,8 +42,12 @@ Same programs in the same order as `mars.py`, 500 games per start order, the MAR
 arena, 64 processes per program, programs may execute each other's code, a war is a draw after 600000
 steps, and in statistics mode a war with no DAT left in the arena ends as a draw.
 
+The runner explicitly passes `--standard hu93 --quirks --norotate`. The engine's default
+is now `pmars`; reproducing these historical games always needs that exact preset.
+
 `MARS.COM` seeds its random generator from the BIOS clock. Here each run gets a BIOS tick count derived
-from the master seed 1993, which is in the `seed` field of `runs.jsonl`. With the same seed, `mars run`
+from the master seed 1993, which is in the `seed` field of `runs.jsonl`. With the same seed and
+the historical preset, `mars run`
 plays exactly the same games, and so does `MARS.COM` patched to that seed (see `tools/golden.py`).
 
 `mars.py` played both start orders of a pair in one DOSBox, one after the other. `MARS.COM` never

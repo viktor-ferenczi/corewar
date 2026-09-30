@@ -17,7 +17,7 @@ fn entries(names: &[&str]) -> Vec<Entry> {
 fn options(games: u32, out: PathBuf, format: Format) -> Options {
     Options {
         games,
-        settings: Settings { max_steps: 20000, ..Settings::default() },
+        settings: Settings { max_steps: 20000, ..Settings::hu93() },
         backend: Backend::Cpu { jobs: 4 },
         seed: 5,
         format,
@@ -76,6 +76,17 @@ fn every_pair_in_both_orders_repeatably() {
 }
 
 #[test]
+fn rotating_tournament_has_one_run_per_pair() {
+    let entries = entries(&PROGRAMS[..3]);
+    let mut options = options(5, PathBuf::new(), Format::Jsonl);
+    options.settings.rotate = true;
+    let summary = tournament::compute(&entries, &options).unwrap();
+    assert_eq!(summary.runs.len(), 3);
+    assert_eq!(summary.wars, 15);
+    assert!(summary.runs.iter().all(|run| run.wars == 5));
+}
+
+#[test]
 fn jsonl_output() {
     let entries = entries(&PROGRAMS[..2]);
     let path = temp("jsonl").join("t.jsonl");
@@ -87,7 +98,7 @@ fn jsonl_output() {
     assert_eq!(
         lines[0],
         format!(
-            "{{\"first\":\"IMP\",\"second\":\"MICE\",\"seed\":{seed},\"games\":5,\"first_wins\":{},\"second_wins\":{},\
+            "{{\"first\":\"IMP\",\"second\":\"MICE\",\"standard\":\"hu93\",\"quirks\":true,\"rotate\":false,\"seed\":{seed},\"games\":5,\"first_wins\":{},\"second_wins\":{},\
              \"draws\":{},\"first_pcs\":{},\"second_pcs\":{},\"steps\":{steps},\"max_steps\":20000,\"queue\":64,\
              \"exec_other\":true}}",
             stats[0].wins,
@@ -104,7 +115,7 @@ fn names_are_escaped_in_json() {
     let mut entries = entries(&PROGRAMS[..2]);
     entries[0].name = "A \"B\" \\ C\u{1}".into();
     let summary = tournament::compute(&entries, &options(2, PathBuf::new(), Format::Jsonl)).unwrap();
-    let text = tournament::jsonl(&entries, &Settings::default(), &summary.runs);
+    let text = tournament::jsonl(&entries, &Settings::hu93(), &summary.runs);
     assert!(text.starts_with(r#"{"first":"A \"B\" \\ C\u0001","second":"MICE""#), "{text}");
 }
 
@@ -158,7 +169,7 @@ fn a_tournament_of_256_programs() {
         })
         .collect();
     let options = Options {
-        settings: Settings { max_steps: 2, ..Settings::default() },
+        settings: Settings { max_steps: 2, ..Settings::hu93() },
         ..options(2, PathBuf::new(), Format::Jsonl)
     };
     let summary = tournament::compute(&entries, &options).unwrap();

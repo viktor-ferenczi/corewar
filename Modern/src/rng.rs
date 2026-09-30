@@ -35,6 +35,17 @@ impl Rng {
     /// `RANDOM`: the next arena position, 0..ARENALEN.
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> u16 {
+        modulo(self.advance())
+    }
+
+    pub fn next_in(&mut self, core_size: u16) -> u16 {
+        if core_size == 8000 {
+            return self.next();
+        }
+        self.advance() % core_size
+    }
+
+    fn advance(&mut self) -> u16 {
         let x = (self.hi << 1) ^ self.hi;
         // ROL CX,2 leaves bit 14 of CX in the carry, which RCL shifts into SEEDL.
         let feedback = x >> 14 & 1;
@@ -45,6 +56,6 @@ impl Rng {
         }
         self.lo = lo;
         self.hi = hi;
-        modulo(lo)
+        lo
     }
 }

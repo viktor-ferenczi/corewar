@@ -1,7 +1,8 @@
 //! A whole MARS.COM run in statistics mode (`/P`): the text it prints and its binary log (`/F`).
 
-use crate::engine::{Cell, PlaceError, Stats, MEMLEN};
-use crate::{compile, Engine, Fatal, Program, Rng, Settings};
+use crate::assembler::{assemble, AssemblyContext};
+use crate::engine::{Cell, PlaceError, Stats};
+use crate::{compile, Engine, Fatal, Program, Rng, Settings, Standard};
 
 /// First line of the output. MARS.COM prints "CoreWar MARS V1.0 by GM 1993" there, the rest of the
 /// output has the same format.
@@ -55,12 +56,13 @@ impl Session {
         &self.cells
     }
 
-    fn window(&mut self, programs: usize) -> std::ops::Range<usize> {
+    fn window(&mut self, programs: usize, core_size: u16) -> std::ops::Range<usize> {
         let base = programs * PROGDATA_CELLS;
-        if self.cells.len() < base + MEMLEN {
-            self.cells.resize(base + MEMLEN, Cell::default());
+        let mem_len = core_size as usize + crate::MAXLEN - 1;
+        if self.cells.len() < base + mem_len {
+            self.cells.resize(base + mem_len, Cell::default());
         }
-        base..base + MEMLEN
+        base..base + mem_len
     }
 }
 
@@ -87,14 +89,19 @@ pub fn run_in(
     let mut text = format!("{BANNER}\n");
     let mut programs = Vec::new();
     let mut errors = 0;
-    for source in sources {
+    for (index, source) in sources.iter().enumerate() {
         let Some(bytes) = &source.bytes else {
             text += &format!("Can't open {} !\n", source.name);
             errors += 1;
             continue;
         };
         text += &format!("\n{}\n", source.name);
-        let compiled = compile(bytes).map_err(|fatal| (fatal, text.clone()))?;
+        let compiled = assemble(
+            bytes,
+            settings,
+            AssemblyContext { warriors: sources.len(), rounds: wars.max(1), first: index == 0 },
+        )
+        .map_err(|fatal| (fatal, text.clone()))?;
         for message in &compiled.messages {
             text += &message.text(&source.name);
             text.push('\n');
@@ -106,7 +113,7 @@ pub fn run_in(
         text += "Cannot execute war, while there are any errors !\n";
         return Ok(Run { text, log: Vec::new(), played: false, stats: Vec::new() });
     }
-    let window = session.window(programs.len());
+    let window = session.window(programs.len(), settings.core_size);
     let mut engine = Engine::with_memory(settings.clone(), &programs, rng, session.cells[window.clone()].to_vec());
     for _ in 0..wars.max(1) {
         if let Err(PlaceError::NoPlace) = engine.war() {
@@ -128,12 +135,12 @@ pub fn run_in(
 pub fn place_run(
     session: &mut Session,
     programs: &[Program],
+    settings: &Settings,
     rng: Rng,
     wars: u16,
 ) -> Result<Vec<Vec<u16>>, PlaceError> {
-    let window = session.window(programs.len());
-    let settings = Settings::default();
-    let mut engine = Engine::with_memory(settings, programs, rng, session.cells[window.clone()].to_vec());
+    let window = session.window(programs.len(), settings.core_size);
+    let mut engine = Engine::with_memory(settings.clone(), programs, rng, session.cells[window.clone()].to_vec());
     let placed = (0..wars.max(1)).map(|_| engine.place(None)).collect();
     session.cells[window].copy_from_slice(&engine.mem);
     placed
@@ -157,6 +164,23 @@ pub fn compile_clean(name: &str, bytes: &[u8]) -> Result<Program, String> {
     Ok(compiled.program)
 }
 
+pub fn compile_clean_with_settings(name: &str, bytes: &[u8], settings: &Settings) -> Result<Program, String> {
+    compile_clean_with_context(name, bytes, settings, AssemblyContext::default())
+}
+
+pub fn compile_clean_with_context(
+    name: &str,
+    bytes: &[u8],
+    settings: &Settings,
+    context: AssemblyContext,
+) -> Result<Program, String> {
+    let compiled = assemble(bytes, settings, context).map_err(|fatal| format!("{name}: {fatal}"))?;
+    if let Some(message) = compiled.messages.first() {
+        return Err(message.text(name));
+    }
+    Ok(compiled.program)
+}
+
 /// Average process count, `DIV` rounded up when twice the remainder, taken in 16 bits, is above
 /// the number of wars.
 pub fn average(pcs: u32, wars: u16) -> u16 {
@@ -168,12 +192,19 @@ pub fn average(pcs: u32, wars: u16) -> u16 {
 /// The statistics block `WAR_QUIT` prints. `OUTSPACES` pads to a column but always prints at
 /// least one space.
 pub fn statistics(s: &Settings, wars: u16, stats: &[Stats], names: &[&str]) -> String {
+    let standard_line = if s.rotate || !s.quirks || s.standard != crate::Standard::Hu93 {
+        format!("Standard                     = {} (quirks: {}, rotate: {})\n", s.standard.name(), s.quirks, s.rotate)
+    } else {
+        String::new()
+    };
     let mut text = format!(
-        "\nCoreWar MARS V1.0 Statistics:\n\nNumber of full wars         = {}\nMaximal war length in steps = {}\nQueue length (Max. PCs)     = {}\n{}\n\nProgNum   Average PC  Win     Lose    Progam name\n",
+        "\nCoreWar MARS V1.0 Statistics:\n\nNumber of full wars         = {}\n{} = {}\nQueue length (Max. PCs)     = {}\n{}\n{}\nProgNum   Average PC  Win     Lose    Progam name\n",
         wars,
+        if s.standard == Standard::Hu93 { "Maximal war length in steps" } else { "Maximal war length in cycles" },
         s.max_steps,
         s.queue_len,
         if s.exec_other { "Execute each other was enabled." } else { "Execute each other was disabled." },
+        standard_line,
     );
     for (i, (stats, name)) in stats.iter().zip(names).enumerate() {
         let mut line = String::new();

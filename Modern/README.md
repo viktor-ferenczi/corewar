@@ -1,12 +1,13 @@
 # MARS in Rust
 
-A native reimplementation of the compiler and simulator of Viktor's 1993 `MARS.COM` (CoreWar MARS V1.0,
-see [`Historical`](../Historical)). With the same random seed a battle ends exactly as in `MARS.COM`,
+A Redcode assembler and simulator for pMARS, ICWS'88, ICWS'94, and Viktor's 1993 `MARS.COM`
+(CoreWar MARS V1.0, see [`Historical`](../Historical)). The default is `pmars`, without P-space.
+With `--standard hu93 --quirks --norotate` and the same random seed a battle ends exactly as in `MARS.COM`,
 down to the last process count in the statistics. It needs no DOSBox, and it plays the whole tournament
 of [`Reproduction`](../Reproduction) in about two minutes on the CPU instead of four hours, or in 22
 seconds on two GPUs.
 
-Where it differs from `MARS.COM` on purpose:
+The exact historical preset differs from `MARS.COM` on purpose in these ways:
 
 - The command line is new; it does not take the `/X` options of `MARS.COM`.
 - The output has the same format, except for the first line, `CoreWar MARS Rust V1.0 - Viktor Ferenczi
@@ -15,6 +16,74 @@ Where it differs from `MARS.COM` on purpose:
   long comment for it. The port takes an LF without a CR before it as a line end too, so sources work
   with CR LF, LF and CR line ends alike. Files with DOS line ends compile exactly as in `MARS.COM`.
 - Where `MARS.COM` would hang or crash while compiling, the port stops with an error.
+
+## Standards
+
+`--standard` applies to `compile`, `run`, and `tournament`. `--quirks` is off by default in
+every standard; `94` rejects it. First movers rotate war by war in every standard. Use
+`--norotate` to keep them fixed. `Settings::default()` is `pmars`; `Settings::hu93()` is
+the exact historical preset, including quirks and no rotation.
+
+### pmars
+
+ICWS'94 with pMARS's source conventions: text `EQU`, nested `FOR`/`ROF`, loop counters,
+label concatenation, `CURLINE`, registers, predefined constants, and `;assert`. `SEQ`
+is a separate opcode, `NOP` defaults to `.F`, and one-operand `JMP`/`SPL`/`NOP` gets
+`$0` as its B operand. P-space instructions and `PIN` are rejected.
+
+`--quirks` reproduces stock pMARS 0.9.2: broken expression precedence and `==`, `w`/`s`
+registers preset in the first warrior, a redefined label dropping its line, numbers
+joining across spaces, immediate B fields read as fetched, and step-limit rescaling
+when a warrior dies in a war with three or more warriors. It does not include the
+2004 `02bimmediate` patch. Sources that would hang pMARS or produce garbage cells
+are rejected, with or without quirks.
+
+### hu93
+
+The 1993 instruction set, B-field arithmetic, operand timing, slot scheduler, `START`
+label, shared step limit, and ownership rules. Without quirks it has a clean parser,
+whole-cell `CMP`, wrapped placement with no leftovers, and a DAT test over every cell.
+The compiler and simulator bugs listed below are enabled by `--quirks`.
+
+Exact `MARS.COM` is `--standard hu93 --quirks --norotate`. It requires an 8000-cell core.
+Only `hu93` supports `--no-exec-other` and the binary `--log`. Its exact statistics text
+retains the historical format; other settings include the standard, quirks, and rotation.
+
+### 88
+
+The ICWS'88 instruction set and addressing modes, FIFO processes, and '94 register-copy
+operand timing. Fields can be separated by commas or whitespace. Without a comma,
+each field expression must have no internal spaces. `EQU` computes a value from earlier
+labels, and `SLT A, #B` is rejected. `--quirks` matches pMARS 0.9.2 `-8`, including text
+`EQU`, immediate B for `SLT`, and the pMARS quirks listed above.
+
+### 94
+
+The ICWS'94 draft's rules: all eight modes, modifiers, arithmetic and comparison
+instructions, `ORG`, text `EQU`, and C-precedence expressions with comparisons and
+logical operators. `SEQ` is synonymous with `CMP`, `NOP` defaults to `.B`, and an
+absent B operand is `#0`. pMARS extensions such as registers, `FOR`, and `CURLINE`
+are not accepted. Execution is checked against pMARS 0.9.5 with explicit load-file cells,
+not its assembler defaults. There is no P-space and no quirks mode.
+
+### Settings
+
+| Setting | hu93 | pmars, 88, 94 |
+|:--|--:|--:|
+| `--core` | 8000 | 8000 |
+| `--length` | 100, at most 100 | 100, at most 1000 |
+| `--steps` | 600000 shared steps | 80000 cycles per warrior |
+| `--queue` | 64, at most 256 | 8000, at most 8000 |
+| `--distance` | 0 | 100 |
+
+Options override these defaults. A zero war limit means 2^32 steps or cycles. Core size
+is 100 to 65535; program length must not exceed it. Placement is seeded and obeys the
+minimum start distance and nonoverlap. `--syntax hu93` compiles historical sources
+with the original compiler and converts them for execution under another standard.
+
+Quirks execution is selected once per war on the CPU using specialized code. GPU
+pipelines specialize the same choices with shader constants. There is no runtime
+quirks flag check in the instruction executor.
 
 ## Build and run
 
@@ -34,35 +103,35 @@ cargo build --release --no-default-features
 Compile a program and list the result:
 
 ```bash
-./target/release/mars compile ../Historical/MICE.CWR
+./target/release/mars compile --standard hu93 --quirks --norotate ../Historical/MICE.CWR
 ```
 
 Play 500 wars and print the statistics the way `MARS /P=500` does:
 
 ```bash
-./target/release/mars run --wars 500 ../Historical/MICE.CWR ../Historical/KILLER.CWR
+./target/release/mars run --standard hu93 --quirks --norotate --wars 500 ../Historical/MICE.CWR ../Historical/KILLER.CWR
 ```
 
-Options of `run`: `--steps` (war length, 600000), `--queue` (processes per program, 64),
+Options for this historical run: `--steps` (war length, 600000), `--queue` (processes per program, 64),
 `--no-exec-other` (like `/E`), `--seed` (BIOS tick count, the time of day by default), `--log FILE`
 (the binary statistics file of `/F`) and `--no-dat-test` (see below). `mars --help` lists them all.
 
 ## Tournaments
 
-A tournament plays every pair of 2 to 256 programs in both start orders, 1000 games per pair by
-default, on all CPU cores:
+A tournament plays every pair of 2 to 256 programs, 1000 games per pair by default, on all CPU
+cores. With rotation each pair has one run. With `--norotate` it has two runs in opposite orders:
 
 ```bash
-./target/release/mars tournament --out results.jsonl --seed 1 ../Historical/*.CWR
+./target/release/mars tournament --standard hu93 --quirks --norotate --out results.jsonl --seed 1 ../Historical/*.CWR
 ```
 
-Every pair plays two MARS runs, one per start order, with random seeds derived from the master seed
+This historical preset plays two MARS runs per pair, with random seeds derived from the master seed
 `--seed`, so a tournament can be repeated exactly. Both runs of a pair share a DOS session like in
 `Reproduction/mars.py`. The file gets one JSON object per run and line, in pair order, like this one
 from [`Reproduction/results/runs.jsonl`](Reproduction/results/runs.jsonl):
 
 ```json
-{"first":"ANTIIMP","second":"ARTUR-1","seed":1276916,"games":500,"first_wins":0,"second_wins":73,"draws":427,"first_pcs":570,"second_pcs":30236,"steps":272061937,"max_steps":600000,"queue":64,"exec_other":true}
+{"first":"ANTIIMP","second":"ARTUR-1","seed":1276916,"games":500,"first_wins":0,"second_wins":73,"draws":427,"first_pcs":570,"second_pcs":30236,"steps":272061937,"max_steps":600000,"queue":64,"exec_other":true,"standard":"hu93","quirks":true,"rotate":false}
 ```
 
 `first_pcs` and `second_pcs` are the processes left at the end of the wars, summed. `--format sta`
@@ -107,16 +176,32 @@ The code follows `MARS.ASM`, and a comparison of the assembled source with the b
 - `tests/compiler.rs`, `tests/engine.rs`, `tests/report.rs`, `tests/rng.rs`: unit tests of each rule
   and quirk below.
 - `tests/tournament.rs`: a tournament gives the same results as playing its MARS runs one by one.
-- `tests/gpu.rs`: the GPU against the CPU engine, war by war, with various settings, on every adapter
-  found, llvmpipe included. Without any adapter there is nothing to compare.
+- `tests/gpu.rs`: the GPU against the CPU engine, war by war, for every standard, on every
+  nonintegrated adapter, llvmpipe included. `MARS_TEST_GPUS=1` pins it to adapter 1;
+  comma-separated indexes select several adapters. Without an adapter there is nothing to compare.
+- `tests/icws88.rs`, `tests/icws94.rs`, `tests/standards.rs`: dialect and execution rules.
+- `tests/pmars_diff.rs`: generated cells and expressions, assembler probes, timing probes, and
+  upstream warriors against pMARS. Defaults are small; `MARS_DIFF_CASES` opts into more cases.
 
 `cargo test --release` runs all of them in about 15 seconds. `tools/golden.py` records the reference
 data again. It needs DOSBox 0.74 and nasm, and never modifies `MARS.COM`; the patched copies live in
 temporary folders. It gives DOSBox the sources with CR LF line ends, whatever the checkout has.
 
+The differential tests are offline by default. Build pMARS 0.9.2 and 0.9.5 from upstream
+source, without vendoring them into this repository. In each version's `src` directory:
+
+```bash
+gcc -O2 -w -DEXT94 -DSERVER -DPERMUTATE pmars.c asm.c eval.c disasm.c cdb.c sim.c pos.c clparse.c global.c token.c str_eng.c -o ../pmars
+```
+
+Then set `PMARS_092_BIN` and `PMARS_095_BIN` to the binaries, and `PMARS_092_SRC` to the
+0.9.2 source root (containing `warriors`). Run `cargo test --release --test pmars_diff`.
+Reference invocations have a two-second timeout. Generated tests use explicit modifiers
+and modes for `94`, avoiding pMARS's differing assembler defaults.
+
 ## Quirks it reproduces
 
-These come from `MARS.ASM` and all of them can change results.
+These come from `MARS.ASM` and apply to `hu93 --quirks`. All can change results.
 
 Compiler:
 
@@ -153,6 +238,8 @@ Simulator:
 ## Source files
 
 - `src/compiler.rs`: the Redcode compiler (`COMPILE`, `PASS1`, `PASS2`, `PARAMX`, `GETPARAM`)
+- `src/clean.rs`: clean historical parsing and draft expression arithmetic
+- `src/assembler.rs`, `src/pmars_eval.rs`: standard dialects and pMARS expression evaluation
 - `src/engine.rs`: the simulator (`WAR`, `WAR1`, `LOADA`, `LOADB`, the instructions)
 - `src/rng.rs`: the random generator used for placement (`RANDOMIZE`, `RANDOM`)
 - `src/report.rs`: a whole `MARS.COM` run in statistics mode, its text output and binary log
@@ -162,6 +249,31 @@ Simulator:
 
 ## Performance
 
+### Standards benchmark
+
+Measured on the workstation on 2026-09-30: eight historical programs, 128 games per pair,
+3584 wars, seed 1, four CPU threads or RTX 4090 adapter 1. Times are wall-clock medians
+of three runs, including startup. The baseline is commit `896c5b3`.
+
+| Rules | Steps | CPU | RTX 4090 |
+|:--|--:|--:|--:|
+| Baseline | 1,095,410,027 | 2.82 s | 1.86 s |
+| `hu93 --quirks --norotate` | 1,095,410,027 | 2.54 s | 1.66 s |
+| `hu93` | 849,375,325 | 1.91 s | 1.78 s |
+| `88` | 476,134,493 | 1.18 s | 0.74 s |
+| `94` | 476,134,493 | 1.18 s | 0.74 s |
+| `pmars` | 476,134,493 | 1.18 s | 0.74 s |
+
+The historical preset gave identical results to the baseline on both backends, with no
+slowdown. Other standards used `--syntax hu93` and their own defaults, so their results
+and instruction counts differ. These short runs do not measure sustained GPU throughput.
+At the default 8000-process limit, the FIFO queues add 32 KB per GPU thread next to the
+64 KB arena: two 16-bit process addresses share each word. State size follows the actual
+core and process limits.
+
+### Earlier full tournaments
+
+These measurements predate the standards change; the full tournaments were not rerun.
 Measured on two machines, with the same binary, built on the first one with rustc 1.90.0 and wgpu
 30.0.1. Every run below gave exactly the same results as the CPU.
 

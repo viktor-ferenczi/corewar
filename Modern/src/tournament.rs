@@ -1,8 +1,8 @@
 //! Pairwise tournament of 2 to 256 programs, played like `Reproduction/mars.py tournament`.
 //!
-//! Every pair plays two MARS runs, one per start order, each with its own random seed derived from
-//! a master seed, so a tournament can be repeated exactly. Like in `mars.py`, both runs of a pair
-//! share one DOS session: the second run starts with the memory the first one left behind.
+//! Rotating first movers use one run per pair; fixed first movers use two opposite-order runs.
+//! Each run has a seed derived from a master seed. Historical fixed-order runs share a DOS
+//! session: the second run starts with the memory the first one left behind.
 //!
 //! Placement is the only part of a run that goes from war to war (the random generator and the
 //! cells after the arena), and it does not depend on how the wars end. So the positions of all wars
@@ -29,14 +29,33 @@ pub struct Entry {
     /// The file name, which MARS prints in its statistics.
     pub file: String,
     pub program: Program,
+    /// Source retained for assembly with each run's role and round count.
+    pub source: Option<Vec<u8>>,
 }
 
 impl Entry {
     pub fn load(path: &Path) -> Result<Self, String> {
+        Self::load_with_settings(path, &Settings::hu93())
+    }
+
+    pub fn load_with_settings(path: &Path, settings: &Settings) -> Result<Self, String> {
+        Self::load_with_context(path, settings, crate::assembler::AssemblyContext::default())
+    }
+
+    pub fn load_with_context(
+        path: &Path,
+        settings: &Settings,
+        context: crate::assembler::AssemblyContext,
+    ) -> Result<Self, String> {
         let file = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
         let name = file.strip_suffix(".CWR").unwrap_or(&file).to_string();
         let source = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-        Ok(Entry { program: report::compile_clean(&file, &source)?, name, file })
+        Ok(Entry {
+            program: report::compile_clean_with_context(&file, &source, settings, context)?,
+            name,
+            file,
+            source: Some(source),
+        })
     }
 }
 
@@ -74,13 +93,14 @@ pub struct Options {
 pub struct War {
     pub programs: [u16; 2],
     pub positions: [u16; 2],
+    pub first_mover: u8,
 }
 
 /// How a war ended: the processes left to both programs, and the steps played.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct WarResult {
     pub pcs: [u16; 2],
-    pub steps: u32,
+    pub steps: u64,
 }
 
 /// One MARS run of the tournament and its results.
@@ -131,16 +151,47 @@ pub fn compute(entries: &[Entry], options: &Options) -> Result<Summary, String> 
             return Err(format!("two programs are called {}", e.name));
         }
     }
-    if !(2..=2 * 65535).contains(&options.games) {
-        return Err(format!("games per pair must be 2 to 131070, got {}", options.games));
+    let range = if options.settings.rotate { 1..=65535 } else { 2..=2 * 65535 };
+    if !range.contains(&options.games) {
+        return Err(format!("games per pair must be {} to {}, got {}", range.start(), range.end(), options.games));
     }
     let started = Instant::now();
     let jobs = match &options.backend {
         Backend::Cpu { jobs } => (*jobs).max(1),
         Backend::Gpu { .. } => std::thread::available_parallelism().map_or(1, |n| n.get()),
     };
-    let (runs, wars) = plan(entries, options, jobs)?;
-    let programs: Vec<Program> = entries.iter().map(|e| e.program.clone()).collect();
+    let contextual = options.settings.standard != crate::Standard::Hu93 && !options.settings.hu93_syntax;
+    let mut programs = Vec::new();
+    if contextual {
+        for order in 0..if options.settings.rotate { 1 } else { 2 } {
+            let rounds = if options.settings.rotate {
+                options.games
+            } else if order == 0 {
+                options.games.div_ceil(2)
+            } else {
+                options.games / 2
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                for first in [true, false] {
+                    let used = !options.settings.rotate || if first { index + 1 < entries.len() } else { index > 0 };
+                    let program = if let Some(source) = entry.source.as_ref().filter(|_| used) {
+                        report::compile_clean_with_context(
+                            &entry.file,
+                            source,
+                            &options.settings,
+                            crate::assembler::AssemblyContext { warriors: 2, rounds: rounds as u16, first },
+                        )?
+                    } else {
+                        entry.program.clone()
+                    };
+                    programs.push(program);
+                }
+            }
+        }
+    } else {
+        programs.extend(entries.iter().map(|entry| entry.program.clone()));
+    }
+    let (runs, wars) = plan(entries, &programs, contextual, options, jobs)?;
     let progress = Progress::new(wars.len() as u64, options.progress);
     let results = match &options.backend {
         Backend::Cpu { jobs } => fight_cpu(&programs, &wars, &options.settings, *jobs, &progress),
@@ -161,7 +212,7 @@ pub fn compute(entries: &[Entry], options: &Options) -> Result<Summary, String> 
                     s.wins += (r.pcs[i] != 0 && r.pcs[1 - i] == 0) as u16;
                     s.losses += (r.pcs[i] == 0) as u16;
                 }
-                run.steps += r.steps as u64;
+                run.steps += r.steps;
             }
             offset += run.wars as usize;
             run
@@ -172,7 +223,13 @@ pub fn compute(entries: &[Entry], options: &Options) -> Result<Summary, String> 
 }
 
 /// The runs in pair order, and the wars of all runs in the same order.
-fn plan(entries: &[Entry], options: &Options, jobs: usize) -> Result<(Vec<RunResult>, Vec<War>), String> {
+fn plan(
+    entries: &[Entry],
+    programs: &[Program],
+    contextual: bool,
+    options: &Options,
+    jobs: usize,
+) -> Result<(Vec<RunResult>, Vec<War>), String> {
     let mut pairs = Vec::new();
     for a in 0..entries.len() {
         for b in a + 1..entries.len() {
@@ -189,11 +246,25 @@ fn plan(entries: &[Entry], options: &Options, jobs: usize) -> Result<(Vec<RunRes
                 let Some(&(a, b)) = pairs.get(n) else { break };
                 let mut session = Session::new();
                 let mut pair = Vec::new();
-                for (order, (first, second)) in [(a, b), (b, a)].into_iter().enumerate() {
-                    let seed = run_seed(options.seed, 2 * n as u64 + order as u64);
-                    let programs = [entries[first].program.clone(), entries[second].program.clone()];
-                    let positions = report::place_run(&mut session, &programs, Rng::from_ticks(seed), games[order]);
-                    pair.push((first, second, seed, positions));
+                let orders: &[(usize, usize, u16)] = if options.settings.rotate {
+                    &[(a, b, options.games as u16)]
+                } else {
+                    &[(a, b, games[0]), (b, a, games[1])]
+                };
+                for (order, &(first, second, count)) in orders.iter().enumerate() {
+                    let seed = run_seed(
+                        options.seed,
+                        if options.settings.rotate { n as u64 } else { 2 * n as u64 + order as u64 },
+                    );
+                    let indices = if contextual {
+                        [2 * (order * entries.len() + first), 2 * (order * entries.len() + second) + 1]
+                    } else {
+                        [first, second]
+                    };
+                    let loaded = [programs[indices[0]].clone(), programs[indices[1]].clone()];
+                    let positions =
+                        report::place_run(&mut session, &loaded, &options.settings, Rng::from_ticks(seed), count);
+                    pair.push((first, second, indices, seed, positions));
                 }
                 planned.lock().unwrap()[n] = Some(pair);
             });
@@ -202,7 +273,7 @@ fn plan(entries: &[Entry], options: &Options, jobs: usize) -> Result<(Vec<RunRes
     let mut runs = Vec::new();
     let mut wars = Vec::new();
     for pair in planned.into_inner().unwrap() {
-        for (first, second, seed, positions) in pair.unwrap() {
+        for (first, second, indices, seed, positions) in pair.unwrap() {
             let positions = positions.map_err(|_| "Cannot place many programs into arena !".to_string())?;
             runs.push(RunResult {
                 first,
@@ -212,9 +283,11 @@ fn plan(entries: &[Entry], options: &Options, jobs: usize) -> Result<(Vec<RunRes
                 stats: Default::default(),
                 steps: 0,
             });
-            wars.extend(
-                positions.iter().map(|p| War { programs: [first as u16, second as u16], positions: [p[0], p[1]] }),
-            );
+            wars.extend(positions.iter().enumerate().map(|(war, p)| War {
+                programs: [indices[0] as u16, indices[1] as u16],
+                positions: [p[0], p[1]],
+                first_mover: if options.settings.rotate { (war & 1) as u8 } else { 0 },
+            }));
         }
     }
     Ok((runs, wars))
@@ -223,8 +296,9 @@ fn plan(entries: &[Entry], options: &Options, jobs: usize) -> Result<(Vec<RunRes
 /// Play one war from its positions on the CPU.
 pub fn fight_one(engine: &mut Engine, war: &War) -> WarResult {
     engine.place(Some(&war.positions)).expect("given positions");
+    engine.wars = war.first_mover as u16;
     let outcome = engine.fight();
-    WarResult { pcs: [engine.warriors[0].pcnum, engine.warriors[1].pcnum], steps: outcome.steps as u32 }
+    WarResult { pcs: [engine.warriors[0].pcnum, engine.warriors[1].pcnum], steps: outcome.steps }
 }
 
 fn fight_cpu(
@@ -324,10 +398,13 @@ pub fn jsonl(entries: &[Entry], settings: &Settings, runs: &[RunResult]) -> Stri
         let [f, s] = &r.stats;
         writeln!(
             text,
-            "{{\"first\":{},\"second\":{},\"seed\":{},\"games\":{},\"first_wins\":{},\"second_wins\":{},\"draws\":{},\
+            "{{\"first\":{},\"second\":{},\"standard\":{},\"quirks\":{},\"rotate\":{},\"seed\":{},\"games\":{},\"first_wins\":{},\"second_wins\":{},\"draws\":{},\
              \"first_pcs\":{},\"second_pcs\":{},\"steps\":{},\"max_steps\":{},\"queue\":{},\"exec_other\":{}}}",
             json_string(&entries[r.first].name),
             json_string(&entries[r.second].name),
+            json_string(settings.standard.name()),
+            settings.quirks,
+            settings.rotate,
             r.seed,
             r.wars,
             f.wins,

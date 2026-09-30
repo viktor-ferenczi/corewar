@@ -20,7 +20,7 @@ pub const MNEMONICS: [&str; COMMS as usize] = ["DAT", "MOV", "ADD", "SUB", "JMP"
 /// Parameter descriptors of the A and B parameter of each opcode, from the `COMMANDS` table.
 /// Bits 0..3 enable the `#`, `$`, `@`, `<` modes, bit 4: may be present, bit 5: must be present,
 /// bits 6..7: default mode.
-const PARAMS: [(u8, u8); COMMS as usize] = [
+pub(crate) const PARAMS: [(u8, u8); COMMS as usize] = [
     (0b0001_1111, 0b0001_1111),
     (0b0111_1111, 0b0111_1110),
     (0b0111_1111, 0b0111_1110),
@@ -37,22 +37,46 @@ const PARAM_MST: u8 = 32;
 /// `PARAMX` returns this mode for a parameter that is not there.
 const MODE_NONE: u8 = 4;
 
-/// One compiled instruction. `modes` holds the A mode in bits 0..1 and the B mode in bits 2..3,
-/// 0 = `#`, 1 = `$`, 2 = `@`, 3 = `<`. Both fields are always in 0..8000.
+/// One compiled instruction. Historical sources use two-bit modes (#, $, @, <);
+/// standard sources use three-bit modes (#, $, *, @, {, <, }, >). Fields are reduced to the core size.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Instruction {
     pub op: u8,
+    /// ICWS'94 modifier, encoded separately from the historical opcode.
+    pub modifier: u8,
     pub modes: u8,
+    /// False only for the historical compiler's two-bit mode layout.
+    pub wide_modes: bool,
     pub a: u16,
     pub b: u16,
 }
 
 impl std::fmt::Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        const MODE: [char; 4] = ['#', '$', '@', '<'];
-        let name = MNEMONICS.get(self.op as usize).copied().unwrap_or("???");
-        let (ma, mb) = (MODE[(self.modes & 3) as usize], MODE[(self.modes >> 2 & 3) as usize]);
-        write!(f, "{name} {ma}{} {mb}{}", self.a, self.b)
+        const MODE: [char; 8] = ['#', '$', '*', '@', '{', '<', '}', '>'];
+        let name = [
+            "DAT", "MOV", "ADD", "SUB", "JMP", "JMZ", "JMN", "DJN", "CMP", "SPL", "SLT", "MUL", "DIV", "MOD", "SEQ",
+            "SNE", "NOP",
+        ]
+        .get(self.op as usize)
+        .copied()
+        .unwrap_or("???");
+        let (a, b) = if self.wide_modes {
+            (self.modes & 7, self.modes >> 3 & 7)
+        } else {
+            let narrow = ['#', '$', '@', '<'];
+            return write!(
+                f,
+                "{name} {}{} {}{}",
+                narrow[(self.modes & 3) as usize],
+                self.a,
+                narrow[(self.modes >> 2 & 3) as usize],
+                self.b
+            );
+        };
+        let (ma, mb) = (MODE[a as usize], MODE[b as usize]);
+        let modifier = crate::assembler::MODIFIERS.get(self.modifier as usize).copied().unwrap_or("?");
+        write!(f, "{name}.{modifier} {ma}{}, {mb}{}", self.a, self.b)
     }
 }
 
@@ -94,6 +118,7 @@ impl Message {
         match self.kind {
             MessageKind::Undefined => format!("Undefined symbol at line {l} in program {m} !"),
             MessageKind::Duplicated => format!("Duplicated symbol at line {l} in program {m} !"),
+            MessageKind::TooLong if l == 0 => format!("{m} program exceeds the configured length limit !"),
             MessageKind::TooLong => format!("{m} program is too long at line {l} !"),
             MessageKind::MissingParameter => format!("Missing parameter at line {l} in program {m} !"),
             MessageKind::ParameterError => format!("Parameter syntax error at line {l} in program {m} !"),
@@ -434,7 +459,7 @@ impl<'a> Compiler<'a> {
                 return Ok(());
             }
             let modes = (mode_a & 3) | (mode_b & 3) << 2;
-            self.code.push(Instruction { op, modes, a: modulo(a), b: modulo(b) });
+            self.code.push(Instruction { op, modifier: 0, modes, wide_modes: false, a: modulo(a), b: modulo(b) });
             self.cpc += 1;
             self.rcenter();
         }

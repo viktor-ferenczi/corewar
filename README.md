@@ -14,8 +14,9 @@ and the published results at https://viktor-ferenczi.github.io/corewar/
 
 ## Modern
 
-[Modern](Modern/README.md) is a native Rust reimplementation of the `MARS.COM` compiler and
-simulator. Its tests check that it gives exactly the same results as `MARS.COM`. The tournament of
+[Modern](Modern/README.md) is a native Rust assembler and simulator for pMARS, ICWS'88,
+ICWS'94, and historical `MARS.COM` rules. It defaults to `pmars`, without P-space.
+Its golden tests check exact `MARS.COM` results with `--standard hu93 --quirks --norotate`. The tournament of
 `Reproduction` played again on it is in [Modern/Reproduction](Modern/Reproduction/README.md).
 
 ## `MARS.COM` and `MARS.ASM`
