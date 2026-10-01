@@ -152,6 +152,20 @@ Options for this historical run: `--steps` (war length, 600000), `--queue` (proc
 `--no-exec-other` (like `/E`), `--seed` (BIOS tick count, the time of day by default), `--log FILE`
 (the binary statistics file of `/F`) and `--no-dat-test` (see below). `mars --help` lists them all.
 
+## Compiling
+
+`mars compile` prints the compiled program and the error messages. `mars compile --json` prints
+one JSON object per file and line instead, and carries on after a file that fails:
+
+```json
+{"file":"clear.red","ok":true,"start":1,"instructions":[{"op":"DAT","modifier":"F","a_mode":"#","a":0,"b_mode":"#","b":7995}]}
+{"file":"broken.red","ok":false,"errors":["Undefined symbol at line 1 in program broken.red !"]}
+```
+
+The exit code is 1 if any file failed. With `--standard hu93` there are no modifiers and
+`modifier` is `null`; with `--syntax hu93` under another standard it is the modifier the
+instruction gets when it is loaded.
+
 ## Tournaments
 
 A tournament plays every pair of 2 to 256 programs, 1000 games per pair by default, on all CPU
@@ -174,6 +188,19 @@ from [`Reproduction/results/runs.jsonl`](Reproduction/results/runs.jsonl):
 writes the old layout instead: `results/runs.csv` and the statistics text of every run in `raw/`,
 into the folder given by `--out`. `--games`, `--steps`, `--queue` and `--no-exec-other` work like
 for `run`.
+
+### Gauntlets
+
+With `--against` the programs before it are candidates and the ones after it are opponents. Every
+candidate plays every opponent, and neither group plays among itself:
+
+```bash
+./target/release/mars tournament --out results.jsonl --seed 1 candidates/*.red --against field/*.red
+```
+
+A gauntlet takes up to 16384 programs in total. Its output has the format of a tournament, and
+each pair gets the seed, and so the results, it has in the full tournament of the same programs in
+the same order. [`Breeding`](Breeding) evaluates its candidates this way.
 
 ### On GPUs
 
@@ -282,6 +309,7 @@ Simulator:
 - `src/tournament.rs`: tournaments, placement planning, fighting on CPU threads, JSONL and `.sta` output
 - `src/gpu.rs`, `src/gpu.wgsl`: fighting on GPUs
 - `src/main.rs`: the command line
+- `Breeding`: breeding warriors with a GA and gauntlet tournaments, see its [README](Breeding/README.md)
 
 ## Performance
 

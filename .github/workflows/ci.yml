@@ -41,6 +41,8 @@ jobs:
         run: timeout 60s cargo test --release --locked --no-default-features --target-dir target/cpu --quiet
       - name: Check the short CPU tournament
         run: python3 tools/ci_tournament.py target/cpu/release/mars
+      - name: Test the breeding scripts on the CPU
+        run: MARS_BIN="$PWD/target/cpu/release/mars" BREED_GPUS=cpu python3 -m unittest discover -s Breeding
       - name: Collect tested build artifacts
         run: |
           mkdir -p dist

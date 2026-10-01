@@ -253,6 +253,11 @@ fn compile_json(name: &str, source: std::io::Result<Vec<u8>>, settings: &Setting
         .iter()
         .map(|ins| {
             let (op, modifier, a_mode, b_mode) = ins.fields();
+            // A MARS.COM source played under another standard gets its modifier when it is loaded.
+            let modifier = match settings.standard {
+                Standard::Hu93 => modifier,
+                _ => mars::assembler::MODIFIERS.get(mars::engine::load_modifier(settings, ins) as usize).copied(),
+            };
             format!(
                 "{{\"op\":\"{op}\",\"modifier\":{},\"a_mode\":\"{a_mode}\",\"a\":{},\"b_mode\":\"{b_mode}\",\"b\":{}}}",
                 modifier.map_or("null".into(), |m| format!("\"{m}\"")),
