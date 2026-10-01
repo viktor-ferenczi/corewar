@@ -310,6 +310,7 @@ Simulator:
 - `src/gpu.rs`, `src/gpu.wgsl`: fighting on GPUs
 - `src/main.rs`: the command line
 - `Breeding`: breeding warriors with a GA and gauntlet tournaments, see its [README](Breeding/README.md)
+- `Breeding/serve.py`: REST API over the binary for remote agents, see [SERVING.md](Breeding/SERVING.md)
 
 ## Performance
 

@@ -73,6 +73,12 @@ The first screen of an inner run measures the wars per second. If a generation w
 than `generation_seconds` (120), the games per pair of that inner run are cut to fit, and the
 report says so.
 
+### From a remote agent
+
+[`serve.py`](serve.py) is a REST API over the `mars` binary, with a pre-shared key. A coding agent
+elsewhere can drive its own search with it: it sends program variants and gets tournament or
+gauntlet results back. See [SERVING.md](SERVING.md).
+
 ## How it works
 
 Each generation:
@@ -132,6 +138,6 @@ is rejected before any war, and the error goes into the report.
 python3 -m unittest discover -s Breeding
 ```
 
-They take a few seconds. The ones that play wars use a stand-in field made of the seed warriors,
+They take a few seconds, and cover `serve.py` too. The ones that play wars use a stand-in field made of the seed warriors,
 so they need neither the download nor a GPU. `MARS_TEST_GPUS=1` pins them to that adapter, like
 the engine's GPU tests; `MARS_BIN` points them at another build.
