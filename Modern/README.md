@@ -200,7 +200,7 @@ candidate plays every opponent, and neither group plays among itself:
 
 A gauntlet takes up to 16384 programs in total. Its output has the format of a tournament, and
 each pair gets the seed, and so the results, it has in the full tournament of the same programs in
-the same order. [`Breeding`](Breeding) evaluates its candidates this way.
+the same order. The [tournament server](Breeding/SERVING.md) offers it to remote agents.
 
 ### On GPUs
 
@@ -309,7 +309,7 @@ Simulator:
 - `src/tournament.rs`: tournaments, placement planning, fighting on CPU threads, JSONL and `.sta` output
 - `src/gpu.rs`, `src/gpu.wgsl`: fighting on GPUs
 - `src/main.rs`: the command line
-- `Breeding`: breeding warriors with a GA and gauntlet tournaments, see its [README](Breeding/README.md)
+- `Breeding`: breeding warriors with an LLM and tournaments, see its [README](Breeding/README.md)
 - `Breeding/serve.py`: REST API over the binary for remote agents, see [SERVING.md](Breeding/SERVING.md)
 
 ## Performance

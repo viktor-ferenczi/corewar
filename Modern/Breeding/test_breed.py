@@ -1,9 +1,11 @@
 """Tests of breed.py and benchmark/fetch.py: python3 -m unittest discover -s Modern/Breeding
 
-They play a few thousand short wars. MARS_TEST_GPUS pins them to the given adapters, like the GPU
+The breeding loop runs against a serve.py started on a free local port, with a stand-in for the
+LLM. They play a few thousand short wars. MARS_TEST_GPUS pins them to the given adapters, like the GPU
 tests of the engine. Without it they use what breed.py would: every discrete GPU, or the CPU.
 """
 
+import contextlib
 import io
 import json
 import os
@@ -11,50 +13,43 @@ import random
 import stat
 import tarfile
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest import mock
 
 import breed
+import serve
 from benchmark import fetch
 
 GPU = os.environ.get("MARS_TEST_GPUS")
 
 
-class Operators(unittest.TestCase):
-    def test_children_are_valid_programs(self):
-        rng = random.Random(1)
-        parents = [
-            {"id": f"w{n}", "code": code, "start": start}
-            for n, (code, start) in enumerate(breed.random_program(rng) for _ in range(5))
-        ]
-        children = breed.breed(rng, parents, 300)
-        self.assertEqual(len(children), 300)
-        self.assertEqual({c["op"] for c in children}, {"mutate", "cross", "sweep"})
-        for child in children:
-            self.assertTrue(1 <= len(child["code"]) <= breed.MAX_LENGTH)
-            self.assertTrue(0 <= child["start"] < len(child["code"]))
-            self.assertTrue(set(child["parents"]) <= {p["id"] for p in parents})
-            for op, modifier, a_mode, a, b_mode, b in child["code"]:
-                self.assertIn(op, breed.OPCODES)
-                self.assertIn(modifier, breed.MODIFIERS)
-                self.assertTrue(a_mode in breed.MODES and b_mode in breed.MODES)
-                self.assertTrue(0 <= a < breed.CORE and 0 <= b < breed.CORE)
+class Selection(unittest.TestCase):
+    WINNERS = [f"w{n}" for n in range(10)]
 
-    def test_crossover_respects_the_length_limit(self):
-        rng = random.Random(2)
-        long = [breed.random_instruction(rng) for _ in range(breed.MAX_LENGTH)]
-        for _ in range(200):
-            code, start = breed.crossover(rng, long, long, 99)
-            self.assertTrue(1 <= len(code) <= breed.MAX_LENGTH and start < len(code))
+    def test_rows_select_a_few_winners_in_random_order(self):
+        matrix = breed.selection(random.Random("7-3"), 200, self.WINNERS, 2, 0)
+        self.assertEqual(len(matrix), 200)
+        for row in matrix:
+            chosen = [w for w, bit in zip(self.WINNERS, row["select"]) if bit]
+            self.assertEqual(set(row["select"]) | {0, 1}, {0, 1})
+            self.assertTrue(2 <= len(chosen) <= 5)  # up to half of the winners
+            self.assertEqual(sorted(row["order"]), chosen)
+        self.assertEqual({sum(row["select"]) for row in matrix}, {2, 3, 4, 5})
+        self.assertTrue(any(row["order"] != sorted(row["order"]) for row in matrix))
+        self.assertEqual(
+            {sum(row["select"]) for row in breed.selection(random.Random(1), 50, self.WINNERS, 3, 4)}, {3, 4}
+        )
 
-    def test_no_parents_gives_random_programs(self):
-        self.assertEqual({c["op"] for c in breed.breed(random.Random(3), [], 10)}, {"random"})
+    def test_the_seed_repeats_the_matrix(self):
+        draw = lambda seed: breed.selection(random.Random(seed), 20, self.WINNERS, 2, 0)
+        self.assertEqual(draw("7-3"), draw("7-3"))
+        self.assertNotEqual(draw("7-3"), draw("7-4"))
 
-    def test_cells(self):
-        self.assertEqual(breed.cell_of(1, 0.0), "0-0")
-        self.assertEqual(breed.cell_of(6, 1.5), "1-1")
-        self.assertEqual(breed.cell_of(100, 5000.0), "4-4")
+    def test_few_or_no_winners(self):
+        self.assertEqual(breed.selection(random.Random(1), 2, [], 2, 0), [{"select": [], "order": []}] * 2)
+        self.assertEqual(breed.selection(random.Random(1), 1, ["only"], 2, 0), [{"select": [1], "order": ["only"]}])
 
 
 class Statistics(unittest.TestCase):
@@ -130,58 +125,6 @@ class Engine(unittest.TestCase):
             self.enterContext(mock.patch.object(breed, target, value))
         self.enterContext(mock.patch.object(fetch, "USAGE", self.tmp / "USAGE.md"))
 
-    def test_canonical_source_assembles_to_the_same_program(self):
-        rng = random.Random(4)
-        code = [breed.random_instruction(rng) for _ in range(50)]
-        warrior = {"id": "w1", "code": code, "start": 7, "op": "random", "parents": [], "gen": 0}
-        path = self.tmp / "w1.red"
-        path.write_text(breed.canonical(warrior))
-        broken = self.tmp / "broken.red"
-        broken.write_text("MOV 0, nowhere\n")
-        good, bad = breed.compile_sources([path, broken])
-        self.assertEqual((good["code"], good["start"]), (code, 7))
-        self.assertIn("Undefined symbol", bad["error"])
-
-    def test_hu93_sources_become_seeds(self):
-        historical = breed.HERE.parent.parent / "Historical" / "PRB004.CWR"
-        (compiled,) = breed.compile_sources([historical], hu93=True)
-        self.assertTrue(all(ins[1] in breed.MODIFIERS for ins in compiled["code"]))
-
-    def test_two_iterations_with_an_inbox(self):
-        options = {"population": 20, "screen_games": 4, "refine_games": 10, "hall_games": 20, "hall_size": 2, "seed": 1}
-        run = breed.Run("test", options, GPU)
-        inbox = run.dir / "inbox"
-        (inbox / "good.red").write_text(";intent a second process keeps the first alive\nSPL 0\nMOV 0, 1\n")
-        (inbox / "bad.red").write_text(";intent never assembles\nMOV 0, nowhere\n")
-        report = run.iterate(minutes=1, generations=2).read_text()
-        self.assertLessEqual(len(report.splitlines()), 150)
-        for expected in (
-            "## Leaderboard against the benchmark field",
-            "| bad.red | rejected: Undefined symbol",
-            "| good.red | w0",
-            "paper by test",
-        ):
-            self.assertIn(expected, report)
-        self.assertEqual(sorted(p.name for p in (run.dir / "llm" / "iter-001").iterdir()), ["bad.red", "good.red"])
-        self.assertEqual(list(inbox.iterdir()), [])
-
-        # Opponents are never parents: every parent is a bred warrior's ID.
-        lineage = [json.loads(line) for line in (run.dir / "lineage.jsonl").read_text().splitlines()]
-        ids = {row["id"] for row in lineage}
-        self.assertTrue(all(set(row["parents"]) <= ids for row in lineage))
-        self.assertEqual({row["op"] for row in lineage if not row["parents"]}, {"seed", "llm", "random"})
-
-        again = breed.Run("test", {}, GPU)
-        self.assertEqual(again.config["population"], 20)
-        self.assertTrue(1 <= len(again.state["hof"]) <= 2)  # the first newcomer always joins
-        self.assertTrue(all(p.exists() for p in again.hof_files()))
-        again.iterate(minutes=1, generations=1)
-        self.assertEqual((again.state["iteration"], again.state["generation"]), (2, 3))
-        self.assertTrue((run.dir / "reports" / "iter-002.md").exists())
-        usage = (self.tmp / "USAGE.md").read_text().splitlines()
-        self.assertEqual(len(usage), 2)
-        self.assertIn("test, iteration 2 | local breeding benchmark, opponents only", usage[1])
-
     def test_rank_and_pmars_check(self):
         with mock.patch.object(breed, "BENCHMARK", self.tmp):
             ranking = breed.rank(None, 0, 20, GPU).read_text()
@@ -195,6 +138,111 @@ class Engine(unittest.TestCase):
             breed.pmars_check(None, 2, 10)
         self.assertEqual(printed.call_count, 3)
         self.assertIn("  0.600", printed.call_args.args[0])
+
+
+@unittest.skipUnless(breed.MARS.exists(), "needs the release build of mars")
+class Loop(unittest.TestCase):
+    """The breeding loop against a local serve.py. The stand-in LLM writes bombers with random steps."""
+
+    KEY = "test-key-0123456789"
+
+    def setUp(self):
+        self.tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        server = serve.Server(("127.0.0.1", 0), self.KEY, breed.device_args(GPU), max_wars=100000)
+        server.RequestHandlerClass.log_message = lambda *args: None
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        remote = {"MARS_URL": f"http://127.0.0.1:{server.server_port}/", "MARS_API_KEY": self.KEY}
+        self.enterContext(mock.patch.dict(os.environ, remote))
+        self.enterContext(mock.patch.object(breed, "RUNS", self.tmp))
+        self.rng = random.Random(5)
+
+    def step(self, **options) -> tuple[int, str]:
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            code = breed.Run("test", options).step(skip_broken=False)
+        return code, output.getvalue()
+
+    def write(self, run: Path, programs: list[str]) -> None:
+        for program in programs:
+            step = self.rng.randrange(1, 8000)
+            source = f";name {program}\nADD.AB #{step}, 1\nMOV.I 2, 2\nJMP -2\nDAT #0, #0\n"
+            (run / "programs" / f"{program}.red").write_text(source)
+
+    def test_three_generations(self):
+        run = self.tmp / "test"
+        code, output = self.step(population=10, games=4, generations=3, seed=11)
+        state = lambda: json.loads((run / "state.json").read_text())
+        first = [f"g001-r{n:03d}" for n in range(1, 11)]
+        self.assertEqual((code, state()["generation"], state()["pending"]), (0, 1, first))
+        self.assertIn("Write these 10 programs", output)
+        prompt = (run / "prompts" / "g001-r001.md").read_text()
+        self.assertIn("There are no earlier warriors yet", prompt)
+        self.assertIn("/programs/g001-r001.red`", prompt)
+        self.assertTrue(any(family in prompt for family in breed.FAMILIES))
+
+        # Nothing is played until every program is written and assembles.
+        self.write(run, first[:8])
+        (run / "programs" / "g001-r009.red").write_text("MOV 0, nowhere\n")
+        code, output = self.step()
+        self.assertEqual((code, "1 programs of generation 1 are not written yet" in output), (0, True))
+        self.assertIn("g001-r010.md", output)
+        self.write(run, first[9:])
+        code, output = self.step()
+        self.assertEqual(code, 1)
+        self.assertIn("g001-r009.red: Undefined symbol at line 1", output)
+        self.assertEqual(state()["generation"], 1)
+        self.write(run, ["g001-r009"])
+
+        code, output = self.step()
+        self.assertEqual(code, 0, output)
+        self.assertEqual((state()["generation"], len(state()["winners"]), len(state()["pending"])), (2, 2, 10))
+        record = json.loads((run / "generations" / "001.json").read_text())
+        ranked = [row["program"] for row in record["standings"]]
+        self.assertEqual(len(ranked), 10 + 4)  # the seeds play in the first generation
+        self.assertEqual(state()["winners"], ranked[:2])
+        self.assertEqual(
+            [row["elo"] for row in record["standings"]],
+            sorted((row["elo"] for row in record["standings"]), reverse=True),
+        )
+        report = (run / "reports" / "001.md").read_text()
+        self.assertIn("| 1 | " + ranked[0], report)
+        self.assertEqual(report.count("kept"), 2 + 1)
+        self.assertEqual((run / "champion.red").read_text(), (run / "programs" / f"{ranked[0]}.red").read_text())
+
+        # The second generation combines the winners: the matrix, and a prompt with their sources.
+        plan = json.loads((run / "generations" / "002.json").read_text())
+        self.assertEqual(plan["winners"], state()["winners"])
+        self.assertEqual([row["select"] for row in plan["matrix"]], [[1, 1]] * 10)
+        row = plan["matrix"][0]
+        prompt = (run / "prompts" / f"{row['program']}.md").read_text()
+        self.assertIn("combines the ideas of all of them", prompt)
+        for number, parent in enumerate(row["order"], 1):
+            self.assertIn(f"## Warrior {number}: {parent} (rank ", prompt)
+            self.assertIn((run / "programs" / f"{parent}.red").read_text().rstrip(), prompt)
+        self.assertEqual(state()["programs"][row["program"]], {"generation": 2, "parents": row["order"]})
+
+        # The winners play again: 10 new programs and 2 winners, without the other seeds.
+        self.write(run, state()["pending"])
+        self.assertEqual(self.step()[0], 0)
+        self.assertEqual(len(json.loads((run / "generations" / "002.json").read_text())["standings"]), 12)
+        self.write(run, state()["pending"])
+        code, output = self.step()
+        self.assertEqual((code, state()["generation"], state()["pending"]), (0, 3, []))
+        self.assertIn("STOP: 3 generations played", output)
+        self.assertIn("STOP: 3 generations played", self.step()[1])
+        self.assertEqual([h["generation"] for h in state()["history"]], [1, 2, 3])
+        self.assertEqual(breed.best_of("test", 1), [run / "programs" / f"{state()['winners'][0]}.red"])
+
+    def test_the_server_and_the_key_are_required(self):
+        with mock.patch.dict(os.environ, {"MARS_API_KEY": "wrong-key-0123456789"}):
+            with self.assertRaisesRegex(SystemExit, "401 missing or wrong key"):
+                breed.api("GET", "/")
+        with mock.patch.dict(os.environ, {"MARS_API_USER": "agent"}):
+            self.assertEqual(breed.api("GET", "/")["service"], "corewar mars")
+        with mock.patch.dict(os.environ, {"MARS_URL": ""}), self.assertRaisesRegex(SystemExit, "set MARS_URL"):
+            breed.api("GET", "/")
 
 
 if __name__ == "__main__":

@@ -10,8 +10,11 @@ can list its tournaments to catch up after a restart. The server keeps all of th
 finished tournaments are forgotten after an hour, and everything is gone when the server
 restarts.
 
-It does not serve the benchmark field. Those warriors are played only by `breed.py`, which logs
-each use.
+[`breed.py step`](README.md) is one such client: it plays each generation of the breeding loop
+here.
+
+It does not serve the benchmark field. Those warriors are played only by `breed.py rank` and
+`breed.py pmars` on this machine, which log each use.
 
 ## Running it
 

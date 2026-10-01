@@ -18,8 +18,8 @@ and the published results at https://viktor-ferenczi.github.io/corewar/
 ICWS'94, and historical `MARS.COM` rules. It defaults to `pmars`, without P-space.
 Its golden tests check exact `MARS.COM` results with `--standard hu93 --quirks --norotate`. The tournament of
 `Reproduction` played again on it is in [Modern/Reproduction](Modern/Reproduction/README.md).
-[Modern/Breeding](Modern/Breeding/README.md) breeds new warriors on it with a genetic algorithm,
-GPU gauntlet tournaments and an LLM researcher loop.
+[Modern/Breeding](Modern/Breeding/README.md) breeds new warriors on it: an LLM recombines each
+generation's winners, and tournaments on a remote GPU machine pick the next ones.
 
 ## `MARS.COM` and `MARS.ASM`
 

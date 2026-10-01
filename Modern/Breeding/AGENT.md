@@ -1,85 +1,71 @@
-# Researcher protocol
+# Breeding loop
 
-You are the researcher of a breeding run. `breed.py` is the lab: it runs a genetic algorithm and
-GPU tournaments. You supply what random mutation rarely finds: a new strategy, a counter to a
-specific opponent, a fix for a known loss. The GA tunes the constants. Read
-[`README.md`](README.md) once for how the lab works.
+You run a breeding loop for Core War warriors. Your goal: breed the strongest warrior you can
+within the run's generation limit, by repeating one cycle until the script says `STOP`.
 
-The user starts you with a run name, for example `/loop follow Modern/Breeding/AGENT.md for run
-night-1`. Work from the `Modern` folder.
+The script `Breeding/breed.py` does the bookkeeping. Each generation it has the programs played
+against each other on a remote MARS, keeps the best 20% by Elo rating as winners, and draws a
+random matrix: one row per program of the next generation, selecting a few of the winners. For
+each row it writes a prompt that asks for one new warrior combining the ideas of the selected
+winners. You are the one who answers those prompts. The winners play again in the next
+generation, so a good warrior is never lost.
+
+Work from the `Modern` folder. The run's name comes from the user, here `RUN`. The environment
+must have `MARS_URL` and `MARS_API_KEY` (and `MARS_API_USER` if the proxy wants HTTP Basic); if
+`breed.py` says they are missing or the server refuses the key, stop and tell the user.
+
+## The cycle
+
+1. Run `python3 Breeding/breed.py step RUN`. On the first call, pass the settings the user gave
+   (for example `--population 50 --generations 20`); later calls take them from the run.
+2. The output lists prompt files and the program file each one asks for:
+   `Breeding/runs/RUN/prompts/g003-r017.md -> Breeding/runs/RUN/programs/g003-r017.red`
+3. Answer every prompt. Give each one to a subagent with a fresh context, several at a time, with
+   an instruction like: "Read `PROMPT FILE` and do what it says." The prompt file has everything
+   the subagent needs. Without subagents, answer them yourself one by one, and treat each on its
+   own: read only that prompt, write only that program.
+4. Run `step` again. It checks that every program is there and assembles.
+   - If it lists missing programs, write them.
+   - If it lists programs that do not assemble, fix each one from its error message while keeping
+     to its prompt, and run `step` again. If one cannot be fixed after two tries, run
+     `step --skip-broken` and it sits this generation out.
+   - Otherwise it plays the tournament (it prints the progress while it waits), writes the report
+     `Breeding/runs/RUN/reports/NNN.md`, and lists the prompts of the next generation.
+5. Commit the run folder `Breeding/runs/RUN` with a message such as `RUN generation 3`. Push only
+   if the user asked for that.
+6. If the output says `STOP`, go to "When it stops". Otherwise continue with step 3.
 
 ## Rules
 
-- Write your own code. Do not copy published warriors, in whole or in part, from memory or from
-  any file. Never read `Breeding/benchmark/warriors/`. Knowing the classic strategies (stones,
-  papers, scanners, clears, imps, vampires, quickscans and their mixes) and using them is fine;
-  reproducing a named warrior is not.
-- The benchmark warriors are opponents only. You see their names, authors and scores in the
-  report and nothing else.
+- The programs must be new code written for their prompt. Do not copy a published warrior, in
+  whole or in part, from memory or from any file. Classic techniques are fine.
+- Do not write programs outside the prompts, do not edit a program after its tournament, and do
+  not edit `state.json`, `generations/`, the prompts, `breed.py` or another run. The matrix decides
+  which winners are combined; do not pick parents yourself.
+- Do not read `Breeding/benchmark/warriors/` if it exists.
+- One `step` at a time. If a `step` was interrupted while a tournament was playing, run it again:
+  it finds the tournament on the server and waits for it.
 - Nothing gets submitted to a hill.
-- Never read raw results (`gen/`, `*.jsonl`). The report has what you need.
-- Only start `breed.py iterate` for the run you were given, with the time budget below, and one
-  at a time. Don't pass `--gpu`: the script picks the discrete GPUs itself. No runs under
-  `--standard hu93`.
-- Don't edit `breed.py`, the benchmark files or other runs. If the lab looks broken, write down
-  what you saw in the notebook and stop.
+- If the script fails in a way these instructions do not cover, stop and report what it printed.
 
-## Each iteration
+## When it stops
 
-1. Read the newest report in `Breeding/runs/RUN/reports/` and the last three entries of
-   `Breeding/runs/RUN/NOTEBOOK.md`. On the first iteration there is no report yet: start from
-   step 2 with your own opening ideas.
-2. Pick one or two hypotheses. Write 5 to 20 candidates into `Breeding/runs/RUN/inbox/`, one
-   `.red` file each. A candidate is a new warrior, or an edit of a bred one (the champion is in
-   `champion.red`, the hall of fame in `hof/`). Each file needs an `;intent` line saying in one
-   sentence what it tests. Check that they assemble:
-   `./target/release/mars compile Breeding/runs/RUN/inbox/*.red`
-3. Run `python3 Breeding/breed.py iterate RUN --minutes 20` and wait for it. It prints the path
-   of the new report.
-4. Append one entry to `NOTEBOOK.md`: the hypothesis, the candidates and why, what the report
-   said about them (score, whether descendants did better), and what to try next. Keep it short
-   and factual. The notebook is your memory across context compaction and restarts.
-5. Check the last line of the report. If it says `STOP`, or the user's time budget is over, write
-   a closing notebook entry with the main findings and end the loop. Otherwise continue with
-   step 1.
+`step` prints `STOP` when the generation limit is reached or the champion has not changed for
+several generations. Then:
 
-## Rules of the game
+1. Read the last report and `Breeding/runs/RUN/champion.red`.
+2. Write `Breeding/runs/RUN/SUMMARY.md`: the champion and how it works, which ideas survived
+   across the generations (the reports list each winner's parents), and what did not work.
+3. Commit, and tell the user where the champion and the summary are.
 
-`--standard pmars`: ICWS'94 as pMARS plays it, without P-space. Core 8000, at most 100
-instructions, 80000 cycles per warrior, 8000 processes, minimum start distance 100. A war of two
-warriors ends when one has no process left, or as a draw at the cycle limit.
+## Files of a run
 
-## Syntax the assembler takes
-
-- Opcodes: `DAT MOV ADD SUB MUL DIV MOD JMP JMZ JMN DJN SPL SLT CMP SEQ SNE NOP`. No `LDP`, `STP`
-  or `PIN`.
-- Modifiers: `.A .B .AB .BA .F .X .I`; without one the '94 default applies.
-- Modes: `#` immediate, `$` direct, `*` and `@` A and B indirect, `{` and `<` with predecrement,
-  `}` and `>` with postincrement.
-- Labels, `EQU`, `FOR`/`ROF`, `ORG`, `END start`, expressions with `+ - * / %` and parentheses,
-  and the constants `CORESIZE`, `MAXLENGTH`, `MAXPROCESSES`, `MAXCYCLES`, `MINDISTANCE`.
-- Comments start with `;`. Begin a file like this:
-
-```
-;redcode-94nop
-;name Short name
-;author Claude
-;intent One sentence: what this candidate tests.
-;assert CORESIZE==8000
-```
-
-The lab rewrites every candidate in canonical form (numbers instead of labels) under an ID such as
-`w000123`. Your annotated original is kept in `llm/iter-NNN/`, and the report lists the ID next to
-your file name.
-
-## Reading the report
-
-- Leaderboard against the benchmark field: the comparable number across the whole run. Score is
-  (wins + draws / 2) / games; 0.5 means level with the field.
-- Leaderboard against the hall of fame: how the bred warriors do against each other.
-- The champion's matchups, worst first: where to aim a counter.
-- LLM candidates: whether each one assembled, its score, and the best score among its
-  descendants. A weak candidate with strong descendants was a good idea badly tuned.
-- Biggest improvements: what the GA changed, as diffs. Look for what it keeps rediscovering.
-- Stagnation and diversity: few filled archive cells means the population has collapsed onto one
-  strategy; propose different ones.
+| Path | Content |
+|:--|:--|
+| `config.json` | the settings and the random seed of the run |
+| `state.json` | the current generation, the programs still to write, the winners, the history |
+| `prompts/gNNN-rNNN.md` | one prompt per matrix row |
+| `programs/gNNN-rNNN.red` | the program written for that prompt; `seed-*.red` are the starting seeds |
+| `generations/NNN.json` | the winners going in, the matrix, and after the tournament the standings |
+| `reports/NNN.md` | the generation's ranking with Elo, and which programs were kept |
+| `champion.red` | the best program of the last tournament |

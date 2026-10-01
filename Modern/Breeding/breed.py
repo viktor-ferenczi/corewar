@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Breed Redcode warriors: a genetic algorithm evaluated by gauntlet tournaments of the Rust MARS.
+"""Breed Redcode warriors: an LLM recombines each generation's winners, a remote MARS ranks them.
 
-  breed.py iterate RUN   one inner run: take the inbox, breed for --minutes, write a report
-  breed.py rank [RUN]    full tournament of the benchmark field, with the run's best warriors
-  breed.py pmars [RUN]   replay sample pairs on pMARS (PMARS_092_BIN) as an independent check
+  breed.py step RUN     evaluate the generation on the remote MARS, keep the winners (top Elo),
+                        and write one prompt per program of the next generation
+  breed.py rank [RUN]   full tournament of the benchmark field, with the run's winners (local mars)
+  breed.py pmars [RUN]  replay sample pairs on pMARS (PMARS_092_BIN) as an independent check
 
-Warriors play under the engine's default rules (--standard pmars: ICWS'94 without P-space, core
-8000). The benchmark warriors are opponents only, see benchmark/USAGE.md. See README.md and
-AGENT.md.
+`step` needs no local engine: it talks to serve.py at MARS_URL with MARS_API_KEY. A coding agent
+writes the programs the prompts ask for and calls `step` again, see AGENT.md. Warriors play under
+the engine's default rules (--standard pmars: ICWS'94 without P-space, core 8000). `rank` and
+`pmars` run on the machine that has the engine and the benchmark field, see benchmark/USAGE.md.
 """
 
 import argparse
-import difflib
-import gzip
+import base64
+import hashlib
 import importlib.util
 import json
 import math
@@ -20,10 +22,12 @@ import os
 import random
 import re
 import secrets
-import shutil
 import subprocess
 import time
-from datetime import datetime, timedelta
+import urllib.error
+import urllib.request
+from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 from benchmark.fetch import WARRIORS, field_summary, load_field, log_usage
@@ -34,48 +38,33 @@ RUNS = HERE / "runs"
 SEEDS = HERE / "seeds"
 BENCHMARK = HERE / "benchmark"
 
-CORE = 8000
-MAX_LENGTH = 100
-# No P-space (LDP, STP), and SEQ stands for its synonym CMP.
-OPCODES = [
-    "DAT",
-    "MOV",
-    "ADD",
-    "SUB",
-    "MUL",
-    "DIV",
-    "MOD",
-    "JMP",
-    "JMZ",
-    "JMN",
-    "DJN",
-    "SPL",
-    "SLT",
-    "SEQ",
-    "SNE",
-    "NOP",
-]
-MODIFIERS = ["A", "B", "AB", "BA", "F", "X", "I"]
-MODES = "#$*@{<}>"
-# MAP-Elites cells: upper bounds of the program length and of the mean processes left per war.
-LENGTH_BINS = [5, 10, 20, 40, MAX_LENGTH]
-PROCESS_BINS = [1, 2, 10, 100, math.inf]
-
 DEFAULTS = {
-    "population": 200,  # new candidates per generation
-    "screen_games": 40,  # games per pair, half with each first mover
-    "refine_games": 400,
-    "hall_games": 2000,
-    "refine_fraction": 0.2,
-    "hall_size": 20,
-    "generation_seconds": 120,  # the stages shrink to fit this on slower hardware
-    "opponents": 0,  # benchmark warriors to play against, 0 for all
-    "seeds": True,  # start from seeds/*.red
-    "hu93_seeds": [],  # MARS.COM sources to start from, compiled with --syntax hu93
+    "population": 50,  # N: new programs per generation
+    "keep": 0.2,  # the winners are this share of N, the best by Elo
+    "min_parents": 2,  # programs a prompt combines, at least
+    "max_parents": 0,  # at most; 0 for half of the winners, rounded up
+    "games": 200,  # games per pair, half with each first mover
+    "generations": 20,  # a stop rule
+    "patience": 5,  # stop when the champion has not changed for this many generations
+    "seeds": True,  # seeds/*.red play in the first generation
 }
+# Starting points for the first generation, which has no winners to combine yet.
+FAMILIES = [
+    "a stone: a small, fast bomber",
+    "a paper: a replicator that spreads copies of itself",
+    "a scanner: it looks for the opponent before it attacks",
+    "a core clear: it wipes the whole core in a loop",
+    "an imp spiral or imp ring, with whatever launches it",
+    "a vampire: it bombs with jumps into a trap that wastes the opponent's processes",
+    "a stone with imps as a backup",
+    "a paper that also bombs",
+    "a quickscan in front of another strategy",
+    "a strategy of your own choice that is none of the usual ones",
+]
+OVER = ("done", "failed", "canceled")
 
 
-# --- the engine --------------------------------------------------------------------------------
+# --- the local engine, for serve.py, rank and pmars ----------------------------------------------
 
 
 def mars(*args: str) -> subprocess.CompletedProcess:
@@ -102,39 +91,6 @@ def device_args(override: str | None) -> list[str]:
     if not set(wanted) <= set(discrete):
         raise SystemExit(f"--gpu {override}: breeding only uses discrete GPUs, mars gpus lists {discrete} as such")
     return ["--gpu", ",".join(map(str, wanted))] if wanted else ["--cpu"]
-
-
-def compile_sources(paths: list[Path], hu93: bool = False) -> list[dict]:
-    """One result per path: the code and start of the assembled program, or its error."""
-    if not paths:
-        return []
-    output = mars("compile", "--json", *(["--syntax", "hu93"] if hu93 else []), *map(str, paths)).stdout
-    results = []
-    for line in output.splitlines():
-        compiled = json.loads(line)
-        if compiled["ok"]:
-            fields = ("op", "modifier", "a_mode", "a", "b_mode", "b")
-            code = [[ins[f] for f in fields] for ins in compiled["instructions"]]
-            results.append({"code": code, "start": compiled["start"]})
-        else:
-            results.append({"error": "; ".join(compiled["errors"])})
-    return results
-
-
-def canonical(warrior: dict) -> str:
-    """The source that plays: explicit modifiers, numeric addresses, no labels. Runs on pMARS as is."""
-    signed = lambda v: v if v <= CORE // 2 else v - CORE
-    meta = {k: warrior.get(k) for k in ("op", "parents", "gen", "intent")}
-    lines = [
-        ";redcode-94nop",
-        f";name {warrior['id']}",
-        ";author corewar Modern/Breeding",
-        f";breeding {json.dumps(meta)}",
-        f";assert CORESIZE=={CORE}",
-        f"ORG {warrior['start']}",
-    ]
-    lines += [f"{op}.{mod} {am}{signed(a)}, {bm}{signed(b)}" for op, mod, am, a, bm, b in warrior["code"]]
-    return "\n".join(lines) + "\n"
 
 
 class Tally:
@@ -175,153 +131,83 @@ def z_score(a: Tally, b: Tally) -> float:
     return (a.mean - b.mean) / spread if spread else 0.0
 
 
-def gauntlet(
-    out: Path, candidates: list[Path], opponents: list[Path], games: int, seed: int, device: list[str]
-) -> tuple[dict[str, dict[str, list[int]]], int, float]:
-    """Play every candidate against every opponent.
-
-    Returns [wins, draws, losses, processes left] by candidate and opponent file name, the wars
-    played and the seconds taken. The raw results stay next to `out`, compressed.
-    """
-    started = time.monotonic()
-    names = [str(p) for p in candidates] + ["--against"] + [str(p) for p in opponents]
-    played = mars("tournament", "--games", str(games), "--seed", str(seed), "--out", str(out), *device, *names)
-    if played.returncode != 0:
-        raise SystemExit(f"mars tournament failed:\n{played.stderr[-2000:]}")
-    seconds = time.monotonic() - started
-    raw = out.read_text()
-    with gzip.open(f"{out}.gz", "wt") as f:
-        f.write(raw)
-    out.unlink()
-    ours = {p.name for p in candidates}
-    results: dict[str, dict[str, list[int]]] = {name: {} for name in ours}
-    for line in raw.splitlines():
-        r = json.loads(line)
-        me, other = ("first", "second") if r["first"] in ours else ("second", "first")
-        results[r[me]][r[other]] = [r[f"{me}_wins"], r["draws"], r[f"{other}_wins"], r[f"{me}_pcs"]]
-    return results, len(candidates) * len(opponents) * games, seconds
+def reproduction_report():
+    """Reproduction/report.py as a module: Elo (Bradley-Terry) ratings, standings, tables."""
+    spec = importlib.util.spec_from_file_location("reproduction_report", HERE.parent / "Reproduction" / "report.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-# --- genetic operators -------------------------------------------------------------------------
+# --- the remote engine ---------------------------------------------------------------------------
 
 
-def random_value(rng: random.Random, old: int | None = None) -> int:
-    """Near the old value, a small offset, or a step coprime with the core size."""
-    kind = rng.random()
-    if old is not None and kind < 0.4:
-        return (old + rng.randint(-5, 5)) % CORE
-    if kind < 0.7:
-        return rng.randint(-20, 20) % CORE
-    while True:
-        step = rng.randrange(1, CORE)
-        if math.gcd(step, CORE) == 1:
-            return step
+def api(method: str, path: str, body: dict | None = None) -> dict:
+    """One call to serve.py at MARS_URL. A refusal ends the script with the server's message."""
+    url, key = os.environ.get("MARS_URL", "").rstrip("/"), os.environ.get("MARS_API_KEY", "")
+    if not url or not key:
+        raise SystemExit("set MARS_URL (like https://mars.example.org) and MARS_API_KEY")
+    data = None if body is None else json.dumps(body).encode()
+    request = urllib.request.Request(url + path, data=data, method=method)
+    user = os.environ.get("MARS_API_USER")  # for a proxy that wants HTTP Basic
+    basic = base64.b64encode(f"{user}:{key}".encode()).decode()
+    request.add_header("Authorization", f"Basic {basic}" if user else f"Bearer {key}")
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            try:
+                reply = json.load(error)
+            except ValueError:
+                reply = {"error": error.reason}
+            if error.code == 422 and "errors" in reply:
+                return reply
+            raise SystemExit(f"{method} {path}: {error.code} {reply.get('error')}")
+        except OSError as error:  # the connection: wait and try again
+            if attempt == 4:
+                raise SystemExit(f"{method} {path}: {error}")
+            time.sleep(2**attempt)
 
 
-def random_instruction(rng: random.Random) -> list:
-    return [
-        rng.choice(OPCODES),
-        rng.choice(MODIFIERS),
-        rng.choice(MODES),
-        random_value(rng),
-        rng.choice(MODES),
-        random_value(rng),
-    ]
-
-
-def random_program(rng: random.Random) -> tuple[list, int]:
-    code = [random_instruction(rng) for _ in range(rng.randint(1, 20))]
-    return code, rng.randrange(len(code))
-
-
-def mutate(rng: random.Random, code: list, start: int) -> tuple[list, int]:
-    """One to three point mutations, or an inserted, deleted or duplicated instruction."""
-    code = [list(ins) for ins in code]
-    for _ in range(rng.randint(1, 3)):
-        at = rng.randrange(len(code))
-        kind = rng.random()
-        if kind < 0.10 and len(code) < MAX_LENGTH:
-            code.insert(at, random_instruction(rng))
-        elif kind < 0.20 and len(code) < MAX_LENGTH:
-            code.insert(at, list(code[at]))
-        elif kind < 0.30 and len(code) > 1:
-            del code[at]
-        elif kind < 0.40:
-            code[at][0] = rng.choice(OPCODES)
-        elif kind < 0.50:
-            code[at][1] = rng.choice(MODIFIERS)
-        elif kind < 0.60:
-            code[at][rng.choice((2, 4))] = rng.choice(MODES)
-        else:
-            field = rng.choice((3, 5))
-            code[at][field] = random_value(rng, code[at][field])
-    return code, min(start, len(code) - 1)
-
-
-def crossover(rng: random.Random, a: list, b: list, start: int) -> tuple[list, int]:
-    """One-point: a head of `a` and a tail of `b`. Two-point: a slice of `b` inside `a`."""
-    cut = rng.randint(0, len(a))
-    if rng.random() < 0.5:
-        code = a[:cut] + b[rng.randint(0, len(b)) :]
+def tournament(programs: dict[str, str], games: int, seed: int, label: str) -> dict:
+    """Play a full tournament on the remote MARS and wait for it. Picks up a tournament with the
+    same label if this script was interrupted while one was queued or playing."""
+    listed = api("GET", "/tournaments")["tournaments"]
+    known = [t for t in listed if t["label"] == label and t["status"] != "canceled"]
+    if known:
+        job = api("GET", f"/tournaments/{known[-1]['id']}")
     else:
-        begin, end = sorted((rng.randint(0, len(b)), rng.randint(0, len(b))))
-        code = a[:cut] + b[begin:end] + a[rng.randint(cut, len(a)) :]
-    code = [list(ins) for ins in code[:MAX_LENGTH]] or [list(a[0])]
-    return code, min(start, len(code) - 1)
+        job = api("POST", "/tournaments", {"programs": programs, "games": games, "seed": seed, "label": label})
+    if "id" not in job:
+        raise SystemExit(f"the server refused the tournament: {job['error']}")
+    while job["status"] not in OVER:
+        print(f"  tournament {job['id']}: {job['status']}, {job['progress']}% of {job['wars']} wars", flush=True)
+        job = api("GET", f"/tournaments/{job['id']}?wait=30")
+    if job["status"] != "done":
+        raise SystemExit(f"tournament {job['id']} {job['status']}: {job.get('error', '')}")
+    return job
 
 
-def sweep(rng: random.Random, code: list, count: int = 8) -> list[list]:
-    """The same warrior with one constant varied, preferably the step of an ADD or SUB."""
-    steps = [(i, 3) for i, ins in enumerate(code) if ins[0] in ("ADD", "SUB") and ins[2] == "#"]
-    at, field = rng.choice(steps) if steps else (rng.randrange(len(code)), rng.choice((3, 5)))
-    variants = []
-    for _ in range(count):
-        variant = [list(ins) for ins in code]
-        variant[at][field] = random_value(rng, variant[at][field])
-        variants.append(variant)
-    return variants
+# --- a run ---------------------------------------------------------------------------------------
 
 
-def breed(rng: random.Random, parents: list[dict], count: int) -> list[dict]:
-    """New warriors from the parents, or random programs when there are none yet."""
-    children: list[dict] = []
-    seen = {json.dumps(p["code"]) for p in parents}
-
-    def add(code, start, op, *bred_from):
-        if json.dumps(code) in seen:
-            return
-        seen.add(json.dumps(code))
-        children.append({"code": code, "start": start, "op": op, "parents": [p["id"] for p in bred_from]})
-
-    while len(children) < count:
-        if not parents:
-            add(*random_program(rng), "random")
-            continue
-        parent = rng.choice(parents)
-        kind = rng.random()
-        if kind < 0.15:
-            for variant in sweep(rng, parent["code"]):
-                add(variant, parent["start"], "sweep", parent)
-        elif kind < 0.35 and len(parents) > 1:
-            other = rng.choice([p for p in parents if p is not parent])
-            add(*crossover(rng, parent["code"], other["code"], parent["start"]), "cross", parent, other)
-        else:
-            add(*mutate(rng, parent["code"], parent["start"]), "mutate", parent)
-    return children[:count]
-
-
-# --- a run -------------------------------------------------------------------------------------
-
-
-def cell_of(length: int, processes: float) -> str:
-    bin_of = lambda bins, value: next(i for i, bound in enumerate(bins) if value <= bound)
-    return f"{bin_of(LENGTH_BINS, length)}-{bin_of(PROCESS_BINS, processes)}"
+def selection(rng: random.Random, rows: int, winners: list[str], least: int, most: int) -> list[dict]:
+    """The random matrix: one row per new program, one 0 or 1 per winner. A row selects `least` to
+    `most` winners, and `order` is the random order its prompt shows them in."""
+    most = min(most or math.ceil(len(winners) / 2), len(winners))
+    least = min(least, len(winners))
+    matrix = []
+    for _ in range(rows):
+        order = rng.sample(winners, rng.randint(least, max(least, most)))
+        matrix.append({"select": [int(w in order) for w in winners], "order": order})
+    return matrix
 
 
 class Run:
-    def __init__(self, name: str, options: dict, gpu: str | None):
-        self.dir = RUNS / name
+    def __init__(self, name: str, options: dict):
         self.name = name
+        self.dir = RUNS / name
         config_path = self.dir / "config.json"
         if config_path.exists():
             self.config = json.loads(config_path.read_text())
@@ -332,420 +218,286 @@ class Run:
                 "created": datetime.now().isoformat("T", "seconds"),
             }
             self.config.update({k: v for k, v in options.items() if v is not None})
-            hours = self.config.pop("total_hours", None)
-            if hours:
-                self.config["deadline"] = (datetime.now() + timedelta(hours=hours)).isoformat("T", "seconds")
-            for folder in ("inbox", "hof", "reports", "llm"):
+            if self.config["population"] + self.winner_count > 250:
+                raise SystemExit("population and winners must stay below 250 programs, the limit of a full tournament")
+            for folder in ("programs", "prompts", "reports", "generations"):
                 (self.dir / folder).mkdir(parents=True, exist_ok=True)
             config_path.write_text(json.dumps(self.config, indent=1) + "\n")
-            (self.dir / "NOTEBOOK.md").write_text(f"# Lab notebook of run {name}\n")
         state_path = self.dir / "state.json"
         self.state = (
             json.loads(state_path.read_text())
             if state_path.exists()
-            else {"next_id": 1, "generation": 0, "iteration": 0, "archive": {}, "hof": [], "iterations": []}
+            else {"generation": 0, "pending": [], "winners": [], "programs": {}, "history": []}
         )
-        self.device = device_args(gpu)
-        self.field = load_field()
-        warriors = self.field["warriors"][: self.config["opponents"] or None]
-        self.benchmark = [WARRIORS / w["file"] for w in warriors]
-        missing = [p.name for p in self.benchmark if not p.exists()]
-        if missing:
-            raise SystemExit(f"benchmark warriors missing ({', '.join(missing[:3])}...), run benchmark/fetch.py")
-        self.credits = {w["file"]: f"{w['name']} by {w['author']}" for w in warriors}
-        self.rng = random.Random(f"{self.config['seed']}-{self.state['iteration'] + 1}")
-        self.games = {stage: self.config[f"{stage}_games"] for stage in ("screen", "refine")}
-        self.wars = 0
-        self.seconds = 0.0
-        self.seconds_per_generation = 0.0
-        self.events: list[dict] = []
-        self.llm: list[dict] = []
-        self.notes: list[str] = []
+
+    @property
+    def winner_count(self) -> int:
+        return max(1, round(self.config["keep"] * self.config["population"]))
 
     def save(self) -> None:
-        (self.dir / "state.json").write_text(json.dumps(self.state) + "\n")
+        (self.dir / "state.json").write_text(json.dumps(self.state, indent=1) + "\n")
 
-    def adopt(self, warrior: dict) -> dict:
-        """Give a new warrior its ID and generation."""
-        warrior["id"] = f"w{self.state['next_id']:06d}"
-        warrior["gen"] = self.state["generation"]
-        self.state["next_id"] += 1
-        return warrior
+    def path(self, program: str, kind: str = "programs") -> Path:
+        return self.dir / kind / f"{program}.{'red' if kind == 'programs' else 'md'}"
 
-    def hof_files(self) -> list[Path]:
-        return [self.dir / "hof" / f"hof-{w['id']}.red" for w in self.state["hof"]]
+    def shown(self, path: Path) -> str:
+        """A path as the prompts and messages give it: relative to the Modern folder."""
+        return str(path.relative_to(HERE.parent)) if path.is_relative_to(HERE.parent) else str(path)
 
-    def play(self, folder: Path, stage: str, warriors: list[dict], opponents: list[Path], games: int) -> dict:
-        """Gauntlet of the warriors under a new master seed. Returns the results by warrior ID."""
-        folder.mkdir(parents=True, exist_ok=True)
-        files = []
-        for warrior in warriors:
-            files.append(folder / f"{warrior['id']}.red")
-            files[-1].write_text(canonical(warrior))
-        seed = self.rng.getrandbits(48)
-        results, wars, seconds = gauntlet(folder / f"{stage}.jsonl", files, opponents, games, seed, self.device)
-        with (folder / "seeds.txt").open("a") as f:
-            f.write(f"{stage} games={games} seed={seed} wars={wars} seconds={seconds:.1f}\n")
-        self.wars += wars
-        self.seconds += seconds
-        return {name.removesuffix(".red"): rows for name, rows in results.items()}
-
-    def load_sources(self, paths: list[Path], op: str, hu93: bool = False) -> list[dict]:
-        """Assemble sources into warriors. A source that fails comes back with its error."""
-        loaded = []
-        for path, compiled in zip(paths, compile_sources(paths, hu93)):
-            intent = re.search(r"^;(?:intent|strategy)[ \t]+(.*?)\s*$", path.read_text("latin-1"), re.MULTILINE)
-            entry = {"file": path.name, "op": op, "parents": [], "intent": intent[1] if intent else "", **compiled}
-            if "error" in entry:
-                entry["error"] = entry["error"].replace(str(path), path.name)
-            loaded.append(entry)
-        return loaded
-
-    def take_inbox(self) -> list[dict]:
-        """The LLM's candidates. The annotated originals move to llm/ next to their canonical IDs."""
-        paths = sorted(p for p in (self.dir / "inbox").iterdir() if p.is_file())
-        kept = self.dir / "llm" / f"iter-{self.state['iteration']:03d}"
-        candidates = []
-        for path, entry in zip(paths, self.load_sources(paths, "llm")):
-            kept.mkdir(parents=True, exist_ok=True)
-            shutil.move(path, kept / path.name)
-            if "error" not in entry:
-                candidates.append(entry)
-            self.llm.append(entry)
-        return candidates
-
-    def seeds(self) -> list[dict]:
-        seeds = self.load_sources(sorted(SEEDS.glob("*.red")), "seed") if self.config["seeds"] else []
-        seeds += self.load_sources([Path(p) for p in self.config["hu93_seeds"]], "seed", hu93=True)
-        for seed in seeds:
-            if "error" in seed:
-                raise SystemExit(f"seed {seed['file']}: {seed['error']}")
-        return seeds
-
-    def fit_to_hardware(self, wars: int, seconds: float, candidates: int) -> None:
-        """After the first screen: fewer games per pair if a generation would take too long."""
-        per_candidate = len(self.benchmark) + len(self.state["hof"])
-        planned = (
-            candidates * per_candidate * (self.games["screen"] + self.config["refine_fraction"] * self.games["refine"])
-        )
-        scale = self.config["generation_seconds"] / (planned / (wars / seconds))
-        if scale < 1:
-            self.games = {
-                "screen": max(10, int(self.games["screen"] * scale)),
-                "refine": max(40, int(self.games["refine"] * scale)),
-            }
-            self.notes.append(f"Slow hardware ({wars / seconds:.0f} wars/s): games per pair cut to {self.games}.")
-
-    def generation(self, newcomers: list[dict]) -> None:
+    def plan(self, ranks: dict[str, str]) -> None:
+        """Start the next generation: draw the matrix and write a prompt for each of its rows."""
         state, config = self.state, self.config
         state["generation"] += 1
-        folder = self.dir / "gen" / f"{state['generation']:04d}"
-        elites = list(state["archive"].values())
-        room = max(config["population"] - len(newcomers), 0)
-        children = [self.adopt(w) for w in newcomers + breed(self.rng, elites, room)]
-        everyone = elites + children
-        opponents = self.benchmark + self.hof_files()
-        benchmark = [p.name for p in self.benchmark]
-
-        screen = self.play(folder, "screen", everyone, opponents, self.games["screen"])
-        if not self.seconds_per_generation:  # the first generation of this inner run
-            self.fit_to_hardware(self.wars, self.seconds, len(everyone))
-        fitness = {w["id"]: Tally(screen[w["id"]].values()).mean for w in everyone}
-        ranked = sorted(everyone, key=lambda w: -fitness[w["id"]])
-        finalists = ranked[: max(1, math.ceil(config["refine_fraction"] * len(ranked)))]
-        refine = self.play(folder, "refine", finalists, opponents, self.games["refine"])
-        fitness.update({w["id"]: Tally(refine[w["id"]].values()).mean for w in finalists})
-
-        for elite in elites:
-            elite["fitness"] = fitness[elite["id"]]
-        refined = {w["id"] for w in finalists}
-        with (self.dir / "lineage.jsonl").open("a") as f:
-            for child in children:
-                row = {k: child.get(k) for k in ("id", "gen", "op", "parents", "intent", "file")}
-                row["screen"] = round(Tally(screen[child["id"]].values()).mean, 4)
-                row["refine"] = round(fitness[child["id"]], 4) if child["id"] in refined else None
-                f.write(json.dumps(row) + "\n")
-
-        by_id = {w["id"]: w for w in everyone}
-        newcomers_refined = [w for w in finalists if w in children]
-        for child in newcomers_refined:
-            tally = Tally(refine[child["id"]].values())
-            child["fitness"] = fitness[child["id"]]
-            child["benchmark"] = Tally(refine[child["id"]][o] for o in benchmark).mean
-            child["cell"] = cell_of(len(child["code"]), tally.processes)
-            holder = state["archive"].get(child["cell"])
-            if holder and holder["fitness"] >= child["fitness"]:
-                continue
-            state["archive"][child["cell"]] = child
-            parents = [by_id[p] for p in child["parents"] if p in by_id]
-            if parents:
-                best = max(parents, key=lambda p: fitness[p["id"]])
-                diff = difflib.unified_diff(
-                    canonical(best).splitlines()[5:],
-                    canonical(child).splitlines()[5:],
-                    best["id"],
-                    child["id"],
-                    lineterm="",
-                    n=1,
-                )
-                self.events.append(
-                    {
-                        "id": child["id"],
-                        "op": child["op"],
-                        "gain": child["fitness"] - fitness[best["id"]],
-                        "fitness": child["fitness"],
-                        "diff": list(diff)[:14],
-                    }
-                )
-        if newcomers_refined:
-            self.try_hall(folder, max(newcomers_refined, key=lambda w: w["benchmark"]))
+        generation = state["generation"]
+        rng = random.Random(f"{config['seed']}-{generation}")
+        winners = state["winners"]
+        matrix = selection(rng, config["population"], winners, config["min_parents"], config["max_parents"])
+        state["pending"] = []
+        for number, row in enumerate(matrix, 1):
+            program = f"g{generation:03d}-r{number:03d}"
+            row["program"] = program
+            state["pending"].append(program)
+            state["programs"][program] = {"generation": generation, "parents": row["order"]}
+            family = None if winners else rng.choice(FAMILIES)
+            self.path(program, "prompts").write_text(self.prompt(program, row["order"], ranks, family))
+        plan = {"generation": generation, "winners": winners, "matrix": matrix}
+        (self.dir / "generations" / f"{generation:03d}.json").write_text(json.dumps(plan, indent=1) + "\n")
         self.save()
 
-    def try_hall(self, folder: Path, candidate: dict) -> None:
-        """The generation's best newcomer plays the benchmark at full length. While the hall of fame
-        has room it joins if it beats the best member, after that it replaces the weakest member if
-        it beats that one, in both cases with z > 2."""
-        hall, full = self.state["hof"], len(self.state["hof"]) >= self.config["hall_size"]
-        strength = lambda w: Tally([w["hall"]]).mean
-        rival = (min if full else max)(hall, key=strength, default=None)
-        if rival and candidate["benchmark"] <= strength(rival):
-            return
-        results = self.play(folder, "hall", [candidate], self.benchmark, self.config["hall_games"])
-        tally = Tally(results[candidate["id"]].values())
-        if rival and z_score(tally, Tally([rival["hall"]])) <= 2:
-            return
-        weakest = rival if full else None
-        if weakest:
-            hall.remove(weakest)
-            (self.dir / "hof" / f"hof-{weakest['id']}.red").unlink()
-        member = {**candidate, "hall": [tally.wins, tally.draws, tally.losses, tally.pcs]}
-        hall.append(member)
-        (self.dir / "hof" / f"hof-{member['id']}.red").write_text(canonical(member))
-        self.notes.append(
-            f"Hall of fame: {member['id']} joined in generation {self.state['generation']}"
-            + (f", replacing {weakest['id']}." if weakest else ".")
-        )
-
-    def iterate(self, minutes: float, generations: int | None) -> Path:
-        state = self.state
-        state["iteration"] += 1
-        purpose = "local breeding benchmark, opponents only"
-        played = (
-            field_summary(self.field)
-            if not self.config["opponents"]
-            else f"the first {len(self.benchmark)} warriors of field.json ({self.field['source']}, {self.field['page']})"
-        )
-        log_usage(f"{self.name}, iteration {state['iteration']}", purpose, played)
-
-        newcomers = self.take_inbox() + (self.seeds() if state["generation"] == 0 else [])
-        deadline = time.monotonic() + minutes * 60
-        first = state["generation"] + 1
-        while True:
-            started = time.monotonic()
-            self.generation(newcomers)
-            newcomers = []
-            self.seconds_per_generation = time.monotonic() - started
-            done = state["generation"] - first + 1
-            print(
-                f"generation {state['generation']}: {len(state['archive'])} cells, best {max(w['fitness'] for w in state['archive'].values()):.3f}, {self.seconds_per_generation:.0f} s",
-                flush=True,
-            )
-            if (generations and done >= generations) or time.monotonic() + self.seconds_per_generation > deadline:
-                break
-        report = self.report(done)
-        self.save()
-        return report
-
-    # --- the report ---
-
-    def leaderboard(self) -> tuple[list[dict], dict]:
-        """The archive and the hall of fame against the benchmark and the hall of fame, on new seeds."""
-        best = {w["id"]: w for w in list(self.state["archive"].values()) + self.state["hof"]}
-        folder = self.dir / "gen" / f"final-{self.state['iteration']:03d}"
-        results = self.play(
-            folder, "final", list(best.values()), self.benchmark + self.hof_files(), self.games["refine"]
-        )
-        benchmark = [p.name for p in self.benchmark]
-        hall = [p.name for p in self.hof_files()]
-        rows = [
-            {
-                "warrior": w,
-                "benchmark": Tally(results[i][o] for o in benchmark),
-                "hall": Tally(results[i][o] for o in hall),
-            }
-            for i, w in best.items()
+    def prompt(self, program: str, parents: list[str], ranks: dict[str, str], family: str | None) -> str:
+        target = self.shown(self.path(program))
+        if len(parents) > 1:
+            task = [
+                f"Below are {len(parents)} warriors that were among the best of the last generation, in a random order.",
+                "For each one, work out the ideas that make it work: how it attacks, how it survives, how it is laid",
+                "out, which constants matter. Then write one new warrior that combines the ideas of all of them.",
+                "",
+                "Combining is not concatenating. Make the ideas work together in one program: share code where they",
+                "overlap, keep the parts apart where they would hit each other, and retune the constants for the new",
+                "layout. Drop what does not fit in 100 instructions. Prefer a warrior that works over one that has",
+                "everything.",
+            ]
+        elif parents:
+            task = [
+                "Below is a warrior that was among the best of the last generation. Work out the ideas that make it",
+                "work: how it attacks, how it survives, how it is laid out, which constants matter. Then write one new",
+                "warrior that takes those ideas further. Do not hand back the same program with other constants.",
+            ]
+        else:
+            task = [
+                "There are no earlier warriors yet. Write an original warrior of your own.",
+                f"Start from this kind of strategy: {family}.",
+            ]
+        text = [
+            f"# Write the warrior {program}",
+            "",
+            *task,
+            "",
+            f"Write the warrior to `{target}` and nothing else. Check that it assembles if you have the means;",
+            "`breed.py step` reports it if it does not.",
+            "",
+            "## Rules",
+            "",
+            "- ICWS'94 as pMARS plays it, without P-space. Core 8000, at most 100 instructions, 80000 cycles per",
+            "  warrior, 8000 processes, minimum start distance 100. A war of two warriors ends when one has no",
+            "  process left, or as a draw at the cycle limit. Warriors are ranked by a tournament of every pair.",
+            "- Write your own code. Do not reproduce a published warrior, in whole or in part. Using the classic",
+            "  techniques is fine.",
+            "- Opcodes: `DAT MOV ADD SUB MUL DIV MOD JMP JMZ JMN DJN SPL SLT CMP SEQ SNE NOP`. No `LDP`, `STP`, `PIN`.",
+            "- Modifiers: `.A .B .AB .BA .F .X .I`. Modes: `#` immediate, `$` direct, `*` `@` indirect by the A or B",
+            "  field, `{` `<` with predecrement, `}` `>` with postincrement.",
+            "- Labels, `EQU`, `FOR`/`ROF`, `ORG`, `END start`, expressions with `+ - * / %` and parentheses, and the",
+            "  constants `CORESIZE`, `MAXLENGTH`, `MAXPROCESSES`, `MAXCYCLES`, `MINDISTANCE` are available.",
+            "",
+            "Begin the file like this"
+            + (", and say in `;intent` which idea you took from which warrior:" if parents else ":"),
+            "",
+            "```",
+            ";redcode-94nop",
+            f";name {program}",
+            ";author Claude",
+            ";intent One or two sentences: "
+            + ("the ideas combined and how they work together." if parents else "how it works."),
+            ";assert CORESIZE==8000",
+            "```",
         ]
-        rows.sort(key=lambda r: -r["benchmark"].mean)
-        return rows, results[rows[0]["warrior"]["id"]]
+        for number, parent in enumerate(parents, 1):
+            text += [
+                "",
+                f"## Warrior {number}: {parent} ({ranks[parent]})",
+                "",
+                "```",
+                self.path(parent).read_text().rstrip(),
+                "```",
+            ]
+        return "\n".join(text) + "\n"
+
+    def step(self, skip_broken: bool) -> int:
+        """Advance the run as far as it can go without the LLM. Returns the exit code."""
+        state, config = self.state, self.config
+        if state["generation"] == 0:
+            if config["seeds"]:
+                for seed in sorted(SEEDS.glob("*.red")):
+                    self.path(f"seed-{seed.stem}").write_text(seed.read_text())
+                    state["programs"][f"seed-{seed.stem}"] = {"generation": 0, "parents": []}
+            self.plan({})
+            return self.waiting()
+        if not state["pending"]:
+            print(self.stop_rule())
+            return 0
+        missing = [p for p in state["pending"] if not self.path(p).exists()]
+        if missing:
+            print(f"{len(missing)} programs of generation {state['generation']} are not written yet.")
+            return self.waiting(missing)
+
+        seeds = (
+            [p for p, meta in state["programs"].items() if meta["generation"] == 0] if state["generation"] == 1 else []
+        )
+        members = state["pending"] + state["winners"] + seeds
+        sources = {p: self.path(p).read_text() for p in members}
+        compiled = api("POST", "/compile", {"programs": {p: sources[p] for p in state["pending"]}})["programs"]
+        broken = {p: result["errors"] for p, result in compiled.items() if not result["ok"]}
+        if broken and not skip_broken:
+            print(f"{len(broken)} programs do not assemble. Fix them, then run step again:")
+            for program, errors in broken.items():
+                print(f"  {self.shown(self.path(program))}: {'; '.join(errors)}")
+            return 1
+        members = [p for p in members if p not in broken]
+        sources = {p: sources[p] for p in members}
+
+        generation = state["generation"]
+        digest = hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()[:12]
+        seed = random.Random(f"{config['seed']}-{generation}-play").getrandbits(48)
+        print(f"generation {generation}: {len(members)} programs, {config['games']} games per pair", flush=True)
+        job = tournament(sources, config["games"], seed, f"{self.name} generation {generation} {digest}")
+
+        pairs = defaultdict(lambda: {"games": 0, "wins": 0, "losses": 0, "draws": 0})
+        for run in job["runs"]:
+            for me, other in (("first", "second"), ("second", "first")):
+                pair = pairs[run[me], run[other]]
+                pair["games"] += run["games"]
+                pair["wins"] += run[f"{me}_wins"]
+                pair["losses"] += run[f"{other}_wins"]
+                pair["draws"] += run["draws"]
+        reproduction = reproduction_report()
+        standings = reproduction.standings(members, pairs)  # best Elo first
+        winners = [row["program"] for row in standings[: self.winner_count]]
+        champion = standings[0]["program"]
+        state["history"].append(
+            {
+                "generation": generation,
+                "champion": champion,
+                "elo": round(standings[0]["elo"]),
+                "new_winners": len(set(winners) - set(state["winners"])),
+                "broken": sorted(broken),
+            }
+        )
+
+        record_path = self.dir / "generations" / f"{generation:03d}.json"
+        record = json.loads(record_path.read_text())
+        record |= {
+            "tournament": {k: job[k] for k in ("id", "seed", "games", "wars", "seconds")},
+            "broken": broken,
+            "standings": standings,
+        }
+        record_path.write_text(json.dumps(record, indent=1) + "\n")
+        self.report(generation, standings, winners, broken, job, reproduction)
+        (self.dir / "champion.red").write_text(sources[champion])
+
+        state["winners"], state["pending"] = winners, []
+        ranks = {
+            row["program"]: f"rank {n} of {len(standings)}, Elo {row['elo']:.0f}" for n, row in enumerate(standings, 1)
+        }
+        print(
+            f"generation {generation} played: champion {champion}, report {self.shown(self.dir / 'reports' / f'{generation:03d}.md')}"
+        )
+        stop = self.stop_rule()
+        if stop.startswith("STOP"):
+            self.save()
+            print(stop)
+            return 0
+        self.plan(ranks)
+        return self.waiting()
+
+    def waiting(self, programs: list[str] | None = None) -> int:
+        """Tell the agent which prompts to answer."""
+        programs = programs or self.state["pending"]
+        print(f"Write these {len(programs)} programs, each from its prompt, then run step again:")
+        for program in programs:
+            print(f"  {self.shown(self.path(program, 'prompts'))} -> {self.shown(self.path(program))}")
+        return 0
 
     def stop_rule(self) -> str:
-        history = self.state["iterations"]
-        deadline = self.config.get("deadline")
-        if deadline and datetime.now().isoformat() > deadline:
-            return f"STOP: the run's time budget ended at {deadline}."
-        if len(history) > 5:
-            before = max(history[:-5], key=lambda h: h["mean"])
-            recent = max(history[-5:], key=lambda h: h["mean"])
-            if recent["mean"] - before["mean"] <= 2 * math.hypot(before["error"], recent["error"]):
-                return "STOP: no significant gain against the benchmark field in 5 iterations."
+        history, config = self.state["history"], self.config
+        if len(history) >= config["generations"]:
+            return f"STOP: {config['generations']} generations played. The champion is {history[-1]['champion']}."
+        recent = [h["champion"] for h in history[-config["patience"] :]]
+        if (
+            len(history) > config["patience"]
+            and len(set(recent)) == 1
+            and history[-config["patience"] - 1]["champion"] == recent[0]
+        ):
+            return f"STOP: the champion {recent[0]} has not changed for {config['patience']} generations."
         return "Continue: no stop rule has fired."
 
-    def report(self, generations: int) -> Path:
-        state = self.state
-        rows, champion_results = self.leaderboard()
-        champion = rows[0]
-        state["iterations"].append(
-            {
-                "iteration": state["iteration"],
-                "champion": champion["warrior"]["id"],
-                "mean": champion["benchmark"].mean,
-                "error": champion["benchmark"].error,
-                "koth": champion["benchmark"].koth,
-            }
-        )
-        (self.dir / "champion.red").write_text(canonical(champion["warrior"]))
-        describe = lambda w: f"{w['id']} ({w['op']}, gen {w['gen']}, {len(w['code'])} instructions)"
-
-        out = [
-            f"# Run {self.name}, iteration {state['iteration']}",
+    def report(
+        self, generation: int, standings: list[dict], winners: list[str], broken: dict, job: dict, reproduction
+    ) -> None:
+        programs = self.state["programs"]
+        rows = []
+        for n, row in enumerate(standings, 1):
+            meta = programs[row["program"]]
+            born = (
+                "seed"
+                if meta["generation"] == 0
+                else "new" if meta["generation"] == generation else f"gen {meta['generation']}"
+            )
+            rows.append(
+                [
+                    n,
+                    row["program"],
+                    f"{row['elo']:.0f}",
+                    f"{row['score']:.1f}",
+                    f"{row['wins']} / {row['draws']} / {row['losses']}",
+                    born,
+                    "kept" if row["program"] in winners else "",
+                    " ".join(meta["parents"]),
+                ]
+            )
+        history = ", ".join(f"{h['generation']}: {h['champion']}" for h in self.state["history"][-8:])
+        text = [
+            f"# Run {self.name}, generation {generation}",
             "",
-            f"{generations} generations (up to {state['generation']}), {self.wars} wars in {self.seconds:.0f} s"
-            f" ({self.wars / self.seconds:.0f} wars/s) on `{' '.join(self.device)}`."
-            f" Games per pair: screen {self.games['screen']}, refine {self.games['refine']}, hall {self.config['hall_games']}."
-            f" Opponents: {len(self.benchmark)} benchmark warriors and {len(state['hof'])} hall of fame members.",
+            f"Full tournament of {len(standings)} programs, {job['games']} games per pair, {job['wars']} wars in"
+            f" {job['seconds']} s, master seed {job['seed']}. Elo is a Bradley-Terry rating with mean 1500. Score is the"
+            f" percentage of (wins + draws / 2). The best {len(winners)} by Elo are kept: they are the parents of the next"
+            " generation and play in it again.",
             "",
-            "Score is (wins + draws / 2) / games with its 95% interval. KOTH is 3 points per win and 1 per draw, per 100 games.",
+            reproduction.md_table(["#", "Program", "Elo", "Score", "W / D / L", "Born", "", "Parents"], rows),
             "",
-            *self.notes,
-            "",
-            "## Leaderboard against the benchmark field",
-            "",
-            "| # | Warrior | Score | KOTH | W / D / L |",
-            "|--:|:--------|:------|-----:|:----------|",
+            f"- New among the winners: {self.state['history'][-1]['new_winners']} of {len(winners)}.",
+            f"- Champion by generation: {history}.",
         ]
-        for n, row in enumerate(rows[:10], 1):
-            t = row["benchmark"]
-            out.append(f"| {n} | {describe(row['warrior'])} | {t} | {t.koth:.1f} | {t.wins} / {t.draws} / {t.losses} |")
-        if state["hof"]:
-            out += [
-                "",
-                "## Leaderboard against the hall of fame",
-                "",
-                "A member also plays its own copy.",
-                "",
-                "| # | Warrior | Score |",
-                "|--:|:--------|:------|",
-            ]
-            by_hall = sorted(rows, key=lambda r: -r["hall"].mean)[:10]
-            out += [f"| {n} | {describe(row['warrior'])} | {row['hall']} |" for n, row in enumerate(by_hall, 1)]
-
-        matchups = sorted(
-            ((Tally([champion_results[name]]), credit) for name, credit in self.credits.items()),
-            key=lambda m: m[0].mean,
-        )
-        shown = matchups if len(matchups) <= 20 else matchups[:15] + matchups[-5:]
-        out += [
-            "",
-            f"## Champion {champion['warrior']['id']}",
-            "",
-            "```",
-            *canonical(champion["warrior"]).splitlines()[5:45],
-            "```",
-            "",
-        ]
-        out += [
-            ("Every matchup" if shown is matchups else "Its 15 worst and 5 best matchups") + ", worst first:",
-            "",
-            "| Opponent | Score | W / D / L |",
-            "|:---------|:------|:----------|",
-        ]
-        out += [f"| {credit} | {t.mean:.3f} | {t.wins} / {t.draws} / {t.losses} |" for t, credit in shown]
-
-        if self.llm:
-            lineage = [json.loads(line) for line in (self.dir / "lineage.jsonl").read_text().splitlines()]
-            children: dict[str, list[dict]] = {}
-            for row in lineage:
-                for parent in row["parents"]:
-                    children.setdefault(parent, []).append(row)
-            score = lambda row: row["refine"] if row["refine"] is not None else row["screen"]
-
-            def best_descendant(warrior_id: str) -> float | None:
-                found, queue = [], list(children.get(warrior_id, []))
-                while queue:
-                    row = queue.pop()
-                    found.append(score(row))
-                    queue += children.get(row["id"], [])
-                return max(found, default=None)
-
-            mine = {
-                row["file"]: row
-                for row in lineage
-                if row["op"] == "llm" and row["gen"] > state["generation"] - generations
-            }
-            out += [
-                "",
-                "## LLM candidates",
-                "",
-                "| File | Result | Score | Best descendant | Intent |",
-                "|:-----|:-------|------:|----------------:|:-------|",
-            ]
-            for entry in self.llm[:20]:
-                row = mine.get(entry["file"])
-                if not row:
-                    out.append(f"| {entry['file']} | rejected: {entry['error'][:90]} | | | {entry['intent'][:60]} |")
-                    continue
-                below = best_descendant(row["id"])
-                out.append(
-                    f"| {entry['file']} | {row['id']} | {score(row):.3f} | {'' if below is None else f'{below:.3f}'} | {entry['intent'][:60]} |"
-                )
-
-        out += ["", "## Biggest improvements", ""]
-        for event in sorted(self.events, key=lambda e: -e["gain"])[:3]:
-            out += [
-                f"{event['id']} ({event['op']}): {event['fitness']:.3f}, {event['gain']:+.3f} over its best parent.",
-                "",
-                "```diff",
-                *event["diff"],
-                "```",
-                "",
-            ]
-        if not self.events:
-            out += ["No child entered the archive ahead of its parents.", ""]
-
-        cells = len(state["archive"])
-        lengths = sorted({w["cell"].split("-")[0] for w in state["archive"].values()})
-        history = ", ".join(f"{h['iteration']}: {h['mean']:.3f}" for h in state["iterations"][-8:])
-        out += [
-            "## Stagnation and diversity",
-            "",
-            f"- Archive: {cells} of {len(LENGTH_BINS) * len(PROCESS_BINS)} cells filled, {len(lengths)} of {len(LENGTH_BINS)} length bins."
-            + (" LOW DIVERSITY." if cells < 4 else ""),
-            f"- Hall of fame: {len(state['hof'])} of {self.config['hall_size']}.",
-            f"- Champion's benchmark score by iteration: {history}.",
-            f"- {self.stop_rule()}",
-        ]
-        path = self.dir / "reports" / f"iter-{state['iteration']:03d}.md"
-        path.write_text("\n".join(out) + "\n")
-        return path
+        if broken:
+            text.append(f"- Left out because they did not assemble: {', '.join(sorted(broken))}.")
+        text.append(f"- {self.stop_rule()}")
+        (self.dir / "reports" / f"{generation:03d}.md").write_text("\n".join(text) + "\n")
 
 
-# --- ranking and the pMARS check ---------------------------------------------------------------
+# --- ranking and the pMARS check -----------------------------------------------------------------
 
 
 def best_of(run: str | None, top: int) -> list[Path]:
-    """Canonical files of the run's best hall of fame members."""
+    """The run's winners, best first."""
     if not run:
         return []
-    hall = json.loads((RUNS / run / "state.json").read_text())["hof"]
-    hall.sort(key=lambda w: -Tally([w["hall"]]).mean)
-    return [RUNS / run / "hof" / f"hof-{w['id']}.red" for w in hall[:top]]
+    winners = json.loads((RUNS / run / "state.json").read_text())["winners"]
+    return [RUNS / run / "programs" / f"{program}.red" for program in winners[:top]]
 
 
 def rank(run: str | None, top: int, games: int, gpu: str | None) -> Path:
     """Full tournament of the benchmark field and the run's best, with Elo ratings as in Reproduction."""
-    spec = importlib.util.spec_from_file_location("reproduction_report", HERE.parent / "Reproduction" / "report.py")
-    reproduction = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(reproduction)
+    reproduction = reproduction_report()
     field = load_field()
     bred = best_of(run, top)
     files = [WARRIORS / w["file"] for w in field["warriors"]] + bred
@@ -864,24 +616,18 @@ def main() -> None:
     commands = parser.add_subparsers(dest="command", required=True)
     gpu_help = "discrete GPUs to use, like 1 or 0,1, or cpu (default: every discrete GPU, also BREED_GPUS)"
 
-    iterate = commands.add_parser("iterate", help="one inner run of the GA")
-    iterate.add_argument("run")
-    iterate.add_argument("--minutes", type=float, default=20, help="time budget of this inner run (20)")
-    iterate.add_argument("--generations", type=int, help="stop after this many generations")
-    iterate.add_argument("--gpu", help=gpu_help)
-    created = iterate.add_argument_group("settings of a new run, kept in its config.json")
-    for name in ("population", "screen_games", "refine_games", "hall_games", "hall_size", "opponents", "seed"):
+    step = commands.add_parser("step", help="evaluate the generation and write the prompts of the next")
+    step.add_argument("run")
+    step.add_argument("--skip-broken", action="store_true", help="play without the programs that do not assemble")
+    created = step.add_argument_group("settings of a new run, kept in its config.json")
+    for name in ("population", "min_parents", "max_parents", "games", "generations", "patience", "seed"):
         created.add_argument(f"--{name.replace('_', '-')}", type=int)
-    created.add_argument("--generation-seconds", type=float)
-    created.add_argument("--total-hours", type=float, help="time budget of the whole run, a stop rule")
-    created.add_argument(
-        "--no-seeds", dest="seeds", action="store_false", default=None, help="start from random programs only"
-    )
-    created.add_argument("--hu93-seeds", nargs="+", help="MARS.COM sources to start from as well")
+    created.add_argument("--keep", type=float, help="share of the population kept as winners (0.2)")
+    created.add_argument("--no-seeds", dest="seeds", action="store_false", default=None, help="leave out seeds/*.red")
 
     ranking = commands.add_parser("rank", help="full tournament of the benchmark field")
     ranking.add_argument("run", nargs="?")
-    ranking.add_argument("--top", type=int, default=5, help="hall of fame members of the run to include (5)")
+    ranking.add_argument("--top", type=int, default=5, help="winners of the run to include (5)")
     ranking.add_argument("--games", type=int, default=1000)
     ranking.add_argument("--gpu", help=gpu_help)
 
@@ -891,11 +637,9 @@ def main() -> None:
     check.add_argument("--games", type=int, default=200)
 
     args = parser.parse_args()
-    if args.command == "iterate":
-        options = {k: v for k, v in vars(args).items() if k not in ("command", "run", "minutes", "generations", "gpu")}
-        if options["hu93_seeds"]:
-            options["hu93_seeds"] = [str(Path(p).resolve()) for p in options["hu93_seeds"]]
-        print(Run(args.run, options, args.gpu).iterate(args.minutes, args.generations))
+    if args.command == "step":
+        options = {k: v for k, v in vars(args).items() if k not in ("command", "run", "skip_broken")}
+        raise SystemExit(Run(args.run, options).step(args.skip_broken))
     elif args.command == "rank":
         print(rank(args.run, args.top, args.games, args.gpu))
     else:
