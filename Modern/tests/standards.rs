@@ -142,6 +142,7 @@ fn tournament_assembles_roles_and_round_counts() {
         format: Format::Jsonl,
         out: "unused".into(),
         progress: false,
+        against: 0,
     };
     let summary = compute(&entries, &options).unwrap();
     assert_eq!(summary.runs[0].stats[0].wins, 3);

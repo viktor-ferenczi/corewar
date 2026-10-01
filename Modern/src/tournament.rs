@@ -1,4 +1,5 @@
 //! Pairwise tournament of 2 to 256 programs, played like `Reproduction/mars.py tournament`.
+//! A gauntlet plays candidates against a fixed set of opponents instead (`Options::against`).
 //!
 //! Rotating first movers use one run per pair; fixed first movers use two opposite-order runs.
 //! Each run has a seed derived from a master seed. Historical fixed-order runs share a DOS
@@ -22,6 +23,9 @@ use crate::{Engine, Program, Rng, Settings};
 /// BIOS ticks per day, the range of the tick counter MARS seeds from.
 const TICKS_PER_DAY: u64 = 0x1800B0;
 pub const MAX_PROGRAMS: usize = 256;
+/// Candidates and opponents of a gauntlet together. A war names its programs in 16 bits, and
+/// every entry can take up four program slots (both start roles, both orders).
+pub const MAX_GAUNTLET_PROGRAMS: usize = 16384;
 
 pub struct Entry {
     /// Name used in the results, the file name without `.CWR`.
@@ -86,6 +90,9 @@ pub struct Options {
     pub out: PathBuf,
     /// Print progress to standard error.
     pub progress: bool,
+    /// Gauntlet: the last `against` entries are opponents. Every other entry, the candidates,
+    /// plays every opponent, and neither group plays among itself. 0 plays all pairs.
+    pub against: usize,
 }
 
 /// A war to fight: the indexes of the two programs and their positions.
@@ -143,13 +150,18 @@ pub fn play(entries: &[Entry], options: &Options) -> Result<Summary, String> {
 
 /// Play the tournament without writing anything.
 pub fn compute(entries: &[Entry], options: &Options) -> Result<Summary, String> {
-    if !(2..=MAX_PROGRAMS).contains(&entries.len()) {
-        return Err(format!("a tournament needs 2 to {MAX_PROGRAMS} programs, got {}", entries.len()));
-    }
-    for (i, e) in entries.iter().enumerate() {
-        if entries[..i].iter().any(|o| o.name == e.name) {
-            return Err(format!("two programs are called {}", e.name));
+    if options.against == 0 {
+        if !(2..=MAX_PROGRAMS).contains(&entries.len()) {
+            return Err(format!("a tournament needs 2 to {MAX_PROGRAMS} programs, got {}", entries.len()));
         }
+    } else if options.against >= entries.len() {
+        return Err("a gauntlet needs at least one candidate".into());
+    } else if entries.len() > MAX_GAUNTLET_PROGRAMS {
+        return Err(format!("a gauntlet takes at most {MAX_GAUNTLET_PROGRAMS} programs, got {}", entries.len()));
+    }
+    let mut names = std::collections::HashSet::new();
+    if let Some(e) = entries.iter().find(|e| !names.insert(e.name.as_str())) {
+        return Err(format!("two programs are called {}", e.name));
     }
     let range = if options.settings.rotate { 1..=65535 } else { 2..=2 * 65535 };
     if !range.contains(&options.games) {
@@ -230,10 +242,17 @@ fn plan(
     options: &Options,
     jobs: usize,
 ) -> Result<(Vec<RunResult>, Vec<War>), String> {
+    // Runs are numbered over all pairs, so a gauntlet gets the seeds, and with them the results,
+    // that its pairs have in the full tournament of the same entries.
+    let candidates = entries.len() - options.against;
     let mut pairs = Vec::new();
+    let mut number = 0u64;
     for a in 0..entries.len() {
         for b in a + 1..entries.len() {
-            pairs.push((a, b));
+            if options.against == 0 || (a < candidates && b >= candidates) {
+                pairs.push((a, b, number));
+            }
+            number += 1;
         }
     }
     let games = [options.games.div_ceil(2) as u16, (options.games / 2) as u16];
@@ -243,7 +262,7 @@ fn plan(
         for _ in 0..jobs {
             scope.spawn(|| loop {
                 let n = next.fetch_add(1, Ordering::Relaxed);
-                let Some(&(a, b)) = pairs.get(n) else { break };
+                let Some(&(a, b, number)) = pairs.get(n) else { break };
                 let mut session = Session::new();
                 let mut pair = Vec::new();
                 let orders: &[(usize, usize, u16)] = if options.settings.rotate {
@@ -254,7 +273,7 @@ fn plan(
                 for (order, &(first, second, count)) in orders.iter().enumerate() {
                     let seed = run_seed(
                         options.seed,
-                        if options.settings.rotate { n as u64 } else { 2 * n as u64 + order as u64 },
+                        if options.settings.rotate { number } else { 2 * number + order as u64 },
                     );
                     let indices = if contextual {
                         [2 * (order * entries.len() + first), 2 * (order * entries.len() + second) + 1]
@@ -378,7 +397,7 @@ impl Progress {
     }
 }
 
-fn json_string(s: &str) -> String {
+pub fn json_string(s: &str) -> String {
     let mut out = String::from('"');
     for c in s.chars() {
         match c {

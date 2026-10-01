@@ -23,6 +23,7 @@ fn options(games: u32, out: PathBuf, format: Format) -> Options {
         format,
         out,
         progress: false,
+        against: 0,
     }
 }
 
@@ -176,4 +177,121 @@ fn a_tournament_of_256_programs() {
     assert_eq!(summary.runs.len(), 256 * 255);
     assert_eq!(summary.wars, 256 * 255);
     assert!(summary.runs.iter().all(|r| r.wars == 1 && r.first != r.second));
+}
+
+/// The runs of the full tournament between a candidate and an opponent.
+fn gauntlet_pairs(runs: &[RunResult], candidates: usize) -> Vec<RunResult> {
+    runs.iter().filter(|r| (r.first < candidates) != (r.second < candidates)).cloned().collect()
+}
+
+#[test]
+fn a_gauntlet_equals_its_pairs_of_the_full_tournament() {
+    // Two candidates against two opponents, with fixed first movers (two runs per pair).
+    let entries = entries(&PROGRAMS);
+    let full = options(11, PathBuf::new(), Format::Jsonl);
+    let all = tournament::compute(&entries, &full).unwrap();
+    let gauntlet = tournament::compute(&entries, &Options { against: 2, ..full }).unwrap();
+    assert_eq!(gauntlet.runs.len(), 2 * 2 * 2);
+    assert_eq!(gauntlet.runs, gauntlet_pairs(&all.runs, 2));
+    assert_eq!(gauntlet.wars, 4 * 11);
+}
+
+#[test]
+fn a_pmars_gauntlet_equals_its_pairs_of_the_full_tournament() {
+    let sources: [(&str, &[u8]); 5] = [
+        ("imp", b"MOV 0, 1\n"),
+        ("dwarf", b"ADD #4, 3\nMOV 2, @2\nJMP -2\nDAT #0, #0\n"),
+        ("first", b"DAT #0, #(ROUNDS)\nstart SPL 0\nMOV -2, <-2\nJMP start\nEND start\n"),
+        ("split", b"SPL 0\nMOV.I #0, 1\n"),
+        ("clear", b"MOV 2, <-1\nJMP -1\nDAT #0, #-5\n"),
+    ];
+    let settings = Settings { max_steps: 2000, ..Settings::pmars() };
+    let entries: Vec<Entry> = sources
+        .iter()
+        .map(|(name, source)| Entry {
+            name: name.to_string(),
+            file: name.to_string(),
+            program: mars::assembler::compile_with_context(source, &settings, Default::default()).program,
+            source: Some(source.to_vec()),
+        })
+        .collect();
+    let full = Options { settings, ..options(9, PathBuf::new(), Format::Jsonl) };
+    let all = tournament::compute(&entries, &full).unwrap();
+    assert_eq!(all.runs.len(), 10);
+    let gauntlet = tournament::compute(&entries, &Options { against: 2, ..full }).unwrap();
+    assert_eq!(gauntlet.runs.len(), 3 * 2);
+    assert_eq!(gauntlet.runs, gauntlet_pairs(&all.runs, 3));
+}
+
+#[test]
+fn gauntlet_limits() {
+    let two = entries(&PROGRAMS[..2]);
+    let no_candidate = Options { against: 2, ..options(10, PathBuf::new(), Format::Jsonl) };
+    assert!(tournament::compute(&two, &no_candidate).unwrap_err().contains("candidate"));
+    // More than a full tournament takes: 300 candidates against one opponent.
+    let many: Vec<Entry> = (0..301)
+        .map(|i| {
+            let mut e = Entry::load(&historical(PROGRAMS[i % 4])).unwrap();
+            e.name = format!("P{i:03}");
+            e
+        })
+        .collect();
+    let options = Options {
+        settings: Settings { max_steps: 2, ..Settings::hu93() },
+        against: 1,
+        ..options(2, PathBuf::new(), Format::Jsonl)
+    };
+    let summary = tournament::compute(&many, &options).unwrap();
+    assert_eq!(summary.runs.len(), 300 * 2);
+    assert!(summary.runs.iter().all(|r| r.first == 300 || r.second == 300));
+}
+
+#[test]
+fn cli_gauntlet_and_compile_json() {
+    use std::process::Command;
+    let dir = temp("cli");
+    let write = |name: &str, text: &str| {
+        let path = dir.join(name);
+        std::fs::write(&path, text).unwrap();
+        path
+    };
+    let imp = write("imp.red", "MOV 0, 1\n");
+    let dwarf = write("dwarf.red", "ADD #4, 3\nMOV 2, @2\nJMP -2\nDAT #0, #0\n");
+    let clear = write("clear.red", "ORG 1\nDAT #0, #-5\nMOV -1, <-1\nJMP -1\n");
+    let broken = write("broken.red", "MOV 0, nowhere\n");
+    let mars = || Command::new(env!("CARGO_BIN_EXE_mars"));
+
+    let out = dir.join("g.jsonl");
+    let status = mars()
+        .args(["tournament", "--cpu", "--games", "4", "--steps", "500", "--out"])
+        .arg(&out)
+        .args([&imp, &dwarf])
+        .arg("--against")
+        .arg(&clear)
+        .output()
+        .unwrap();
+    assert!(status.status.success(), "{}", String::from_utf8_lossy(&status.stderr));
+    let text = std::fs::read_to_string(&out).unwrap();
+    let pairs: Vec<&str> = text.lines().map(|l| &l[..l.find(",\"standard\"").unwrap()]).collect();
+    assert_eq!(pairs, [r#"{"first":"imp.red","second":"clear.red""#, r#"{"first":"dwarf.red","second":"clear.red""#]);
+    let rejected = mars().args(["tournament", "--out", "x"]).arg(&imp).arg("--against").output().unwrap();
+    assert_eq!(rejected.status.code(), Some(2));
+
+    let output = mars().args(["compile", "--json"]).args([&clear, &broken, &dir.join("missing.red")]).output().unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let text = String::from_utf8(output.stdout).unwrap();
+    let lines: Vec<&str> = text.lines().collect();
+    assert_eq!(lines.len(), 3);
+    assert_eq!(
+        lines[0],
+        format!(
+            "{{\"file\":\"{}\",\"ok\":true,\"start\":1,\"instructions\":[\
+             {{\"op\":\"DAT\",\"modifier\":\"F\",\"a_mode\":\"#\",\"a\":0,\"b_mode\":\"#\",\"b\":7995}},\
+             {{\"op\":\"MOV\",\"modifier\":\"I\",\"a_mode\":\"$\",\"a\":7999,\"b_mode\":\"<\",\"b\":7999}},\
+             {{\"op\":\"JMP\",\"modifier\":\"B\",\"a_mode\":\"$\",\"a\":7999,\"b_mode\":\"$\",\"b\":0}}]}}",
+            clear.display()
+        )
+    );
+    assert!(lines[1].contains("\"ok\":false,\"errors\":[\"Undefined symbol at line 1"), "{}", lines[1]);
+    assert!(lines[2].contains("\"ok\":false,\"errors\":[\""), "{}", lines[2]);
 }

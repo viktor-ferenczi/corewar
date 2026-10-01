@@ -13,12 +13,16 @@ Redcode assembler and simulator, with ICWS standards and historical MARS.COM rul
 Usage:
   mars compile [OPTIONS] FILE...
       Print the compiled program and the error messages of MARS.
+      With --json one JSON object per file and line, and a file that fails
+      does not stop the rest.
   mars run [OPTIONS] FILE...
       Play wars between the programs and print the statistics like MARS /P.
   mars tournament [OPTIONS] --out PATH FILE...
       Pairwise tournament of 2 to 256 programs, with rotating first movers.
       Writes one JSON object per run to the file PATH, or with --format sta
       PATH/results/runs.csv and PATH/raw/FIRST_vs_SECOND.sta.
+      With --against every FILE plays every opponent instead (a gauntlet),
+      and neither group plays among itself. Up to 16384 programs in total.
   mars gpus
       List the GPUs --gpu can use.
 
@@ -26,6 +30,8 @@ Options:
   --wars N            run: wars to play (1)
   --games N           tournament: total games per pair (1000)
   --format F          tournament: jsonl (default) or sta
+  --against FILE...   tournament: the programs after it are the opponents
+  --json              compile: machine readable output
   --cpu               tournament: play on CPU threads (default)
   --gpu [LIST]        tournament: play on GPUs, the first one by default, or a
                       list like 0,1, or all (all GPUs of the best kind present)
@@ -51,6 +57,9 @@ Options:
 struct Args {
     command: String,
     files: Vec<PathBuf>,
+    /// Files after `--against`, the opponents of a gauntlet.
+    against: Option<Vec<PathBuf>>,
+    json: bool,
     wars: Option<u16>,
     games: u32,
     format: Format,
@@ -82,6 +91,8 @@ fn parse() -> Result<Args, String> {
     let mut args = Args {
         command,
         files: Vec::new(),
+        against: None,
+        json: false,
         wars: None,
         games: 1000,
         format: Format::Jsonl,
@@ -137,6 +148,8 @@ fn parse() -> Result<Args, String> {
                 }
             }
             "--cpu" => args.gpu = None,
+            "--against" => args.against = Some(Vec::new()),
+            "--json" => args.json = true,
             "--queue" => {
                 args.settings.queue_len = u16::try_from(number(value()?)?).map_err(|_| "--queue is too large")?
             }
@@ -148,7 +161,7 @@ fn parse() -> Result<Args, String> {
             "--out" => args.out = Some(value()?.into()),
             "-h" | "--help" => return Err(String::new()),
             _ if arg.starts_with("--") => return Err(format!("unknown option {arg}")),
-            _ => args.files.push(arg.into()),
+            _ => args.against.as_mut().unwrap_or(&mut args.files).push(arg.into()),
         }
     }
     if args.files.is_empty() && args.command != "gpus" {
@@ -184,6 +197,9 @@ fn parse() -> Result<Args, String> {
             (Standard::Icws94, true) => return Err("94 does not support --quirks".into()),
         }
     }
+    if args.against.as_ref().is_some_and(|opponents| opponents.is_empty() || args.command != "tournament") {
+        return Err("--against needs opponents, and is for tournament only".into());
+    }
     Ok(args)
 }
 
@@ -214,10 +230,56 @@ fn main() -> ExitCode {
     }
 }
 
+/// One line of `compile --json`: the instructions, or the errors that keep the program from playing.
+fn compile_json(name: &str, source: std::io::Result<Vec<u8>>, settings: &Settings, context: AssemblyContext) -> String {
+    use mars::tournament::json_string;
+    let failed = |errors: Vec<String>| {
+        let errors: Vec<String> = errors.iter().map(|e| json_string(e)).collect();
+        format!("{{\"file\":{},\"ok\":false,\"errors\":[{}]}}", json_string(name), errors.join(","))
+    };
+    let compiled = match source
+        .map_err(|e| e.to_string())
+        .and_then(|s| assemble(&s, settings, context).map_err(|f| f.to_string()))
+    {
+        Ok(compiled) => compiled,
+        Err(e) => return failed(vec![e]),
+    };
+    if !compiled.is_ok() {
+        return failed(compiled.messages.iter().map(|m| m.text(name)).collect());
+    }
+    let instructions: Vec<String> = compiled
+        .program
+        .code
+        .iter()
+        .map(|ins| {
+            let (op, modifier, a_mode, b_mode) = ins.fields();
+            format!(
+                "{{\"op\":\"{op}\",\"modifier\":{},\"a_mode\":\"{a_mode}\",\"a\":{},\"b_mode\":\"{b_mode}\",\"b\":{}}}",
+                modifier.map_or("null".into(), |m| format!("\"{m}\"")),
+                ins.a,
+                ins.b
+            )
+        })
+        .collect();
+    format!(
+        "{{\"file\":{},\"ok\":true,\"start\":{},\"instructions\":[{}]}}",
+        json_string(name),
+        compiled.program.start,
+        instructions.join(",")
+    )
+}
+
 fn compile_command(args: &Args) -> Result<ExitCode, String> {
     let mut ok = true;
     for (index, path) in args.files.iter().enumerate() {
         let name = path.display().to_string();
+        if args.json {
+            let context = AssemblyContext { warriors: 2, rounds: args.wars.unwrap_or(1), first: true };
+            let line = compile_json(&name, std::fs::read(path), &args.settings, context);
+            ok &= line.contains("\"ok\":true,");
+            println!("{line}");
+            continue;
+        }
         let source = std::fs::read(path).map_err(|e| format!("{name}: {e}"))?;
         let compiled = assemble(
             &source,
@@ -257,15 +319,16 @@ fn run_command(args: &Args) -> Result<ExitCode, String> {
 
 fn tournament_command(args: &Args) -> Result<ExitCode, String> {
     let rounds = if args.settings.rotate { args.games } else { args.games.div_ceil(2) } as u16;
-    let entries = args
-        .files
+    let opponents = args.against.as_deref().unwrap_or_default();
+    let files: Vec<&PathBuf> = args.files.iter().chain(opponents).collect();
+    let entries = files
         .iter()
         .enumerate()
         .map(|(index, path)| {
             Entry::load_with_context(
                 path,
                 &args.settings,
-                AssemblyContext { warriors: 2, rounds, first: !args.settings.rotate || index + 1 < args.files.len() },
+                AssemblyContext { warriors: 2, rounds, first: !args.settings.rotate || index + 1 < files.len() },
             )
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -281,6 +344,7 @@ fn tournament_command(args: &Args) -> Result<ExitCode, String> {
         format: args.format,
         out: args.out.clone().ok_or("--out is required")?,
         progress: true,
+        against: opponents.len(),
     };
     let summary = tournament::play(&entries, &options)?;
     println!(

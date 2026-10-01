@@ -51,32 +51,31 @@ pub struct Instruction {
     pub b: u16,
 }
 
-impl std::fmt::Display for Instruction {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        const MODE: [char; 8] = ['#', '$', '*', '@', '{', '<', '}', '>'];
-        let name = [
+impl Instruction {
+    /// Opcode name, modifier and the two mode characters. The historical two-bit mode layout has
+    /// no modifier.
+    pub fn fields(&self) -> (&'static str, Option<&'static str>, char, char) {
+        const NAMES: [&str; 17] = [
             "DAT", "MOV", "ADD", "SUB", "JMP", "JMZ", "JMN", "DJN", "CMP", "SPL", "SLT", "MUL", "DIV", "MOD", "SEQ",
             "SNE", "NOP",
-        ]
-        .get(self.op as usize)
-        .copied()
-        .unwrap_or("???");
-        let (a, b) = if self.wide_modes {
-            (self.modes & 7, self.modes >> 3 & 7)
-        } else {
+        ];
+        let name = NAMES.get(self.op as usize).copied().unwrap_or("???");
+        if !self.wide_modes {
             let narrow = ['#', '$', '@', '<'];
-            return write!(
-                f,
-                "{name} {}{} {}{}",
-                narrow[(self.modes & 3) as usize],
-                self.a,
-                narrow[(self.modes >> 2 & 3) as usize],
-                self.b
-            );
-        };
-        let (ma, mb) = (MODE[a as usize], MODE[b as usize]);
+            return (name, None, narrow[(self.modes & 3) as usize], narrow[(self.modes >> 2 & 3) as usize]);
+        }
+        let modes = crate::assembler::MODES;
         let modifier = crate::assembler::MODIFIERS.get(self.modifier as usize).copied().unwrap_or("?");
-        write!(f, "{name}.{modifier} {ma}{}, {mb}{}", self.a, self.b)
+        (name, Some(modifier), modes[(self.modes & 7) as usize], modes[(self.modes >> 3 & 7) as usize])
+    }
+}
+
+impl std::fmt::Display for Instruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self.fields() {
+            (name, None, ma, mb) => write!(f, "{name} {ma}{} {mb}{}", self.a, self.b),
+            (name, Some(modifier), ma, mb) => write!(f, "{name}.{modifier} {ma}{}, {mb}{}", self.a, self.b),
+        }
     }
 }
 
