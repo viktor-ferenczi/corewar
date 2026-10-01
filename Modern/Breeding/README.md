@@ -49,9 +49,10 @@ python3 Breeding/breed.py iterate my-run --minutes 20
 
 This creates `runs/my-run` on first use, breeds for 20 minutes and prints the path of the report.
 Calling it again continues the run. The options that shape a run (`--population`,
-`--screen-games`, `--refine-games`, `--hall-games`, `--hall-size`, `--opponents`, `--seed`,
-`--total-hours`, `--no-seeds`, `--hu93-seeds`) count only when the run is created, and are kept in
-its `config.json`.
+`--screen-games`, `--refine-games`, `--hall-games`, `--hall-size`, `--generation-seconds`,
+`--opponents`, `--seed`, `--total-hours`, `--no-seeds`, `--hu93-seeds`) count only when the run is
+created, and are kept in its `config.json`. `--minutes` and `--generations` limit one inner run:
+it ends when either is reached.
 
 A GA-only run is the same command with nobody filling the inbox. It is the control the researcher
 runs are measured against.

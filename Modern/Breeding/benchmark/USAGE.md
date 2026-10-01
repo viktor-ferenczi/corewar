@@ -2,7 +2,7 @@
 
 Every download and use of the benchmark warriors: the date, the run or script, the purpose and the
 warriors involved with their source. `fetch.py` adds a line for each download and `breed.py` one
-for each run. The log holds names and sources only, no code. The warriors themselves are never
+for each inner run, ranking and pMARS check. The log holds names and sources only, no code. The warriors themselves are never
 committed, are played against only, and are never parents in the GA.
 
 Sources considered and left out:
