@@ -1,8 +1,8 @@
 [package]
 name = "mars"
-version = "1.0.0"
+version = "0.1.0"
 edition = "2021"
-description = "Native reimplementation of the 1993 CoreWar MARS V1.0 (MARS.COM) compiler and simulator"
+description = "Redcode assembler and simulator for ICWS standards, pMARS and historical MARS.COM"
 license = "MIT"
 publish = false
 

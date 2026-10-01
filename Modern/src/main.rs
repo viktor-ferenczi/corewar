@@ -1,21 +1,22 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use mars::assembler::{assemble, AssemblyContext};
 use mars::report::{self, Source};
 use mars::tournament::{self, Backend, Entry, Format};
-use mars::{compile, Rng, Settings};
+use mars::{Rng, Settings, Standard};
 
 const USAGE: &str = "\
 CoreWar MARS Rust V1.0 - Viktor Ferenczi 2026
-The compiler and simulator of MARS.COM (CoreWar MARS V1.0, 1993), reimplemented
+Redcode assembler and simulator, with ICWS standards and historical MARS.COM rules
 
 Usage:
-  mars compile FILE
+  mars compile [OPTIONS] FILE...
       Print the compiled program and the error messages of MARS.
   mars run [OPTIONS] FILE...
       Play wars between the programs and print the statistics like MARS /P.
   mars tournament [OPTIONS] --out PATH FILE...
-      Pairwise tournament of 2 to 256 programs, every pair in both start orders.
+      Pairwise tournament of 2 to 256 programs, with rotating first movers.
       Writes one JSON object per run to the file PATH, or with --format sta
       PATH/results/runs.csv and PATH/raw/FIRST_vs_SECOND.sta.
   mars gpus
@@ -23,15 +24,23 @@ Usage:
 
 Options:
   --wars N            run: wars to play (1)
-  --games N           tournament: games per pair, both start orders (1000)
+  --games N           tournament: total games per pair (1000)
   --format F          tournament: jsonl (default) or sta
   --cpu               tournament: play on CPU threads (default)
   --gpu [LIST]        tournament: play on GPUs, the first one by default, or a
                       list like 0,1, or all (all GPUs of the best kind present)
-  --steps N           steps per war, both programs counted, 0 = 2^32 (600000)
-  --queue N           processes per program, 1..256 (64)
-  --no-exec-other     programs die when executing a cell another program wrote
-  --no-dat-test       do not end a war when no DAT is left (MARS without /P)
+  --steps N           cycles per warrior (80000); hu93: shared steps (600000)
+                      0 means 2^32 cycles or shared steps
+  --core N            arena size in cells (8000)
+  --standard S        pmars (default), hu93, 88 or 94
+  --syntax hu93       compile MARS.COM sources for another standard
+  --quirks            reproduce the reference implementation's bugs
+  --norotate          keep the same first mover in every war
+  --length N          maximum program length (100)
+  --distance N        minimum start distance (0 for hu93, 100 otherwise)
+  --queue N           processes per program (8000; hu93: 64, at most 256)
+  --no-exec-other     hu93: die when executing another program's cell
+  --no-dat-test       hu93: do not end a war when no DAT is left
   --seed N            run: BIOS tick count to seed from (default: time of day),
                       tournament: master seed (0)
   --log FILE          run: write the binary statistics log of MARS /F
@@ -54,11 +63,22 @@ struct Args {
 }
 
 fn parse() -> Result<Args, String> {
-    let mut it = std::env::args().skip(1).peekable();
-    let command = it.next().ok_or("missing command")?;
+    let raw: Vec<String> = std::env::args().skip(1).collect();
+    let command = raw.first().ok_or("missing command")?.clone();
     if command == "-h" || command == "--help" {
         return Err(String::new());
     }
+    let standard = raw
+        .windows(2)
+        .filter(|pair| pair[0] == "--standard")
+        .map(|pair| pair[1].parse::<Standard>())
+        .next_back()
+        .transpose()?
+        .unwrap_or(Standard::Pmars);
+    let mut settings = Settings::for_standard(standard);
+    settings.quirks = false;
+    settings.rotate = true;
+    let mut it = raw.into_iter().skip(1).peekable();
     let mut args = Args {
         command,
         files: Vec::new(),
@@ -66,7 +86,7 @@ fn parse() -> Result<Args, String> {
         games: 1000,
         format: Format::Jsonl,
         gpu: None,
-        settings: Settings::default(),
+        settings,
         seed: None,
         log: None,
         jobs: std::thread::available_parallelism().map_or(1, |n| n.get()),
@@ -86,6 +106,28 @@ fn parse() -> Result<Args, String> {
             "--steps" => {
                 args.settings.max_steps = u32::try_from(number(value()?)?).map_err(|_| "--steps is too large")?
             }
+            "--core" => {
+                args.settings.core_size =
+                    u16::try_from(number(value()?)?).map_err(|_| "--core must be 100 to 65535")?;
+                if args.settings.core_size < 100 {
+                    return Err("--core must be 100 to 65535".into());
+                }
+            }
+            "--standard" => args.settings.standard = value()?.parse::<Standard>()?,
+            "--syntax" => {
+                if value()? != "hu93" {
+                    return Err("--syntax currently accepts only hu93".into());
+                }
+                args.settings.hu93_syntax = true;
+            }
+            "--quirks" => args.settings.quirks = true,
+            "--norotate" => args.settings.rotate = false,
+            "--length" => {
+                args.settings.program_len = u16::try_from(number(value()?)?).map_err(|_| "--length is too large")?
+            }
+            "--distance" => {
+                args.settings.min_distance = u16::try_from(number(value()?)?).map_err(|_| "--distance is too large")?
+            }
             "--games" => args.games = u32::try_from(number(value()?)?).map_err(|_| "--games is too large")?,
             "--format" => {
                 args.format = match value()?.as_str() {
@@ -95,7 +137,9 @@ fn parse() -> Result<Args, String> {
                 }
             }
             "--cpu" => args.gpu = None,
-            "--queue" => args.settings.queue_len = number(value()?)?.clamp(1, 256) as u16,
+            "--queue" => {
+                args.settings.queue_len = u16::try_from(number(value()?)?).map_err(|_| "--queue is too large")?
+            }
             "--no-exec-other" => args.settings.exec_other = false,
             "--no-dat-test" => args.settings.dat_test = false,
             "--seed" => args.seed = Some(number(value()?)?),
@@ -109,6 +153,36 @@ fn parse() -> Result<Args, String> {
     }
     if args.files.is_empty() && args.command != "gpus" {
         return Err("no program given".into());
+    }
+    if args.command != "gpus" {
+        if args.settings.queue_len == 0 || args.settings.queue_len > if standard == Standard::Hu93 { 256 } else { 8000 }
+        {
+            return Err(format!("--queue must be 1 to {}", if standard == Standard::Hu93 { 256 } else { 8000 }));
+        }
+        let max_length = if standard == Standard::Hu93 { 100 } else { 1000 };
+        if args.settings.program_len == 0 || args.settings.program_len > max_length {
+            return Err(format!("--length must be 1 to {max_length}"));
+        }
+        if args.settings.program_len > args.settings.core_size {
+            return Err("--length must not exceed --core".into());
+        }
+        if !args.settings.exec_other && standard != Standard::Hu93 {
+            return Err("--no-exec-other is only available with hu93".into());
+        }
+        if args.settings.min_distance > args.settings.core_size / 2 {
+            return Err("--distance must be at most half the core size".into());
+        }
+        if args.settings.standard == Standard::Hu93 && args.settings.quirks && args.settings.core_size != 8000 {
+            return Err("hu93 --quirks requires --core 8000".into());
+        }
+        if args.log.is_some() && standard != Standard::Hu93 {
+            return Err("--log is only available with hu93".into());
+        }
+        match (args.settings.standard, args.settings.quirks) {
+            (Standard::Hu93 | Standard::Icws88 | Standard::Pmars | Standard::Icws94, false) => {}
+            (Standard::Hu93 | Standard::Icws88 | Standard::Pmars, true) => {}
+            (Standard::Icws94, true) => return Err("94 does not support --quirks".into()),
+        }
     }
     Ok(args)
 }
@@ -142,10 +216,15 @@ fn main() -> ExitCode {
 
 fn compile_command(args: &Args) -> Result<ExitCode, String> {
     let mut ok = true;
-    for path in &args.files {
+    for (index, path) in args.files.iter().enumerate() {
         let name = path.display().to_string();
         let source = std::fs::read(path).map_err(|e| format!("{name}: {e}"))?;
-        let compiled = compile(&source).map_err(|e| format!("{name}: {e}"))?;
+        let compiled = assemble(
+            &source,
+            &args.settings,
+            AssemblyContext { warriors: args.files.len(), rounds: args.wars.unwrap_or(1), first: index == 0 },
+        )
+        .map_err(|fatal| format!("{name}: {fatal}"))?;
         println!("; {name}, {} instructions, START at {}", compiled.program.code.len(), compiled.program.start);
         for (i, ins) in compiled.program.code.iter().enumerate() {
             println!("{i:3}  {ins}");
@@ -177,7 +256,19 @@ fn run_command(args: &Args) -> Result<ExitCode, String> {
 }
 
 fn tournament_command(args: &Args) -> Result<ExitCode, String> {
-    let entries = args.files.iter().map(|p| Entry::load(p)).collect::<Result<Vec<_>, _>>()?;
+    let rounds = if args.settings.rotate { args.games } else { args.games.div_ceil(2) } as u16;
+    let entries = args
+        .files
+        .iter()
+        .enumerate()
+        .map(|(index, path)| {
+            Entry::load_with_context(
+                path,
+                &args.settings,
+                AssemblyContext { warriors: 2, rounds, first: !args.settings.rotate || index + 1 < args.files.len() },
+            )
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     let backend = match &args.gpu {
         None => Backend::Cpu { jobs: args.jobs },
         Some(list) => Backend::Gpu { devices: gpu_devices(list)? },
@@ -193,11 +284,14 @@ fn tournament_command(args: &Args) -> Result<ExitCode, String> {
     };
     let summary = tournament::play(&entries, &options)?;
     println!(
-        "{} wars, {} steps in {:.1} s, {:.2} billion steps per second",
+        "{} wars, {} steps in {:.1} s, {:.2} billion steps per second (standard {}, quirks {}, rotate {})",
         summary.wars,
         summary.steps,
         summary.seconds,
-        summary.steps as f64 / summary.seconds / 1e9
+        summary.steps as f64 / summary.seconds / 1e9,
+        args.settings.standard.name(),
+        args.settings.quirks,
+        args.settings.rotate,
     );
     Ok(ExitCode::SUCCESS)
 }

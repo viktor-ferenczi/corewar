@@ -21,7 +21,7 @@ fn average_rounds_half_down() {
 #[test]
 fn statistics_text() {
     let sources = [source("D:\\IMP.CWR", "START MOV 0 1\n"), source("D:\\DIE.CWR", "START DAT 0\n")];
-    let run = report::run(&sources, &Settings::default(), Rng::from_ticks(1), 3).unwrap();
+    let run = report::run(&sources, &Settings::hu93(), Rng::from_ticks(1), 3).unwrap();
     assert!(run.played);
     assert_eq!(
         run.text,
@@ -47,7 +47,7 @@ ProgNum   Average PC  Win     Lose    Progam name
 #[test]
 fn errors_stop_mars_before_the_war() {
     let sources = [source("A.CWR", " MOV X 1\n"), Source { name: "B.CWR".into(), bytes: None }];
-    let run = report::run(&sources, &Settings::default(), Rng::from_ticks(1), 3).unwrap();
+    let run = report::run(&sources, &Settings::hu93(), Rng::from_ticks(1), 3).unwrap();
     assert!(!run.played);
     assert_eq!(
         run.text,
@@ -62,7 +62,7 @@ fn errors_stop_mars_before_the_war() {
 #[test]
 fn a_fatal_source_returns_the_text_so_far() {
     let (fatal, text) =
-        report::run(&[source("H.CWR", "START MOV 0 1\nX ")], &Settings::default(), Rng::from_ticks(1), 1).unwrap_err();
+        report::run(&[source("H.CWR", "START MOV 0 1\nX ")], &Settings::hu93(), Rng::from_ticks(1), 1).unwrap_err();
     assert_eq!(fatal, mars::Fatal::Hang { line: 2 });
     assert_eq!(text, format!("{BANNER}\n\nH.CWR\n"));
 }
@@ -71,7 +71,7 @@ fn a_fatal_source_returns_the_text_so_far() {
 fn a_session_carries_the_memory_after_the_arena_to_the_next_run() {
     let long = " DAT 0\n".repeat(99) + "START JMP START\n";
     let sources = [source("L.CWR", &long), source("M.CWR", &long)];
-    let settings = Settings { max_steps: 2, ..Settings::default() };
+    let settings = Settings { max_steps: 2, ..Settings::hu93() };
     let mut session = Session::new();
     let first = report::run_in(&mut session, &sources, &settings, Rng::from_ticks(7), 2000).unwrap();
     assert_eq!(first, report::run(&sources, &settings, Rng::from_ticks(7), 2000).unwrap());

@@ -106,7 +106,7 @@ fn parse_cases() -> Vec<Case> {
         let mut tokens = line.split_whitespace();
         let id = tokens.next().unwrap().to_string();
         let seed = tokens.next().unwrap().parse().unwrap();
-        let mut case = Case { id, seed, wars: 1, settings: Settings::default(), programs: Vec::new() };
+        let mut case = Case { id, seed, wars: 1, settings: Settings::hu93(), programs: Vec::new() };
         for token in tokens {
             let value = || token[3..].parse::<u32>().unwrap();
             match token.get(..2) {

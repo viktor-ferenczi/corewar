@@ -19,7 +19,7 @@ fn messages(source: &str) -> Vec<(MessageKind, u16)> {
 #[test]
 fn imp() {
     let c = ok("START MOV 0 1\n");
-    assert_eq!(c.program.code, [Instruction { op: 1, modes: 0b0101, a: 0, b: 1 }]);
+    assert_eq!(c.program.code, [Instruction { op: 1, modifier: 0, modes: 0b0101, wide_modes: false, a: 0, b: 1 }]);
     assert_eq!(c.program.start, 0);
 }
 

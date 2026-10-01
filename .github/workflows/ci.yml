@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 permissions:
   contents: read
@@ -13,11 +13,46 @@ jobs:
   check:
     # Skip draft PRs; ready_for_review runs it once the draft is marked ready.
     if: github.event_name == 'push' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: Modern
     steps:
-      - uses: actions/checkout@v4
-      - name: Placeholder
-        run: echo "No checks yet"
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Select preinstalled Rust
+        run: rustup default stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
+        with:
+          workspaces: |
+            Modern -> target/cpu
+            Modern -> target/gpu
+      - name: Build release binaries and CPU tests
+        run: |
+          cargo build --release --locked --no-default-features --target-dir target/cpu
+          cargo test --release --locked --no-default-features --target-dir target/cpu --no-run
+          cargo build --release --locked --target-dir target/gpu
+      - name: Test release scripts
+        run: python3 -m unittest discover -s ../.github/scripts -p 'test_*.py'
+      - name: Test CPU rules and historical goldens
+        run: timeout 60s cargo test --release --locked --no-default-features --target-dir target/cpu --quiet
+      - name: Check the short CPU tournament
+        run: python3 tools/ci_tournament.py target/cpu/release/mars
+      - name: Collect tested build artifacts
+        run: |
+          mkdir -p dist
+          cp target/cpu/release/mars dist/mars-cpu
+          cp target/gpu/release/mars dist/mars-gpu
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mars-linux-x86_64
+          path: Modern/dist/mars-*
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
 
   pages:
     # Publishes the Reproduction folder to GitHub Pages, only from main.
@@ -34,7 +69,7 @@ jobs:
       group: pages
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
