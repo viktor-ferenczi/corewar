@@ -20,12 +20,11 @@ def api(repo: str, endpoint: str, data: dict | None = None, *, pages: bool = Fal
     if data is not None:
         command.extend(["--method", "POST", "--input", "-"])
     if pages:
-        command.extend(["--paginate", "--slurp"])
+        command.extend(["--paginate", "--jq", ".[] | @json"])
     result = subprocess.run(
         command, input=json.dumps(data) if data is not None else None, capture_output=True, text=True, check=True
     )
-    value = json.loads(result.stdout)
-    return [item for page in value for item in page] if pages else value
+    return [json.loads(line) for line in result.stdout.splitlines()] if pages else json.loads(result.stdout)
 
 
 def eligible(run: dict, pull: dict | None = None) -> bool:

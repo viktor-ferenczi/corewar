@@ -4,9 +4,10 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
-from release import eligible, package, publish, release_tag
+from release import api, eligible, package, publish, release_tag
 
 
 class ReleaseTests(unittest.TestCase):
@@ -38,6 +39,12 @@ class ReleaseTests(unittest.TestCase):
             self.assertFalse(eligible(self.run | patch, self.pull))
         self.assertFalse(eligible(self.run))
         self.assertFalse(eligible(self.run | {"event": "push", "head_branch": "other"}))
+
+    def test_paginated_api_works_with_older_github_clients(self) -> None:
+        with patch("release.subprocess.run", return_value=SimpleNamespace(stdout='{"id":1}\n{"id":2}\n')) as command:
+            self.assertEqual(api("owner/repo", "releases", pages=True), [{"id": 1}, {"id": 2}])
+        self.assertIn("--paginate", command.call_args.args[0])
+        self.assertNotIn("--slurp", command.call_args.args[0])
 
     def test_versions_start_at_zero_and_include_drafts_and_tags(self) -> None:
         self.assertEqual(release_tag([], [], 42), ("v0.1.0", None))
