@@ -90,6 +90,11 @@ quirks flag check in the instruction executor.
 Tested with Rust 1.90. The GPU support (cargo feature `gpu`, on by default) uses
 [wgpu](https://wgpu.rs), which runs on Vulkan on Linux, with NVIDIA and AMD GPUs alike.
 
+Download Linux x86-64 builds from [Releases](https://github.com/viktor-ferenczi/corewar/releases).
+Each release has CPU-only and GPU-enabled archives, `SHA256SUMS`, and `BUILD.json` inside each
+archive with its version, tested commit, CI run, and features. The binaries are built on Ubuntu
+24.04 and need glibc 2.39 or newer. The GPU build also needs a Vulkan driver.
+
 ```bash
 cargo build --release
 ```
@@ -99,6 +104,30 @@ Without GPU support the binary is a tenth of the size and needs no Vulkan:
 ```bash
 cargo build --release --no-default-features
 ```
+
+### CI and releases
+
+CI builds both release binaries, runs the CPU-only test suite and historical goldens, then checks
+a fixed 3584-war tournament against its recorded results. Tests have one-minute limits; cold
+compilation can take longer. Cargo downloads and compiled dependencies, including wgpu, are cached.
+Upstream pMARS differential tests still require the reference binaries described below.
+
+After successful CI, ready-for-review PRs get draft releases; draft PRs get none. Successful
+`main` builds get published releases. Versions start at `0.1.0` and increment the patch number
+for each released build, across PR and main runs. A retry reuses its run's version. The Cargo
+package starts at `0.1.0`; the historical `V1.0` statistics banner is unchanged.
+
+The publisher runs trusted code from the default branch, with no PR code or binaries executed
+under release credentials. Numbering and publishing are serialized. The release workflow becomes
+active once it is merged into the default branch. It can also retry a successful CI run through
+the Release workflow's manual `run_id` input.
+
+For PRs that change workflows, configure the Actions secret `RELEASE_TOKEN` with a fine-grained
+token limited to this repository: Contents and Workflows write, Actions and Pull requests read.
+Otherwise the publisher uses `GITHUB_TOKEN`. GitHub requires the additional Workflows permission
+when a release targets a commit that changes workflows relative to the default branch.
+Draft releases are visible only to collaborators; build artifacts are also available from CI
+runs for 30 days. Failed, stale, closed, or newly converted-to-draft PR builds are not released.
 
 Compile a program and list the result:
 
