@@ -11,6 +11,7 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+from unittest import mock
 
 import breed
 import serve
@@ -52,6 +53,21 @@ class Api(unittest.TestCase):
         for authorization in (f"Bearer {KEY}", basic(KEY)):
             status, info = self.call("/", authorization=authorization)
             self.assertEqual((status, info["max_wars"], info["device"]), (200, 1000, " ".join(self.server.device)))
+
+    def test_livez_needs_no_key_and_health_does(self):
+        self.assertEqual(self.call("/livez", authorization=None), (200, {"status": "ok"}))
+        self.assertEqual(self.call("/health", authorization=None)[0], 401)
+        status, body = self.call("/health")
+        self.assertEqual((status, body["status"], body["busy"]), (200, "ok", False))
+        self.assertEqual(list(body["checks"]), ["binary", "device", "tournament"])
+        self.assertTrue(all(check["ok"] for check in body["checks"].values()))
+
+    def test_health_reports_what_failed(self):
+        with mock.patch.object(serve, "run_mars", side_effect=serve.Refused(504, "mars took too long")):
+            status, body = self.call("/health")
+        self.assertEqual((status, body["status"], body["error"]), (503, "fail", "unhealthy"))
+        self.assertEqual(body["checks"]["tournament"]["error"], "mars took too long")
+        self.assertTrue(body["checks"]["binary"]["ok"])
 
     def test_compile(self):
         status, body = self.call("/compile", {"programs": {"stone": STONE, "broken": BROKEN}})

@@ -4,10 +4,12 @@
   MARS_API_KEY=secret python3 serve.py [--host 127.0.0.1] [--port 8080] [--gpu LIST] [--max-wars N]
 
   GET  /             the limits and defaults of this server
+  GET  /livez        cheap: the process answers (no key needed)
+  GET  /health       extensive: assembles and plays a tiny tournament on the configured device
   POST /compile      {"programs": {name: source}}
   POST /tournaments  {"programs": {name: source}, "against": {name: source}, "games": 100, ...}
 
-Every request needs the pre-shared key: `Authorization: Bearer KEY`, or HTTP Basic with the key as
+Every request but /livez needs the pre-shared key: `Authorization: Bearer KEY`, or HTTP Basic with the key as
 the password. The server speaks plain HTTP and is meant to sit behind a reverse proxy. See
 README.md.
 """
@@ -41,7 +43,7 @@ TIMEOUT = 600  # seconds for one mars call, far above what --max-wars allows
 class Refused(Exception):
     """A request the server won't serve, with its HTTP status."""
 
-    def __init__(self, status: int, message: str, **details):
+    def __init__(self, status: int, message: str, /, **details):
         super().__init__(message)
         self.status = status
         self.body = {"error": message, **details}
@@ -138,6 +140,54 @@ class Server(ThreadingHTTPServer):
             "max_source_bytes": MAX_SOURCE,
         }
 
+    def health(self, body: dict) -> dict:
+        """Check the whole path a tournament takes: the binary, the device, the assembler and a
+        war with a known winner. Answers 503 with the failed checks."""
+        checks = {}
+
+        def check(name: str, probe) -> None:
+            started = time.monotonic()
+            try:
+                problem = probe()
+            except Exception as error:  # a failed probe is the finding, whatever it raised
+                problem = str(error) or type(error).__name__
+            checks[name] = {"ok": not problem, "seconds": round(time.monotonic() - started, 2)}
+            if problem:
+                checks[name]["error"] = problem
+
+        def device() -> str | None:
+            if self.device == ["--cpu"]:
+                return None
+            listed = breed.discrete_gpus()
+            missing = [i for i in self.device[1].split(",") if int(i) not in listed]
+            return f"discrete GPU {', '.join(missing)} is gone, mars gpus lists {listed}" if missing else None
+
+        def play() -> str | None:
+            # A bomber against a program that dies on its first step: it must win every war.
+            body = {"programs": {"bomber": "ADD.AB #4, 1\nMOV.I 2, 2\nJMP -2\nDAT #0, #0\n", "dat": "DAT #0, #0\n"}}
+            with tempfile.TemporaryDirectory(prefix="mars-health-") as folder:
+                folder = Path(folder)
+                compiled = compile_programs(folder, body["programs"], [])
+                if not all(result["ok"] for result in compiled.values()):
+                    return f"the probe programs do not assemble: {compiled}"
+                out = folder / "runs.jsonl"
+                files = [str(folder / name) for name in body["programs"]]
+                # Not under the lock: two wars fit next to a running tournament.
+                played = run_mars("tournament", "--games", "2", "--out", str(out), *self.device, *files)
+                if played.returncode != 0:
+                    return played.stderr.strip()[-500:]
+                run = json.loads(out.read_text())
+                return None if run["first_wins"] == 2 else f"wrong result: {run}"
+
+        check("binary", lambda: None if breed.MARS.exists() else f"{breed.MARS} is missing")
+        check("device", device)
+        check("tournament", play)
+        healthy = all(c["ok"] for c in checks.values())
+        report = {"status": "ok" if healthy else "fail", "busy": self.playing.locked(), "checks": checks}
+        if not healthy:
+            raise Refused(503, "unhealthy", **report)
+        return report
+
     def compile(self, body: dict) -> dict:
         with tempfile.TemporaryDirectory(prefix="mars-serve-") as folder:
             return {"programs": compile_programs(Path(folder), sources(body, "programs"), rule_args(body))}
@@ -228,9 +278,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.close_connection = True  # the body stays unread
                 raise Refused(413, f"the request body is larger than {MAX_BODY} bytes")
             raw = self.rfile.read(length)
-            if not self.authorized():
+            path = self.path.rstrip("/") or "/"
+            if path != "/livez" and not self.authorized():
                 raise Refused(401, "missing or wrong key")
-            route = routes.get(self.path.rstrip("/") or "/")
+            route = routes.get(path)
             if not route:
                 raise Refused(404, "no such resource, see GET /")
             try:
@@ -244,7 +295,8 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(refused.status, refused.body)
 
     def do_GET(self) -> None:
-        self.handle_request({"/": lambda body: self.server.info()})
+        livez = lambda body: {"status": "ok"}
+        self.handle_request({"/": lambda body: self.server.info(), "/livez": livez, "/health": self.server.health})
 
     def do_POST(self) -> None:
         self.handle_request({"/compile": self.server.compile, "/tournaments": self.server.tournament})

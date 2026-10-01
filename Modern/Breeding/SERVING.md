@@ -29,7 +29,7 @@ tournament plays at a time; requests that arrive meanwhile wait their turn.
 
 ## Authentication
 
-Every request needs the key, in either form:
+Every request except `GET /livez` needs the key, in either form:
 
 ```
 Authorization: Bearer KEY
@@ -42,7 +42,8 @@ Without it the answer is `401`. With `curl`: `-H "Authorization: Bearer $MARS_AP
 ## API
 
 Bodies and replies are JSON. An error reply is `{"error": "..."}` with status 400 (bad request),
-401 (key), 404, 413 (too large: body, program count or wars), 422 (nothing to play) or 504.
+401 (key), 404, 413 (too large: body, program count or wars), 422 (nothing to play), 503 (`/health`
+only) or 504.
 
 Program names are 1 to 64 characters of letters, digits, `_`, `.` and `-`, starting with a letter
 or digit. A source is at most 64 KB.
@@ -50,6 +51,32 @@ or digit. A source is at most 64 KB.
 ### `GET /`
 
 The server's device and limits.
+
+### `GET /livez`
+
+Cheap liveness check: `{"status": "ok"}` as soon as the process answers. It needs no key and
+touches neither the binary nor the GPUs, so a proxy or a supervisor can poll it often.
+
+### `GET /health`
+
+Extensive check of the whole path a tournament takes, with the key. It answers `200` when every
+check passes and `503` otherwise, with the failed check's `error`:
+
+- `binary`: the `mars` binary is there.
+- `device`: the configured discrete GPUs are still listed by `mars gpus`.
+- `tournament`: two probe programs assemble, and a two-war tournament on the configured device
+  ends with the known winner.
+
+```json
+{"status": "ok", "busy": false, "checks": {
+  "binary": {"ok": true, "seconds": 0.0},
+  "device": {"ok": true, "seconds": 0.06},
+  "tournament": {"ok": true, "seconds": 0.44}}}
+```
+
+`busy` says whether a tournament is playing. The check does not wait for it: its two wars run
+next to it. It takes about half a second on a GPU (mostly device startup), so poll it every minute or
+so, not every second.
 
 ### `POST /compile`
 
