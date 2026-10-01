@@ -76,8 +76,8 @@ report says so.
 ### From a remote agent
 
 [`serve.py`](serve.py) is a REST API over the `mars` binary, with a pre-shared key. A coding agent
-elsewhere can drive its own search with it: it sends program variants and gets tournament or
-gauntlet results back. See [SERVING.md](SERVING.md).
+elsewhere can drive its own search with it: it submits program variants as tournaments or
+gauntlets, which the server queues, and polls for the results. See [SERVING.md](SERVING.md).
 
 ## How it works
 
