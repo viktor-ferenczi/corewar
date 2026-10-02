@@ -161,7 +161,7 @@ class Loop(unittest.TestCase):
     def step(self, **options) -> tuple[int, str]:
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
-            code = breed.Run("test", options).step(skip_broken=False)
+            code = breed.Run("test", options).step()
         return code, output.getvalue()
 
     def write(self, run: Path, programs: list[str]) -> None:
@@ -182,17 +182,30 @@ class Loop(unittest.TestCase):
         self.assertIn("/programs/g001-r001.red`", prompt)
         self.assertTrue(any(family in prompt for family in breed.FAMILIES))
 
-        # Nothing is played until every program is written and assembles.
+        # Nothing is played until every program is written.
         self.write(run, first[:8])
         (run / "programs" / "g001-r009.red").write_text("MOV 0, nowhere\n")
         code, output = self.step()
         self.assertEqual((code, "1 programs of generation 1 are not written yet" in output), (0, True))
         self.assertIn("g001-r010.md", output)
         self.write(run, first[9:])
+
+        # The server validates them first. One that does not assemble is replaced, not repaired:
+        # it is set aside, its row is drawn again, and only its new prompt is waiting.
+        old_prompt = (run / "prompts" / "g001-r009.md").read_text()
         code, output = self.step()
-        self.assertEqual(code, 1)
-        self.assertIn("g001-r009.red: Undefined symbol at line 1", output)
-        self.assertEqual(state()["generation"], 1)
+        self.assertEqual(code, 0)
+        self.assertIn("g001-r009: Undefined symbol at line 1", output)
+        self.assertIn("Write these 1 programs", output)
+        self.assertEqual((state()["generation"], state()["history"]), (1, []))
+        self.assertFalse((run / "programs" / "g001-r009.red").exists())
+        self.assertEqual((run / "rejected" / "g001-r009.1.red").read_text(), "MOV 0, nowhere\n")
+        self.assertNotEqual(
+            (run / "prompts" / "g001-r009.md").read_text(), old_prompt
+        )  # another strategy to start from
+        rejected = json.loads((run / "generations" / "001.json").read_text())["rejected"]
+        self.assertEqual([(r["program"], r["errors"][0][:16]) for r in rejected], [("g001-r009", "Undefined symbol")])
+        self.assertIn("1 programs of generation 1 are not written yet", self.step()[1])
         self.write(run, ["g001-r009"])
 
         code, output = self.step()
@@ -208,7 +221,8 @@ class Loop(unittest.TestCase):
         )
         report = (run / "reports" / "001.md").read_text()
         self.assertIn("| 1 | " + ranked[0], report)
-        self.assertEqual(report.count("kept"), 2 + 1)
+        self.assertEqual(report.count("| kept |"), 2)
+        self.assertIn("Programs replaced because they did not assemble: 1", report)
         self.assertEqual((run / "champion.red").read_text(), (run / "programs" / f"{ranked[0]}.red").read_text())
 
         # The second generation combines the winners: the matrix, and a prompt with their sources.
@@ -223,8 +237,17 @@ class Loop(unittest.TestCase):
             self.assertIn((run / "programs" / f"{parent}.red").read_text().rstrip(), prompt)
         self.assertEqual(state()["programs"][row["program"]], {"generation": 2, "parents": row["order"]})
 
-        # The winners play again: 10 new programs and 2 winners, without the other seeds.
+        # A replaced program of a later generation gets a row drawn again from the same winners.
         self.write(run, state()["pending"])
+        (run / "programs" / "g002-r003.red").write_text("JMP nowhere\n")
+        self.assertIn("are replaced, not repaired", self.step()[1])
+        redrawn = json.loads((run / "generations" / "002.json").read_text())
+        self.assertEqual((redrawn["matrix"][2]["program"], redrawn["matrix"][2]["select"]), ("g002-r003", [1, 1]))
+        self.assertIn("## Warrior 2: ", (run / "prompts" / "g002-r003.md").read_text())
+        self.assertTrue((run / "rejected" / "g002-r003.2.red").exists())
+
+        # The winners play again: 10 new programs and 2 winners, without the other seeds.
+        self.write(run, ["g002-r003"])
         self.assertEqual(self.step()[0], 0)
         self.assertEqual(len(json.loads((run / "generations" / "002.json").read_text())["standings"]), 12)
         self.write(run, state()["pending"])

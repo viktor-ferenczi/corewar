@@ -66,9 +66,11 @@ bearer token, for a reverse proxy that wants Basic.
 
 One generation, as `step` sees it:
 
-1. **Check.** Every program the prompts asked for must be written and must assemble (the server's
-   `/compile` says). Otherwise `step` lists what is missing or broken and stops there.
-   `--skip-broken` plays without the broken ones.
+1. **Validate.** Every program the prompts asked for must be written, and `step` sends them to
+   the server's `/compile` before anything plays. A program that does not assemble is replaced,
+   not repaired: it is moved to `rejected/`, its matrix row is drawn again (a new random
+   selection of winners, seeded), and a new prompt asks for a new program. `step` stops there
+   until the replacements are written, and validates those the same way.
 2. **Play.** The N new programs and the M winners of the generation before play a full
    tournament on the server. In the first generation the seeds play too. The tournament's master
    seed is derived from the run's seed and the generation.
@@ -99,7 +101,8 @@ field.
 | `state.json` | the current generation, the programs still to write, the winners, the history |
 | `prompts/gNNN-rNNN.md` | one prompt per matrix row |
 | `programs/gNNN-rNNN.red` | the program written for that prompt; `seed-*.red` are the seeds |
-| `generations/NNN.json` | the winners going in, the matrix, and after the tournament the standings |
+| `generations/NNN.json` | the winners going in, the matrix, the replaced programs with their errors, and after the tournament the standings |
+| `rejected/` | programs that did not assemble and were replaced |
 | `reports/NNN.md` | the generation's ranking with Elo, and which programs were kept |
 | `champion.red` | the best program of the last tournament |
 

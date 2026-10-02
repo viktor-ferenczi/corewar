@@ -24,11 +24,13 @@ must have `MARS_URL` and `MARS_API_KEY` (and `MARS_API_USER` if the proxy wants 
    an instruction like: "Read `PROMPT FILE` and do what it says." The prompt file has everything
    the subagent needs. Without subagents, answer them yourself one by one, and treat each on its
    own: read only that prompt, write only that program.
-4. Run `step` again. It checks that every program is there and assembles.
+4. Run `step` again. Before anything plays, it sends the new programs to the MARS service for
+   validation.
    - If it lists missing programs, write them.
-   - If it lists programs that do not assemble, fix each one from its error message while keeping
-     to its prompt, and run `step` again. If one cannot be fixed after two tries, run
-     `step --skip-broken` and it sits this generation out.
+   - If some programs do not assemble, it replaces them: it sets each one aside, draws that row
+     of the matrix again and writes a new prompt. Do not repair the old program and do not look
+     at it. Answer the new prompt the same way as any other, with a fresh subagent, and run
+     `step` again.
    - Otherwise it plays the tournament (it prints the progress while it waits), writes the report
      `Breeding/runs/RUN/reports/NNN.md`, and lists the prompts of the next generation.
 5. Commit the run folder `Breeding/runs/RUN` with a message such as `RUN generation 3`. Push only
@@ -67,5 +69,6 @@ several generations. Then:
 | `prompts/gNNN-rNNN.md` | one prompt per matrix row |
 | `programs/gNNN-rNNN.red` | the program written for that prompt; `seed-*.red` are the starting seeds |
 | `generations/NNN.json` | the winners going in, the matrix, and after the tournament the standings |
+| `rejected/` | programs that did not assemble and were replaced; leave them alone |
 | `reports/NNN.md` | the generation's ranking with Elo, and which programs were kept |
 | `champion.red` | the best program of the last tournament |

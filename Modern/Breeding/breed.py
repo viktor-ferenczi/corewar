@@ -260,8 +260,34 @@ class Run:
             state["programs"][program] = {"generation": generation, "parents": row["order"]}
             family = None if winners else rng.choice(FAMILIES)
             self.path(program, "prompts").write_text(self.prompt(program, row["order"], ranks, family))
-        plan = {"generation": generation, "winners": winners, "matrix": matrix}
+        plan = {"generation": generation, "winners": winners, "ranks": ranks, "matrix": matrix, "rejected": []}
         (self.dir / "generations" / f"{generation:03d}.json").write_text(json.dumps(plan, indent=1) + "\n")
+        self.save()
+
+    def replace(self, broken: dict[str, list[str]]) -> None:
+        """Programs that do not assemble are not repaired. Each one is set aside, and its row is
+        drawn again: a new random selection of winners and a new prompt for a new program."""
+        state, config = self.state, self.config
+        generation = state["generation"]
+        state["redraws"] = state.get("redraws", 0) + 1  # counted over the whole run, so file names are unique
+        rng = random.Random(f"{config['seed']}-{generation}-redraw-{state['redraws']}")
+        record_path = self.dir / "generations" / f"{generation:03d}.json"
+        record = json.loads(record_path.read_text())
+        (self.dir / "rejected").mkdir(exist_ok=True)
+        for program, errors in broken.items():
+            row = selection(rng, 1, record["winners"], config["min_parents"], config["max_parents"])[0]
+            row["program"] = program
+            index = state["pending"].index(program)
+            kept = self.dir / "rejected" / f"{program}.{state['redraws']}.red"
+            self.path(program).rename(kept)
+            record["rejected"].append(
+                {"program": program, "errors": errors, "parents": record["matrix"][index]["order"]}
+            )
+            record["matrix"][index] = row
+            state["programs"][program]["parents"] = row["order"]
+            family = None if record["winners"] else rng.choice(FAMILIES)
+            self.path(program, "prompts").write_text(self.prompt(program, row["order"], record["ranks"], family))
+        record_path.write_text(json.dumps(record, indent=1) + "\n")
         self.save()
 
     def prompt(self, program: str, parents: list[str], ranks: dict[str, str], family: str | None) -> str:
@@ -332,7 +358,7 @@ class Run:
             ]
         return "\n".join(text) + "\n"
 
-    def step(self, skip_broken: bool) -> int:
+    def step(self) -> int:
         """Advance the run as far as it can go without the LLM. Returns the exit code."""
         state, config = self.state, self.config
         if state["generation"] == 0:
@@ -355,15 +381,16 @@ class Run:
         )
         members = state["pending"] + state["winners"] + seeds
         sources = {p: self.path(p).read_text() for p in members}
+        # Validation: the server assembles every new program before any of them plays.
         compiled = api("POST", "/compile", {"programs": {p: sources[p] for p in state["pending"]}})["programs"]
         broken = {p: result["errors"] for p, result in compiled.items() if not result["ok"]}
-        if broken and not skip_broken:
-            print(f"{len(broken)} programs do not assemble. Fix them, then run step again:")
+        if broken:
+            print(f"{len(broken)} programs do not assemble and are replaced, not repaired:")
             for program, errors in broken.items():
-                print(f"  {self.shown(self.path(program))}: {'; '.join(errors)}")
-            return 1
-        members = [p for p in members if p not in broken]
-        sources = {p: sources[p] for p in members}
+                print(f"  {program}: {'; '.join(errors)}")
+            self.replace(broken)
+            print("Their rows were drawn again and their prompts are new.")
+            return self.waiting(list(broken))
 
         generation = state["generation"]
         digest = hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()[:12]
@@ -383,25 +410,24 @@ class Run:
         standings = reproduction.standings(members, pairs)  # best Elo first
         winners = [row["program"] for row in standings[: self.winner_count]]
         champion = standings[0]["program"]
+        record_path = self.dir / "generations" / f"{generation:03d}.json"
+        record = json.loads(record_path.read_text())
         state["history"].append(
             {
                 "generation": generation,
                 "champion": champion,
                 "elo": round(standings[0]["elo"]),
                 "new_winners": len(set(winners) - set(state["winners"])),
-                "broken": sorted(broken),
+                "replaced": len(record["rejected"]),
             }
         )
 
-        record_path = self.dir / "generations" / f"{generation:03d}.json"
-        record = json.loads(record_path.read_text())
         record |= {
             "tournament": {k: job[k] for k in ("id", "seed", "games", "wars", "seconds")},
-            "broken": broken,
             "standings": standings,
         }
         record_path.write_text(json.dumps(record, indent=1) + "\n")
-        self.report(generation, standings, winners, broken, job, reproduction)
+        self.report(generation, standings, winners, len(record["rejected"]), job, reproduction)
         (self.dir / "champion.red").write_text(sources[champion])
 
         state["winners"], state["pending"] = winners, []
@@ -441,7 +467,7 @@ class Run:
         return "Continue: no stop rule has fired."
 
     def report(
-        self, generation: int, standings: list[dict], winners: list[str], broken: dict, job: dict, reproduction
+        self, generation: int, standings: list[dict], winners: list[str], replaced: int, job: dict, reproduction
     ) -> None:
         programs = self.state["programs"]
         rows = []
@@ -478,8 +504,8 @@ class Run:
             f"- New among the winners: {self.state['history'][-1]['new_winners']} of {len(winners)}.",
             f"- Champion by generation: {history}.",
         ]
-        if broken:
-            text.append(f"- Left out because they did not assemble: {', '.join(sorted(broken))}.")
+        if replaced:
+            text.append(f"- Programs replaced because they did not assemble: {replaced} (kept in `rejected/`).")
         text.append(f"- {self.stop_rule()}")
         (self.dir / "reports" / f"{generation:03d}.md").write_text("\n".join(text) + "\n")
 
@@ -618,7 +644,6 @@ def main() -> None:
 
     step = commands.add_parser("step", help="evaluate the generation and write the prompts of the next")
     step.add_argument("run")
-    step.add_argument("--skip-broken", action="store_true", help="play without the programs that do not assemble")
     created = step.add_argument_group("settings of a new run, kept in its config.json")
     for name in ("population", "min_parents", "max_parents", "games", "generations", "patience", "seed"):
         created.add_argument(f"--{name.replace('_', '-')}", type=int)
@@ -638,8 +663,8 @@ def main() -> None:
 
     args = parser.parse_args()
     if args.command == "step":
-        options = {k: v for k, v in vars(args).items() if k not in ("command", "run", "skip_broken")}
-        raise SystemExit(Run(args.run, options).step(args.skip_broken))
+        options = {k: v for k, v in vars(args).items() if k not in ("command", "run")}
+        raise SystemExit(Run(args.run, options).step())
     elif args.command == "rank":
         print(rank(args.run, args.top, args.games, args.gpu))
     else:
