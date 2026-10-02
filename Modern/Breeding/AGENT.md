@@ -20,10 +20,18 @@ must have `MARS_URL` and `MARS_API_KEY` (and `MARS_API_USER` if the proxy wants 
    (for example `--population 50 --generations 20`); later calls take them from the run.
 2. The output lists prompt files and the program file each one asks for:
    `Breeding/runs/RUN/prompts/g003-r017.md -> Breeding/runs/RUN/programs/g003-r017.red`
-3. Answer every prompt. Give each one to a subagent with a fresh context, several at a time, with
-   an instruction like: "Read `PROMPT FILE` and do what it says." The prompt file has everything
-   the subagent needs. Without subagents, answer them yourself one by one, and treat each on its
-   own: read only that prompt, write only that program.
+3. Answer every prompt with parallel subagents, to save wall clock time. One subagent per prompt,
+   each with a fresh context and an instruction like: "Read `PROMPT FILE` and do what it says."
+   The prompt file has everything the subagent needs.
+   - Start them in batches of about 8 to 10 at once (all of them if there are fewer), in a single
+     message so they run concurrently, and start the next batch when one is done. Use fewer at a
+     time if the platform limits you or the subagents start failing.
+   - Do not wait for one subagent before starting the next, and do not write the programs
+     yourself while subagents are available.
+   - When a batch is done, check that each program file exists. Start a new subagent for any
+     that is missing.
+   - Only without subagents: answer the prompts yourself one by one, and treat each on its own.
+     Read only that prompt, write only that program.
 4. Run `step` again. Before anything plays, it sends the new programs to the MARS service for
    validation.
    - If it lists missing programs, write them.
