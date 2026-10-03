@@ -99,6 +99,10 @@ pub enum MessageKind {
     SymbolTableFull,
     IllegalMode,
     ZeroLength,
+    /// The ICWS'88, ICWS'94 and pMARS assemblers only: a false `;assert`.
+    AssertionFailed,
+    /// The ICWS'88, ICWS'94 and pMARS assemblers only: `ORG` or `END` points outside the code.
+    StartOutside,
 }
 
 /// An error message as MARS prints it. Every message counts as an error: MARS refuses to start
@@ -126,6 +130,8 @@ impl Message {
             MessageKind::SymbolTableFull => format!("Symbol table full at line {l} in program {m} !"),
             MessageKind::IllegalMode => format!("Illegal addressing mode at line {l} in program {m} !"),
             MessageKind::ZeroLength => format!("Zero length in program {m} !"),
+            MessageKind::AssertionFailed => format!("Assertion failed at line {l} in program {m} !"),
+            MessageKind::StartOutside => format!("Start outside the code at line {l} in program {m} !"),
         }
     }
 }

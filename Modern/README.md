@@ -31,14 +31,19 @@ label concatenation, `CURLINE`, registers, predefined constants, and `;assert`. 
 is a separate opcode, `NOP` defaults to `.F`, and one-operand `JMP`/`SPL`/`NOP` gets
 `$0` as its B operand. P-space instructions and `PIN` are rejected. Like pMARS, it leaves a
 modifier written right after its opcode (`MOV.I`) out of text substitution, so a loop
-counter or `EQU` named `i` does not break it.
+counter or `EQU` named `i` does not break it. A label in a `FOR` count is relative, an
+operand can follow the opcode without a space (`MOV.AB#1,2`), and a line can be longer
+than 255 characters. A false `;assert` and a start offset outside the code are errors
+with messages of their own. pMARS only warns about the start offset.
 
 `--quirks` reproduces stock pMARS 0.9.2: broken expression precedence and `==`, `w`/`s`
 registers preset in the first warrior, a redefined label dropping its line, numbers
 joining across spaces, immediate B fields read as fetched, and step-limit rescaling
 when a warrior dies in a war with three or more warriors. It does not include the
-2004 `02bimmediate` patch. Sources that would hang pMARS or produce garbage cells
-are rejected, with or without quirks.
+2004 `02bimmediate` patch. Lines are read 255 bytes at a time, so the rest of a longer
+line is the next line. Sources that would hang pMARS or produce garbage cells are
+rejected, with or without quirks. With quirks, that includes an operand glued to the
+opcode at the end of a line (`MOV#1,2`), where pMARS reads stale bytes after it.
 
 ### hu93
 

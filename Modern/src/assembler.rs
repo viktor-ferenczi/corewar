@@ -46,6 +46,8 @@ struct Head {
     op: Option<String>,
     modifier: Option<String>,
     rest: String,
+    /// Text follows the opcode without whitespace up to the end of the line.
+    glued_to_end: bool,
 }
 
 struct Record {
@@ -129,31 +131,43 @@ fn comment_directive(line: &str, name: &str) -> bool {
 }
 
 fn read_lines(source: &[u8], settings: &Settings) -> Result<Vec<SourceLine>, Message> {
-    let source = String::from_utf8_lossy(source);
     let mut lines = Vec::new();
-    let mut continued = String::new();
+    let mut continued = Vec::new();
     let mut continued_at = 0;
     let pmars = settings.standard != Standard::Icws94;
-    for (index, physical) in source.split('\n').enumerate() {
+    // pMARS reads with `fgets` into a 256-byte buffer, so the rest of a longer line is read as
+    // the next line.
+    let buffer = if pmars && settings.quirks { 255 } else { usize::MAX };
+    for (index, physical) in source.split(|&byte| byte == b'\n').enumerate() {
         let number = (index + 1).min(u16::MAX as usize) as u16;
-        let raw = if pmars { physical.split('\r').next().unwrap_or("") } else { physical.trim_end_matches('\r') };
-        if pmars && raw.len() >= 256 {
-            return Err(Message { kind: MessageKind::ParameterError, line: number });
-        }
-        if continued.is_empty() {
-            continued_at = number;
-        }
-        let continuation = pmars && raw.ends_with('\\');
-        continued.push_str(if continuation { &raw[..raw.len() - 1] } else { raw });
-        if continued.len() > 4096 {
-            return Err(Message { kind: MessageKind::ParameterError, line: continued_at });
-        }
-        if !continuation {
-            lines.push(SourceLine { number: continued_at, text: std::mem::take(&mut continued) });
+        let mut unread = physical;
+        loop {
+            let (chunk, rest) = unread.split_at(unread.len().min(buffer - continued.len()));
+            unread = rest;
+            let raw = if pmars {
+                chunk.split(|&byte| byte == b'\r').next().unwrap_or_default()
+            } else {
+                chunk.strip_suffix(b"\r").unwrap_or(chunk)
+            };
+            if continued.is_empty() {
+                continued_at = number;
+            }
+            let continuation = pmars && raw.ends_with(b"\\");
+            continued.extend_from_slice(if continuation { &raw[..raw.len() - 1] } else { raw });
+            if continued.len() > 4096 {
+                return Err(Message { kind: MessageKind::ParameterError, line: continued_at });
+            }
+            if !continuation {
+                let text = String::from_utf8_lossy(&std::mem::take(&mut continued)).into_owned();
+                lines.push(SourceLine { number: continued_at, text });
+            }
+            if unread.is_empty() {
+                break;
+            }
         }
     }
     if !continued.is_empty() {
-        lines.push(SourceLine { number: continued_at, text: continued });
+        lines.push(SourceLine { number: continued_at, text: String::from_utf8_lossy(&continued).into_owned() });
     }
     if !pmars {
         let mut normalized = Vec::new();
@@ -200,14 +214,10 @@ fn head(code: &str, settings: &Settings) -> Result<Head, MessageKind> {
             if let Some(after_dot) = operands.strip_prefix('.') {
                 let (name, tail) = identifier(after_dot.trim_start()).ok_or(MessageKind::ParameterError)?;
                 modifier = Some(name.to_ascii_uppercase());
-                if !tail.is_empty() && !tail.starts_with(char::is_whitespace) {
-                    return Err(MessageKind::ParameterError);
-                }
                 operands = tail.trim_start();
-            } else if !tail.is_empty() && !tail.starts_with(char::is_whitespace) {
-                return Err(MessageKind::ParameterError);
             }
-            return Ok(Head { labels, op: Some(op), modifier, rest: operands.to_string() });
+            let glued_to_end = !tail.is_empty() && !tail.contains(char::is_whitespace);
+            return Ok(Head { labels, op: Some(op), modifier, rest: operands.to_string(), glued_to_end });
         }
         if !valid_label(name) || name.eq_ignore_ascii_case("CURLINE") {
             return Err(MessageKind::ParameterError);
@@ -229,7 +239,7 @@ fn head(code: &str, settings: &Settings) -> Result<Head, MessageKind> {
         }
         rest = rest.trim_start();
     }
-    Ok(Head { labels, op: None, modifier: None, rest: String::new() })
+    Ok(Head { labels, op: None, modifier: None, rest: String::new(), glued_to_end: false })
 }
 
 impl Assembler<'_> {
@@ -353,7 +363,7 @@ impl Assembler<'_> {
                 let expression = line.text.trim_start()[1..].trim_start();
                 let expression = expression[6..].trim();
                 match self.evaluate(expression, self.pc, false, false) {
-                    Ok(0) => self.messages.push(self.error(line.number, MessageKind::ParameterError)),
+                    Ok(0) => self.messages.push(self.error(line.number, MessageKind::AssertionFailed)),
                     Ok(_) => {}
                     Err(kind) if self.settings.standard == Standard::Icws94 => {
                         self.messages.push(self.error(line.number, kind))
@@ -420,6 +430,14 @@ impl Assembler<'_> {
                 continue;
             }
             let parsed = original_head.map_err(|kind| self.error(line.number, kind))?;
+            // pMARS copies text glued to the opcode into a static buffer and only ends it at
+            // whitespace, so at the end of the line it reads stale bytes after it.
+            if self.settings.quirks
+                && parsed.glued_to_end
+                && !line.text.split(';').next().unwrap_or("").ends_with(char::is_whitespace)
+            {
+                return Err(self.error(line.number, MessageKind::ParameterError));
+            }
             let mut labels = std::mem::take(&mut self.pending);
             labels.extend(parsed.labels);
             let Some(op) = parsed.op else {
@@ -437,7 +455,7 @@ impl Assembler<'_> {
                     continue;
                 }
                 let count =
-                    self.evaluate(&parsed.rest, self.pc, true, false).map_err(|kind| self.error(line.number, kind))?;
+                    self.evaluate(&parsed.rest, self.pc, false, false).map_err(|kind| self.error(line.number, kind))?;
                 let mut nesting = 1;
                 let mut end = index + 1;
                 while end < source.len() {
@@ -667,6 +685,7 @@ impl Assembler<'_> {
     fn finish(mut self) -> Compiled {
         let mut code = Vec::new();
         let mut origin = 0u16;
+        let mut origin_line = 0;
         for record in std::mem::take(&mut self.records) {
             if record.op == "ORG" || record.op == "END" {
                 if record.operands.is_empty() && record.op == "END" {
@@ -677,6 +696,7 @@ impl Assembler<'_> {
                     Ok(value) => {
                         if record.op != "END" || self.settings.standard != Standard::Pmars || origin == 0 {
                             origin = value.rem_euclid(self.settings.core_size as i64) as u16;
+                            origin_line = record.number;
                         }
                     }
                     Err(kind) => self.messages.push(self.error(record.number, kind)),
@@ -693,6 +713,9 @@ impl Assembler<'_> {
         }
         if code.is_empty() {
             self.messages.push(self.error(0, MessageKind::ZeroLength));
+        } else if origin as usize >= code.len() {
+            // pMARS 0.9.2 warns and starts outside the core; later versions start in empty core.
+            self.messages.push(self.error(origin_line, MessageKind::StartOutside));
         }
         Compiled { program: Program { code, start: origin }, messages: self.messages }
     }
