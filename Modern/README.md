@@ -29,7 +29,9 @@ the exact historical preset, including quirks and no rotation.
 ICWS'94 with pMARS's source conventions: text `EQU`, nested `FOR`/`ROF`, loop counters,
 label concatenation, `CURLINE`, registers, predefined constants, and `;assert`. `SEQ`
 is a separate opcode, `NOP` defaults to `.F`, and one-operand `JMP`/`SPL`/`NOP` gets
-`$0` as its B operand. P-space instructions and `PIN` are rejected.
+`$0` as its B operand. P-space instructions and `PIN` are rejected. Like pMARS, it leaves a
+modifier written right after its opcode (`MOV.I`) out of text substitution, so a loop
+counter or `EQU` named `i` does not break it.
 
 `--quirks` reproduces stock pMARS 0.9.2: broken expression precedence and `==`, `w`/`s`
 registers preset in the first warrior, a redefined label dropping its line, numbers

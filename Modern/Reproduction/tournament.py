@@ -39,9 +39,7 @@ def cpu_model() -> str:
 
 def gpu_names(devices: str) -> list[str]:
     """Names of the GPUs of a --gpu list, from `mars gpus`."""
-    listing = subprocess.run(
-        [MARS, "gpus"], capture_output=True, text=True, check=True
-    ).stdout
+    listing = subprocess.run([MARS, "gpus"], capture_output=True, text=True, check=True).stdout
     # Lines of "INDEX  NAME  (KIND, BACKEND, DRIVER)", the best kind first.
     rows = [line.split("  ") for line in listing.splitlines()]
     if devices == "all":
@@ -51,9 +49,7 @@ def gpu_names(devices: str) -> list[str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "--gpu",
         metavar="LIST",
@@ -105,9 +101,7 @@ def main() -> None:
     if args.baseline is not None:
         return
 
-    rustc = subprocess.run(
-        ["rustc", "--version"], capture_output=True, text=True, check=True
-    ).stdout.strip()
+    rustc = subprocess.run(["rustc", "--version"], capture_output=True, text=True, check=True).stdout.strip()
     timing = json.loads(TIMING.read_text()) if TIMING.exists() else {}
     entry = {
         "date": date.today().isoformat(),
