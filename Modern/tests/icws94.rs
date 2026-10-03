@@ -31,3 +31,17 @@ fn draft_and_pmars_conventions() {
         assert!(!compile_94(source, &Settings::icws94()).is_ok());
     }
 }
+
+#[test]
+fn counter_or_equ_named_like_a_modifier() {
+    // The modifier glued to an opcode is not substituted; detached, it is (pMARS rejects that too).
+    let looped = compile_94(b"i FOR 2\nMOV.I 0, 1\nROF\nab FOR 1\nMOV.ab 0, 1\nROF\n", &Settings::pmars());
+    assert!(looped.is_ok(), "{:?}", looped.messages);
+    assert_eq!(looped.program.code.iter().map(|ins| ins.modifier).collect::<Vec<_>>(), [6, 6, 2]);
+    assert!(!compile_94(b"ab FOR 1\nMOV . ab 0, 1\nROF\n", &Settings::pmars()).is_ok());
+    for settings in [Settings::pmars(), Settings::icws94()] {
+        let equ = compile_94(b"x EQU 3*(2+1)\nb EQU 4\nMUL.X #x, #b\nADD.b #b, 1\n", &settings);
+        assert!(equ.is_ok(), "{:?}", equ.messages);
+        assert_eq!(equ.program.code.iter().map(|ins| (ins.modifier, ins.a)).collect::<Vec<_>>(), [(5, 9), (1, 4)]);
+    }
+}

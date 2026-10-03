@@ -304,6 +304,13 @@ impl Assembler<'_> {
                     _ => result.push_str(name),
                 }
                 offset += len;
+                if reserved(name) {
+                    // Like pMARS, copy text glued to an opcode verbatim, so a counter or EQU named
+                    // `i` leaves `mov.i` alone.
+                    let glued = remaining.find(char::is_whitespace).unwrap_or(remaining.len());
+                    result.push_str(&remaining[..glued]);
+                    offset += glued;
+                }
             } else if tail.starts_with("&&") {
                 result.push_str("&&");
                 offset += 2;

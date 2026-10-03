@@ -197,11 +197,22 @@ fn pmars_092_assembler_sources() {
         ";assert unknown\nJMP 0\n",
         "MOV . AB # 5 , @ 3\nJMP 0\n",
         "DAT #0, #1+\\\n2\nJMP 0\n",
+        "i FOR 2\nMOV.I 0,1\nROF\nab FOR 1\nMOV.ab 0,1\nROF\nJMP 0\n",
+        "x EQU 3*(2+1)\nb EQU 4\nMUL.X #x,#b\nADD.b #b,1\nJMP 0\n",
     ];
     for source in sources {
         compare(&binary, source, &settings, 1);
     }
-    for source in [";assert 0\nJMP 0", "MOV 0", "DAT", "MOV 0,", "DAT #0,#1+2*3==7", "PIN 1\nJMP 0", "MOV.AZ 1,2"] {
+    for source in [
+        ";assert 0\nJMP 0",
+        "MOV 0",
+        "DAT",
+        "MOV 0,",
+        "DAT #0,#1+2*3==7",
+        "PIN 1\nJMP 0",
+        "MOV.AZ 1,2",
+        "ab FOR 1\nMOV . ab 0,1\nROF",
+    ] {
         let expected = reference(&binary, &[source, SIT], &settings, 1);
         let actual = compile_with_context(source.as_bytes(), &settings, AssemblyContext::default());
         assert!(!expected.accepted || source.starts_with("PIN"), "reference accepted {source}");
