@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use mars::assembler::{compile_with_context, AssemblyContext};
-use mars::{Engine, Rng, Settings, Standard};
+use mars::{Engine, MessageKind, Rng, Settings, Standard};
 
 #[test]
 fn defaults_and_assembler_quirks() {
@@ -32,6 +32,29 @@ fn defaults_and_assembler_quirks() {
     assert_eq!(compile_with_context(b"DAT #0, #1 2\n", &quirks, context).program.code[0].b, 12);
     assert!(!compile_with_context(b"x DAT 0,0\nx DAT 1,2\n", &settings, context).is_ok());
     assert_eq!(compile_with_context(b"x DAT 0,0\nx DAT 1,2\n", &quirks, context).program.code.len(), 1);
+}
+
+#[test]
+fn pmars_line_reading_and_messages() {
+    let compile = |source: &str, quirks: bool| {
+        let settings = Settings { quirks, ..Settings::pmars() };
+        compile_with_context(source.as_bytes(), &settings, AssemblyContext::default())
+    };
+    let kinds = |source: &str| compile(source, false).messages.iter().map(|m| (m.kind, m.line)).collect::<Vec<_>>();
+    let split = format!("JMP 0 ;{}DAT 7,7\n", "x".repeat(248));
+    for quirks in [false, true] {
+        // A label in a FOR count is relative, so this runs four times.
+        assert_eq!(compile("xx DAT 0\nJMP 0\ncnt FOR 2-xx\nDAT 1\nROF\n", quirks).program.code.len(), 6);
+        assert!(compile("MOV#1,2 \nMOV.AB@1,{2 ; glued\nMOV .AB#1,2\n", quirks).is_ok());
+        assert_eq!(compile(&split, quirks).program.code.len(), if quirks { 2 } else { 1 });
+    }
+    assert!(compile("MOV#1,2\nx MOV.AB{1,2\n", false).is_ok());
+    assert!(!compile("MOV#1,2\n", true).is_ok());
+    assert!(!compile(&format!(";{}\nJMP 0\n", "x".repeat(4097)), false).is_ok());
+    assert_eq!(kinds("JMP 0\n;assert CORESIZE==55\n"), [(MessageKind::AssertionFailed, 2)]);
+    assert_eq!(kinds("ORG 2\nJMP 0\nJMP 0\n"), [(MessageKind::StartOutside, 1)]);
+    assert_eq!(kinds("JMP 0\nEND -1\n"), [(MessageKind::StartOutside, 2)]);
+    assert!(compile("ORG 1\nJMP 0\nJMP 0\nEND 0\n", false).is_ok());
 }
 
 #[test]

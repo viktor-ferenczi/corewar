@@ -199,9 +199,15 @@ fn pmars_092_assembler_sources() {
         "DAT #0, #1+\\\n2\nJMP 0\n",
         "i FOR 2\nMOV.I 0,1\nROF\nab FOR 1\nMOV.ab 0,1\nROF\nJMP 0\n",
         "x EQU 3*(2+1)\nb EQU 4\nMUL.X #x,#b\nADD.b #b,1\nJMP 0\n",
+        "xx DAT 0\nJMP 0\ncnt FOR 2-xx\nDAT #cnt\nROF\n",
+        "MOV#1,2 \nx MOV.AB@1,{2 ; glued\nMOV .AB#1,2\nJMP 0\n",
     ];
     for source in sources {
         compare(&binary, source, &settings, 1);
+    }
+    // fgets reads 255 bytes at a time, so the rest of a longer line is a line of its own.
+    for source in [format!(";{}\nJMP 0\n", "x".repeat(259)), format!("JMP 0 ;{}DAT 7,7\n", "x".repeat(248))] {
+        compare(&binary, &source, &settings, 1);
     }
     for source in [
         ";assert 0\nJMP 0",
